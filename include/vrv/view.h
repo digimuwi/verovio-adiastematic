@@ -413,6 +413,17 @@ protected:
     ///@{
     void DrawNcAsNotehead(DeviceContext *dc, Nc *nc, Layer *layer, Staff *staff, Measure *measure);
     void DrawNcGlyphs(DeviceContext *dc, Nc *nc, Staff *staff);
+    /**
+     * Draw a neume as a single calligraphic broad-nib pen gesture from its visual attributes only
+     * (adiastematic / staffless rendering). Enabled by the neumeCalligraphic option.
+     */
+    void DrawNeumeAdiastematic(DeviceContext *dc, Neume *neume, Staff *staff);
+    /**
+     * Draw the significative letters (<signifLet>) of a neume as upright text, positioned relative
+     * to the inked gesture's logical bounding box according to each letter's @place.
+     */
+    void DrawNeumeSignifLets(
+        DeviceContext *dc, Neume *neume, Staff *staff, int x1, int y1, int x2, int y2);
     ///@}
 
     /**

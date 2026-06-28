@@ -585,8 +585,11 @@ TEI_RNG_NS = {"tei": "http://www.tei-c.org/ns/1.0", "rng": "http://relaxng.org/n
 
 
 def vrv_member_cc(name: str, pascal: bool = False) -> str:
-    """Return a camel case member name for an attribute name."""
-    cc = "".join([n[0].upper() + n[1:] for n in name.split(".")])
+    """Return a camel case member name for an attribute name.
+
+    Splits on both "." and "-" so hyphenated MEI names (e.g. "s-shape") become valid C++
+    identifiers (sShape / m_sShape) while the attribute itself keeps its hyphenated XML name."""
+    cc = "".join([n[0].upper() + n[1:] for n in re.split(r"[.-]", name)])
     if pascal:
         return cc
     return cc[0].lower() + cc[1:]

@@ -187,6 +187,13 @@ void View::DrawLayerElement(DeviceContext *dc, LayerElement *element, Layer *lay
     else if (element->Is(QUILISMA)) {
         this->DrawQuilisma(dc, element, layer, staff, measure);
     }
+    else if (element->Is(SIGNIFLET)) {
+        // The significative letters of a neume are drawn by DrawNeumeAdiastematic (calligraphic
+        // mode) relative to the inked gesture. Outside that mode they are not positioned, so the
+        // element is wrapped in an (empty) graphic to keep it addressable without an error.
+        dc->StartGraphic(element, "", element->GetID());
+        dc->EndGraphic(element, this);
+    }
     else if (element->Is(STROPHICUS)) {
         this->DrawStrophicus(dc, element, layer, staff, measure);
     }

@@ -737,6 +737,48 @@ void SvgDeviceContext::DrawCubicBezierPathFilled(Point bezier1[4], Point bezier2
     pathChild.append_attribute("stroke-linejoin") = "round";
 }
 
+void SvgDeviceContext::DrawClosedBezierPath(const std::vector<Point> &cp)
+{
+    assert(m_penStack.size());
+    assert(m_brushStack.size());
+    // A closed cubic path needs a start anchor plus at least one full segment.
+    if (cp.size() < 4) return;
+
+    const Pen &currentPen = m_penStack.top();
+    const Brush &currentBrush = m_brushStack.top();
+
+    std::string d = StringFormat("M%d,%d", cp[0].x, cp[0].y);
+    for (size_t i = 1; i + 2 < cp.size(); i += 3) {
+        d += StringFormat(
+            " C%d,%d %d,%d %d,%d", cp[i].x, cp[i].y, cp[i + 1].x, cp[i + 1].y, cp[i + 2].x, cp[i + 2].y);
+    }
+    d += " Z";
+
+    pugi::xml_node pathChild = AddChild("path");
+    pathChild.append_attribute("d") = d.c_str();
+
+    // Outline from the current pen (typically width 0 for a pure fill); same idiom as DrawPolygon.
+    if (currentPen.GetWidth() > 0) {
+        pathChild.append_attribute("stroke-width") = currentPen.GetWidth();
+    }
+    if (currentPen.HasColor() || !this->UseGlobalStyling()) {
+        pathChild.append_attribute("stroke") = this->GetColor(currentPen.GetColor()).c_str();
+    }
+    if (currentPen.HasOpacity()) {
+        pathChild.append_attribute("stroke-opacity") = currentPen.GetOpacity();
+    }
+    pathChild.append_attribute("stroke-linejoin") = "round";
+
+    // Fill from the current brush. With global (CSS) styling and no explicit colour the fill is
+    // inherited from the page (black), matching how noteheads and beams are inked.
+    if (currentBrush.HasColor()) {
+        pathChild.append_attribute("fill") = this->GetColor(currentBrush.GetColor()).c_str();
+    }
+    if (currentBrush.HasOpacity()) {
+        pathChild.append_attribute("fill-opacity") = currentBrush.GetOpacity();
+    }
+}
+
 void SvgDeviceContext::DrawBentParallelogramFilled(Point side[4], int height)
 {
     assert(m_penStack.size());

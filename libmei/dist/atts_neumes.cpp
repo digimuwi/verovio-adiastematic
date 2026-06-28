@@ -165,9 +165,9 @@ bool AttNcForm::ReadNcForm(pugi::xml_node element, bool removeAttr)
         if (removeAttr) element.remove_attribute("rellen");
         hasAttribute = true;
     }
-    if (element.attribute("sShape")) {
-        this->SetSShape(StrToStr(element.attribute("sShape").value()));
-        if (removeAttr) element.remove_attribute("sShape");
+    if (element.attribute("s-shape")) {
+        this->SetSShape(StrToStr(element.attribute("s-shape").value()));
+        if (removeAttr) element.remove_attribute("s-shape");
         hasAttribute = true;
     }
     if (element.attribute("tilt")) {
@@ -202,7 +202,7 @@ bool AttNcForm::WriteNcForm(pugi::xml_node element)
         wroteAttribute = true;
     }
     if (this->HasSShape()) {
-        element.append_attribute("sShape") = StrToStr(this->GetSShape()).c_str();
+        element.append_attribute("s-shape") = StrToStr(this->GetSShape()).c_str();
         wroteAttribute = true;
     }
     if (this->HasTilt()) {

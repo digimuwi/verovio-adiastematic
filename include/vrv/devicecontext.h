@@ -10,6 +10,7 @@
 
 #include <stack>
 #include <string>
+#include <vector>
 
 //----------------------------------------------------------------------------
 
@@ -193,6 +194,13 @@ public:
     virtual void DrawQuadBezierPath(Point bezier[3]) = 0;
     virtual void DrawCubicBezierPath(Point bezier[4]) = 0;
     virtual void DrawCubicBezierPathFilled(Point bezier1[4], Point bezier2[4]) = 0;
+    /**
+     * Draw an implicitly closed and filled path made of an arbitrary number of cubic Bézier
+     * segments. @p controlPoints is a flat list [P0, C0a, C0b, P1, C1a, C1b, P2, ...] of size
+     * 1 + 3 * k (a start anchor followed by k segments). The fill uses the current brush and the
+     * outline the current pen. Used for inking calligraphic neume strokes as a single nib ribbon.
+     */
+    virtual void DrawClosedBezierPath(const std::vector<Point> &controlPoints) = 0;
     virtual void DrawBentParallelogramFilled(Point side[4], int height) = 0;
     virtual void DrawCircle(int x, int y, int radius) = 0;
     virtual void DrawEllipse(int x, int y, int width, int height) = 0;

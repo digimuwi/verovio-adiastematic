@@ -66,7 +66,13 @@ FunctorCode AdjustNeumeXFunctor::VisitNeume(Neume *neume)
         }
     }
 
-    m_neumeMinPos = neume->GetContentRight() + m_doc->GetDrawingUnit(100);
+    // Gap to the next neume. Classic glyph neumes are spaced a full unit apart; the calligraphic
+    // (broad-nib) rendering reads as flowing handwriting, so its neumes are set much closer together
+    // to keep long melismas compact.
+    const int neumeGap = m_doc->GetOptions()->m_neumeCalligraphic.GetValue()
+        ? m_doc->GetDrawingUnit(100) / 3
+        : m_doc->GetDrawingUnit(100);
+    m_neumeMinPos = neume->GetContentRight() + neumeGap;
 
     // Check if the neume takes more space the the syllable text
     if (m_neumeMinPos > m_minPos) m_minPos = m_neumeMinPos;

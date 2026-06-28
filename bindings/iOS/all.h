@@ -65,6 +65,7 @@
 #import <VerovioFramework/calcslurdirectionfunctor.h>
 #import <VerovioFramework/calcspanningbeamspansfunctor.h>
 #import <VerovioFramework/calcstemfunctor.h>
+#import <VerovioFramework/calligraphicneume.h>
 #import <VerovioFramework/castofffunctor.h>
 #import <VerovioFramework/choice.h>
 #import <VerovioFramework/chord.h>
@@ -226,6 +227,7 @@
 #import <VerovioFramework/section.h>
 #import <VerovioFramework/setscoredeffunctor.h>
 #import <VerovioFramework/sic.h>
+#import <VerovioFramework/signiflet.h>
 #import <VerovioFramework/slur.h>
 #import <VerovioFramework/smufl.h>
 #import <VerovioFramework/space.h>

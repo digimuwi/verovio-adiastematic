@@ -146,6 +146,7 @@ class ScoreDefInterface;
 class Sb;
 class Section;
 class Sic;
+class SignifLet;
 class Slur;
 class Space;
 class Staff;
@@ -431,6 +432,7 @@ private:
     void WriteNote(pugi::xml_node currentNode, Note *note);
     void WriteOriscus(pugi::xml_node currentNode, Oriscus *oriscus);
     void WritePlica(pugi::xml_node currentNode, Plica *plica);
+    void WriteSignifLet(pugi::xml_node currentNode, SignifLet *signifLet);
     void WriteProport(pugi::xml_node currentNode, Proport *proport);
     void WriteQuilisma(pugi::xml_node currentNode, Quilisma *quilisma);
     void WriteStrophicus(pugi::xml_node currentNode, Strophicus *strophicus);
@@ -791,6 +793,7 @@ private:
     bool ReadSpace(Object *parent, pugi::xml_node space);
     bool ReadStem(Object *parent, pugi::xml_node stem);
     bool ReadStrophicus(Object *parent, pugi::xml_node strophicus);
+    bool ReadSignifLet(Object *parent, pugi::xml_node signifLet);
     bool ReadSyl(Object *parent, pugi::xml_node syl);
     bool ReadSyllable(Object *parent, pugi::xml_node syllable);
     bool ReadTabDurSym(Object *parent, pugi::xml_node tabDurSym);

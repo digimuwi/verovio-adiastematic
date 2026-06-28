@@ -130,6 +130,7 @@
 #include "score.h"
 #include "section.h"
 #include "sic.h"
+#include "signiflet.h"
 #include "slur.h"
 #include "space.h"
 #include "staff.h"
@@ -798,6 +799,10 @@ bool MEIOutput::WriteObjectInternal(Object *object, bool useCustomScoreDef)
         else if (object->Is(ORISCUS)) {
             m_currentNode = m_currentNode.append_child("oriscus");
             this->WriteOriscus(m_currentNode, vrv_cast<Oriscus *>(object));
+        }
+        else if (object->Is(SIGNIFLET)) {
+            m_currentNode = m_currentNode.append_child("signifLet");
+            this->WriteSignifLet(m_currentNode, vrv_cast<SignifLet *>(object));
         }
         else if (object->Is(PLICA)) {
             m_currentNode = m_currentNode.append_child("plica");
@@ -2960,6 +2965,7 @@ void MEIOutput::WriteQuilisma(pugi::xml_node currentNode, Quilisma *quilisma)
     this->WriteOffsetInterface(currentNode, quilisma);
     this->WritePitchInterface(currentNode, quilisma);
     quilisma->WriteColor(currentNode);
+    quilisma->WriteQuilismaVis(currentNode);
 }
 
 void MEIOutput::WriteStrophicus(pugi::xml_node currentNode, Strophicus *strophicus)
@@ -3016,6 +3022,16 @@ void MEIOutput::WriteSyl(pugi::xml_node currentNode, Syl *syl)
     syl->WriteLang(currentNode);
     syl->WriteTypography(currentNode);
     syl->WriteSylLog(currentNode);
+}
+
+void MEIOutput::WriteSignifLet(pugi::xml_node currentNode, SignifLet *signifLet)
+{
+    assert(signifLet);
+
+    this->WriteLayerElement(currentNode, signifLet);
+    signifLet->WriteColor(currentNode);
+    signifLet->WriteSignifLetVis(currentNode);
+    signifLet->WriteTypography(currentNode);
 }
 
 void MEIOutput::WriteSyllable(pugi::xml_node currentNode, Syllable *syllable)
@@ -4030,6 +4046,9 @@ bool MEIInput::IsAllowed(std::string element, Object *filterParent)
     // filter for neume
     else if (filterParent->Is(NEUME)) {
         if (element == "nc") {
+            return true;
+        }
+        else if (element == "signifLet") {
             return true;
         }
         else {
@@ -6761,6 +6780,9 @@ bool MEIInput::ReadLayerChildren(Object *parent, pugi::xml_node parentNode, Obje
         else if (elementName == "oriscus") {
             success = this->ReadOriscus(parent, xmlElement);
         }
+        else if (elementName == "signifLet") {
+            success = this->ReadSignifLet(parent, xmlElement);
+        }
         else if (elementName == "pb") {
             success = this->ReadGenericLayerElement(parent, xmlElement);
         }
@@ -7503,6 +7525,7 @@ bool MEIInput::ReadQuilisma(Object *parent, pugi::xml_node quilisma)
     this->ReadOffsetInterface(quilisma, vrvQuilisma);
     this->ReadPositionInterface(quilisma, vrvQuilisma);
     vrvQuilisma->ReadColor(quilisma);
+    vrvQuilisma->ReadQuilismaVis(quilisma);
 
     parent->AddChild(vrvQuilisma);
     this->ReadUnsupportedAttr(quilisma, vrvQuilisma);
@@ -7597,6 +7620,20 @@ bool MEIInput::ReadSyl(Object *parent, pugi::xml_node syl)
     parent->AddChild(vrvSyl);
     this->ReadUnsupportedAttr(syl, vrvSyl);
     return this->ReadTextChildren(vrvSyl, syl, vrvSyl);
+}
+
+bool MEIInput::ReadSignifLet(Object *parent, pugi::xml_node signifLet)
+{
+    SignifLet *vrvSignifLet = new SignifLet();
+    this->ReadLayerElement(signifLet, vrvSignifLet);
+
+    vrvSignifLet->ReadColor(signifLet);
+    vrvSignifLet->ReadSignifLetVis(signifLet);
+    vrvSignifLet->ReadTypography(signifLet);
+
+    parent->AddChild(vrvSignifLet);
+    this->ReadUnsupportedAttr(signifLet, vrvSignifLet);
+    return this->ReadTextChildren(vrvSignifLet, signifLet, vrvSignifLet);
 }
 
 bool MEIInput::ReadSyllable(Object *parent, pugi::xml_node syllable)

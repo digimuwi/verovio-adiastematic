@@ -10,6 +10,7 @@
 
 #include "atts_analytical.h"
 #include "atts_shared.h"
+#include "atts_visual.h"
 #include "layerelement.h"
 #include "offsetinterface.h"
 #include "pitchinterface.h"
@@ -25,7 +26,8 @@ class Quilisma : public LayerElement,
                  public OffsetInterface,
                  public PitchInterface,
                  public PositionInterface,
-                 public AttColor {
+                 public AttColor,
+                 public AttQuilismaVis {
 public:
     /**
      * @name Constructors, destructors, and other standard methods

@@ -2753,7 +2753,7 @@ bool AttModule::SetNeumes(Object *element, const std::string &attrType, const st
             att->SetRellen(att->StrToNcFormRellen(attrValue));
             return true;
         }
-        if (attrType == "sShape") {
+        if (attrType == "s-shape") {
             att->SetSShape(att->StrToStr(attrValue));
             return true;
         }
@@ -2812,7 +2812,7 @@ void AttModule::GetNeumes(const Object *element, ArrayOfStrAttr *attributes)
             attributes->push_back({ "rellen", att->NcFormRellenToStr(att->GetRellen()) });
         }
         if (att->HasSShape()) {
-            attributes->push_back({ "sShape", att->StrToStr(att->GetSShape()) });
+            attributes->push_back({ "s-shape", att->StrToStr(att->GetSShape()) });
         }
         if (att->HasTilt()) {
             attributes->push_back({ "tilt", att->CompassdirectionToStr(att->GetTilt()) });

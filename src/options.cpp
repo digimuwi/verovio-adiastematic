@@ -1920,6 +1920,24 @@ Options::Options()
     m_liquescentWithoutTails.Init(false);
     this->Register(&m_liquescentWithoutTails, "liquescentWithoutTails", &m_neume);
 
+    m_neumeCalligraphic.SetInfo("Calligraphic neumes",
+        "Render each neume as a single continuous broad-nib pen stroke (adiastematic / staffless), "
+        "driven by the visual MEI attributes (tilt, curve, s-shape, rellen, intm) rather than by pitch.");
+    m_neumeCalligraphic.Init(false);
+    this->Register(&m_neumeCalligraphic, "neumeCalligraphic", &m_neume);
+
+    m_neumeCalligraphicSlant.SetInfo("Calligraphic neume slant",
+        "The forward slant (italicisation) of calligraphic neumes, in degrees: a right hand's habit of "
+        "pulling the gesture toward the upper-right. 0 is upright.");
+    m_neumeCalligraphicSlant.Init(10.0, -30.0, 30.0);
+    this->Register(&m_neumeCalligraphicSlant, "neumeCalligraphicSlant", &m_neume);
+
+    m_neumeCalligraphicSlantBias.SetInfo("Calligraphic neume slant bias",
+        "How much a descending stroke resists the forward slant: 0 leans every stroke uniformly (a "
+        "mechanical oblique), 1 keeps down-strokes upright. Keeps the lean lively rather than drunken.");
+    m_neumeCalligraphicSlantBias.Init(0.3, 0.0, 1.0);
+    this->Register(&m_neumeCalligraphicSlantBias, "neumeCalligraphicSlantBias", &m_neume);
+
     /********* Method JSON options to the command-line *********/
 
     m_jsonCmdLineOptions.SetLabel("Method JSON options for the command-line", "7-methodJson");

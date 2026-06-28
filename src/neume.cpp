@@ -62,7 +62,7 @@ void Neume::Reset()
 
 bool Neume::IsSupportedChild(ClassId classId)
 {
-    static const std::vector<ClassId> supported{ NC };
+    static const std::vector<ClassId> supported{ NC, SIGNIFLET };
 
     if (std::find(supported.begin(), supported.end(), classId) != supported.end()) {
         return true;

@@ -885,6 +885,9 @@ public:
     OptionBool m_gabcExtendedSymbols;
     OptionInt m_gabcStaffLines;
     OptionBool m_liquescentWithoutTails;
+    OptionBool m_neumeCalligraphic;
+    OptionDbl m_neumeCalligraphicSlant;
+    OptionDbl m_neumeCalligraphicSlantBias;
 
     /**
      * Additional options for passing method JSON options to the command-line

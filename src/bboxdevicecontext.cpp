@@ -169,6 +169,19 @@ void BBoxDeviceContext::DrawCubicBezierPathFilled(Point bezier1[4], Point bezier
     this->UpdateBB(pos.x, pos.y, pos.x + width, pos.y + height);
 }
 
+void BBoxDeviceContext::DrawClosedBezierPath(const std::vector<Point> &cp)
+{
+    if (cp.size() < 4) return;
+
+    Point pos;
+    int width, height, minYPos, maxYPos;
+    for (size_t i = 1; i + 2 < cp.size(); i += 3) {
+        const Point segment[4] = { cp[i - 1], cp[i], cp[i + 1], cp[i + 2] };
+        BoundingBox::ApproximateBezierBoundingBox(segment, pos, width, height, minYPos, maxYPos);
+        this->UpdateBB(pos.x, pos.y, pos.x + width, pos.y + height);
+    }
+}
+
 void BBoxDeviceContext::DrawBentParallelogramFilled(Point side[4], int height)
 {
     this->UpdateBB(side[0].x, side[0].y, side[3].x, side[3].y + height);

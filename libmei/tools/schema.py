@@ -208,9 +208,9 @@ class MeiSchema(object):
         Process attribute definition.
         """
         attdef_ident = attdef.get("ident")
-        if "-" in attdef_ident:
-            first, last = attdef_ident.split("-")
-            attdef_ident = f"{first}{last.title()}"
+        # Keep the MEI attribute name verbatim (e.g. the hyphenated "s-shape") so it is read and
+        # written as-is. The C++ member and method names are camel-cased separately by cc() /
+        # vrv_member_cc(), which split on both "." and "-".
 
         if attdef.get("ns"):
             return f"{attdef.get('ns')}|{attdef_ident}"
@@ -256,9 +256,10 @@ class MeiSchema(object):
 
     def cc(self, att_name: str) -> str:
         """
-        Return a CamelCasedName version of attribute.case.names.
+        Return a CamelCasedName version of attribute.case.names (also splitting hyphenated
+        names such as "s-shape" so the generated method names stay valid C++ identifiers).
         """
-        return "".join([n[0].upper() + n[1:] for n in att_name.split(".")])
+        return "".join([n[0].upper() + n[1:] for n in re.split(r"[.-]", att_name)])
 
     def get_att_desc(self, att_name: str) -> str:
         """
