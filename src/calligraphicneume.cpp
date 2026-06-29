@@ -69,6 +69,9 @@ constexpr double EPISEMA_NIB = 0.55; // episemata are drawn with a finer nib tha
 // The scribe's episema is not a ruled bar: drawn freehand it bows into a shallow concave-up dish, a
 // low middle with the ends flicking up. Sized as a fraction of the accent's half-length.
 constexpr double EPISEMA_BOW = 0.30;
+// Chained accents (several stacked on one nc - a clivis foot's horizontal stroke crossed by an
+// upright) are drawn nearly straight, so the stepped shape reads as ruled strokes meeting squarely.
+constexpr double EPISEMA_BOW_CHAIN = 0.07;
 
 // How many levels a stroke reaches, from @rellen: a normal stroke spans one level, a long one (l) two
 // (a leap), a short one (s) half (a small step).
@@ -852,67 +855,103 @@ void CalligraphicNeume::BuildEpisemata(
         PointF summitTan = arched ? segDir(s.pts[apexIdx - 1], s.pts[apexIdx + 1]) : PointF{ 0.0, 0.0 };
         if (summitTan.x == 0.0 && summitTan.y == 0.0) summitTan = { 1.0, 0.0 };
 
+        // Episemata chain. Usually an nc carries one accent, placed independently against the stroke
+        // it marks. When several are stacked on the same nc they are CHAINED into one stepped gesture:
+        // the first reaches out from the marked point toward the open side, and each one after it
+        // stands vertically and CROSSES the far end of the accent before it. So a clivis's foot - a
+        // horizontal episema with an upright crossing its outer end - reads as a single hand-drawn
+        // shape rather than a heap of marks piled on the same point.
+        bool linked = false;
+        PointF linkEnd; // the far end of the previous accent in the chain (pen space, pre-slant)
         for (const EpisemaInfo &e : nc.episemata) {
-            const bool above = (e.place == EVENTREL_above || e.place == EVENTREL_above_left
-                || e.place == EVENTREL_above_right);
-            // Anchor an "above" accent on an arched stroke's summit (flat on top); otherwise on the
-            // end / joint as before. @form="h" (forced along-stroke) keeps its explicit orientation.
-            const bool onSummit = arched && above && (e.form != episemaVis_FORM_h);
-            const PointF anchor = onSummit ? s.pts[apexIdx] : end;
-            const PointF ori = (e.form == episemaVis_FORM_h) ? along : (onSummit ? summitTan : tangent);
-            const double HL = (e.form == episemaVis_FORM_h) ? 7.0 : 6.0;
-            const double GAP = 4.0, NUDGE = 7.0;
-            // The vertical clearance of the accent from the marked point. On a summit the air gap is
-            // measured from the inked edge, not the centreline: the ribbon stands half a nib-width
-            // proud of its spine at the peak, so add that half-width (from the broad-nib law at the
-            // summit's horizontal tangent) to keep the same clean gap the end placement has.
-            double clear = GAP;
-            if (onSummit) {
-                const PointF nib = { std::cos(NIB_ANGLE), std::sin(NIB_ANGLE) };
-                const double sinA = std::fabs(ori.x * nib.y - ori.y * nib.x); // |T x n̂|
-                clear = GAP + (NIB_MIN + (NIB_W - NIB_MIN) * sinA) / 2.0;
+            // The accent's orientation, half-length, and the two centreline ends a -> b.
+            PointF ori;
+            double HL;
+            PointF a, b;
+            if (!linked) {
+                // First (or only) accent: placed against the marked stroke per @form / @place.
+                const bool above = (e.place == EVENTREL_above || e.place == EVENTREL_above_left
+                    || e.place == EVENTREL_above_right);
+                // Anchor an "above" accent on an arched stroke's summit (flat on top); otherwise on the
+                // end / joint as before. @form="h" (forced along-stroke) keeps its explicit orientation.
+                const bool onSummit = arched && above && (e.form != episemaVis_FORM_h);
+                const PointF anchor = onSummit ? s.pts[apexIdx] : end;
+                ori = (e.form == episemaVis_FORM_h) ? along : (onSummit ? summitTan : tangent);
+                HL = (e.form == episemaVis_FORM_h) ? 7.0 : 6.0;
+                const double GAP = 4.0, NUDGE = 7.0;
+                // The vertical clearance of the accent from the marked point. On a summit the air gap is
+                // measured from the inked edge, not the centreline: the ribbon stands half a nib-width
+                // proud of its spine at the peak, so add that half-width (from the broad-nib law at the
+                // summit's horizontal tangent) to keep the same clean gap the end placement has.
+                double clear = GAP;
+                if (onSummit) {
+                    const PointF nib = { std::cos(NIB_ANGLE), std::sin(NIB_ANGLE) };
+                    const double sinA = std::fabs(ori.x * nib.y - ori.y * nib.x); // |T x n̂|
+                    clear = GAP + (NIB_MIN + (NIB_W - NIB_MIN) * sinA) / 2.0;
+                }
+                // Centre the accent on the marked point, then set it clear of the ink in the accent's
+                // own frame so the point always stays at its midpoint instead of sliding to a corner:
+                // @place's vertical part (above / below) lifts it perpendicular to its length, its
+                // horizontal part (left / right) shifts it along its length to one side. @up is the
+                // accent normal oriented upward (pen -y); @axis runs along the accent toward +x so
+                // left / right read as expected.
+                PointF up = { -ori.y, ori.x };
+                if (up.y > 0.0) up = { -up.x, -up.y };
+                const PointF axis = (ori.x < 0.0) ? PointF{ -ori.x, -ori.y } : ori;
+                double lift = 0.0, shift = 0.0;
+                switch (e.place) {
+                    case EVENTREL_above:
+                    case EVENTREL_above_left:
+                    case EVENTREL_above_right: lift = clear; break;
+                    case EVENTREL_below:
+                    case EVENTREL_below_left:
+                    case EVENTREL_below_right: lift = -clear; break;
+                    default: break;
+                }
+                switch (e.place) {
+                    case EVENTREL_above_left:
+                    case EVENTREL_below_left: shift = -NUDGE; break;
+                    case EVENTREL_above_right:
+                    case EVENTREL_below_right: shift = NUDGE; break;
+                    case EVENTREL_left: shift = -GAP; break;
+                    case EVENTREL_right: shift = GAP; break;
+                    default: break;
+                }
+                // A lone accent stays centred on the marked point. When this nc carries a chain, the
+                // first accent instead slides one half-length along its axis toward the open side (+x,
+                // away from the neume body), so one end sits on the marked point and the bar reaches
+                // out into clear space - giving the upright that follows a far end to cross that is
+                // clear of the stroke.
+                const double away = (nc.episemata.size() > 1) ? HL : 0.0;
+                const double cx = anchor.x + up.x * lift + axis.x * (shift + away);
+                const double cy = anchor.y + up.y * lift + axis.y * (shift + away);
+                a = { cx - ori.x * HL, cy - ori.y * HL };
+                b = { cx + ori.x * HL, cy + ori.y * HL };
             }
-            // Centre the accent on the marked point, then set it clear of the ink in the accent's own
-            // frame so the point always stays at its midpoint instead of sliding to a corner: @place's
-            // vertical part (above / below) lifts it perpendicular to its length, its horizontal part
-            // (left / right) shifts it along its length to one side. @up is the accent normal oriented
-            // upward (pen -y); @axis runs along the accent toward +x so left / right read as expected.
-            PointF up = { -ori.y, ori.x };
-            if (up.y > 0.0) up = { -up.x, -up.y };
-            const PointF axis = (ori.x < 0.0) ? PointF{ -ori.x, -ori.y } : ori;
-            double lift = 0.0, shift = 0.0;
-            switch (e.place) {
-                case EVENTREL_above:
-                case EVENTREL_above_left:
-                case EVENTREL_above_right: lift = clear; break;
-                case EVENTREL_below:
-                case EVENTREL_below_left:
-                case EVENTREL_below_right: lift = -clear; break;
-                default: break;
+            else {
+                // A chained accent stands vertically (pen -y) and CROSSES the far end of the accent
+                // before it: the junction sits one third up from the upright's foot, so it reaches well
+                // above the previous bar with a short tail below - the stroke that crosses the outer end
+                // of a clivis foot's horizontal episema. Its length matches a vertical accent's (2 * HL).
+                ori = { 0.0, -1.0 };
+                HL = 6.0;
+                const double L = 2.0 * HL;
+                a = { linkEnd.x - ori.x * (L / 3.0), linkEnd.y - ori.y * (L / 3.0) };             // lower (tail)
+                b = { linkEnd.x + ori.x * (2.0 * L / 3.0), linkEnd.y + ori.y * (2.0 * L / 3.0) }; // upper
             }
-            switch (e.place) {
-                case EVENTREL_above_left:
-                case EVENTREL_below_left: shift = -NUDGE; break;
-                case EVENTREL_above_right:
-                case EVENTREL_below_right: shift = NUDGE; break;
-                case EVENTREL_left: shift = -GAP; break;
-                case EVENTREL_right: shift = GAP; break;
-                default: break;
-            }
-            const double cx = anchor.x + up.x * lift + axis.x * shift;
-            const double cy = anchor.y + up.y * lift + axis.y * shift;
             // Sweep the broad nib along the accent's centreline at full, untapered width: a short
             // stroke in the same hand as the neume, set just clear of the ink. The centreline is not
             // a ruled bar but a shallow concave-up dish - the broad nib drawn freehand sags in the
             // middle and flicks up at the ends - so the accent reads as a hand-drawn stroke, not a
             // straight line.
-            const PointF a = { cx - ori.x * HL, cy - ori.y * HL };
-            const PointF b = { cx + ori.x * HL, cy + ori.y * HL };
             // Perpendicular to the accent's length, oriented visually downward (pen +y), so the bow
             // dips the middle below the chord while the ends ride up - a concave-up valley.
             PointF perp = { -ori.y, ori.x };
             if (perp.y < 0.0) perp = { -perp.x, -perp.y };
-            const double bow = HL * EPISEMA_BOW; // depth of the dish at mid-length
+            // A lone accent keeps the freehand dish; chained accents are drawn nearly straight, so the
+            // stepped clivis foot reads as ruled strokes meeting at a right angle rather than two
+            // scoops. Their depth at mid-length is a fraction of the half-length.
+            const double bow = HL * (nc.episemata.size() > 1 ? EPISEMA_BOW_CHAIN : EPISEMA_BOW);
             constexpr int kSamples = 10;
             std::vector<PointF> centre;
             centre.reserve(kSamples + 1);
@@ -926,6 +965,11 @@ void CalligraphicNeume::BuildEpisemata(
             // which also carries its anchor across to meet the leaned stroke end it marks.
             if (!slant.IsNone()) SlantApply(centre, slant);
             geo.ncs[s.ncIndex].episemata.push_back(NibRibbon(centre, EPISEMA_NIB, false, false));
+            // The next link crosses this accent's far end: the endpoint reaching farthest into open
+            // space - the rightmost (+x), or for an upright accent (equal x) its top. Recorded
+            // pre-slant so the shear that follows leaves the chain joined.
+            linkEnd = (std::fabs(a.x - b.x) > 1e-6) ? (a.x > b.x ? a : b) : (a.y < b.y ? a : b);
+            linked = true;
         }
     }
 }
