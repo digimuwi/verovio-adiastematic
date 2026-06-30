@@ -1220,12 +1220,21 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(const std::vector<NcIn
 
         if (i == 0 || brk) {
             // A fresh pen gesture. The first component sits at the origin; a detached one (@con="g") is
-            // placed by stepping from the previous component's anchor along the melodic contour (@intm).
+            // placed by stepping from the previous component's anchor along the melodic contour (@intm) or
+            // in an explicit @place direction. The bivirga exception below is centred like the first.
+            const PointF stepDir = chordDirOf(i);
+            // The direction the pen jumps to set this detached component down: an explicit @place wins,
+            // otherwise the @intm melodic contour supplies the default (u->ne, d->se, s->e). @place lets a
+            // gap step where @intm cannot name it - straight above (n) or below (s) - or makes the implicit
+            // @intm placement explicit.
+            const bool hasPlace = (nc.place != COMPASSDIRECTION_NONE);
+            const int gapTilt = hasPlace ? nc.place : IntmGapTilt(nc.intm);
             // A repeated same-pitch stroke parallel to its predecessor (a bivirga) is the exception: it
             // slides tight sideways and is centred like the first component, so the pair's feet share one
-            // horizontal line and their tips another, instead of stacking up a diagonal.
-            const PointF stepDir = chordDirOf(i);
-            const bool levelRepeat = brk && (nc.intm == 's' || nc.intm == 0) && prevExitDir.Dot(stepDir) > PARALLEL_COS;
+            // horizontal line and their tips another, instead of stacking up a diagonal. An explicit
+            // @place opts out - it is honoured as a literal gap step, not second-guessed into a slide.
+            const bool levelRepeat
+                = brk && !hasPlace && (nc.intm == 's' || nc.intm == 0) && prevExitDir.Dot(stepDir) > PARALLEL_COS;
             // Centred on the anchor for the first component and a level repeat; a stepped detached
             // component is foot-anchored at the gap point so it continues up/down the contour.
             const bool centred = !brk || levelRepeat;
@@ -1237,7 +1246,7 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(const std::vector<NcIn
                 // Step along the contour, clearing the previous stroke's forward reach (how far its ink
                 // extends along the gap direction) so an ascending salicus / descending climacus stacks
                 // without colliding. A punctum has no reach, so plain subpuncta step by BREAK_GAP alone.
-                PointF gapDir = TiltVec(IntmGapTilt(nc.intm));
+                PointF gapDir = TiltVec(gapTilt);
                 if (gapDir.x == 0.0 && gapDir.y == 0.0) gapDir = TiltVec(COMPASSDIRECTION_e);
                 const double reach
                     = std::max(0.0, (pen.x - lastAnchor.x) * gapDir.x + (pen.y - lastAnchor.y) * gapDir.y);

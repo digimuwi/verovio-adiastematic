@@ -315,6 +315,29 @@ void View::DrawStrophicus(DeviceContext *dc, LayerElement *element, Layer *layer
     dc->EndGraphic(element, this);
 }
 
+namespace {
+
+    // Map the non-standard @place on an <nc> to the compass direction the pen jumps to set a detached /
+    // gapped component down (consumed by CalligraphicNeume as NcInfo::place). It accepts the eight compass
+    // tokens (n, ne, e, se, s, sw, w, nw) - the same vocabulary as @tilt on the very same element - and the
+    // natural placement words (above, below, left, right and their diagonal compounds), so a scribe may
+    // write @place="above" as readily as @place="n". An empty or unrecognised value yields
+    // COMPASSDIRECTION_NONE, leaving the @intm contour to place the component as before.
+    data_COMPASSDIRECTION NcPlaceDirection(const std::string &place)
+    {
+        if (place == "n" || place == "above" || place == "up") return COMPASSDIRECTION_n;
+        if (place == "s" || place == "below" || place == "down") return COMPASSDIRECTION_s;
+        if (place == "e" || place == "right") return COMPASSDIRECTION_e;
+        if (place == "w" || place == "left") return COMPASSDIRECTION_w;
+        if (place == "ne" || place == "above-right") return COMPASSDIRECTION_ne;
+        if (place == "nw" || place == "above-left") return COMPASSDIRECTION_nw;
+        if (place == "se" || place == "below-right") return COMPASSDIRECTION_se;
+        if (place == "sw" || place == "below-left") return COMPASSDIRECTION_sw;
+        return COMPASSDIRECTION_NONE;
+    }
+
+} // namespace
+
 void View::DrawNeumeAdiastematic(DeviceContext *dc, Neume *neume, Staff *staff)
 {
     assert(dc);
@@ -342,6 +365,17 @@ void View::DrawNeumeAdiastematic(DeviceContext *dc, Neume *neume, Staff *staff)
         info.gapped = (nc->GetCon() == ncForm_CON_g);
         const std::string intm = nc->GetIntm();
         info.intm = intm.empty() ? 0 : intm.front();
+        // @place is a non-standard placement override for a detached / gapped component, so it is not in
+        // verovio's Nc model and arrives as an unsupported attribute - read it straight off the element,
+        // like the <liquescent> attributes below. NcPlaceDirection maps it to the gap-step direction.
+        ArrayOfStrAttr ncAttributes;
+        nc->GetAttributes(&ncAttributes);
+        for (const auto &attr : ncAttributes) {
+            if (attr.first == "place") {
+                info.place = NcPlaceDirection(attr.second);
+                break;
+            }
+        }
 
         for (Object *grandChild : nc->GetChildren()) {
             if (grandChild->Is(EPISEMA)) {

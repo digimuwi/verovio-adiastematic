@@ -75,6 +75,11 @@ public:
         bool shortStroke = false; ///< @rellen == s
         char intm = 0; ///< first char of @intm (u / d / s), 0 if absent
         bool gapped = false; ///< @con == g: detached from the previous component (a fresh gesture)
+        int place = 0; ///< @place (data_COMPASSDIRECTION): the explicit direction the pen jumps to set a
+                       ///< detached / gapped component down, overriding the @intm contour default. 0
+                       ///< (NONE) = follow @intm. Lets a gap step where @intm cannot name it (straight
+                       ///< above / below) or makes the implicit @intm placement explicit. No effect on a
+                       ///< connected component (which simply flows on from the previous one).
         bool strophicus = false; ///< has a <strophicus> child
         bool quilisma = false; ///< has a <quilisma> child: drawn as a wavy ascending stroke
         int waves = 0; ///< @waves: number of crests of the quilisma's wavy line (0 = use default)
