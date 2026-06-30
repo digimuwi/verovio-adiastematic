@@ -101,6 +101,28 @@ int IntmGapTilt(char intm)
     return COMPASSDIRECTION_NONE;
 }
 
+// The initial swing of an @s-shape: the compass direction the pen first moves as it starts the S.
+// Per the MEI definition this orients the letterform and its reflections - "w" the standard letter S
+// (initial swing west), "e" its left-right mirror (east), "s" the S turned 90° anti-clockwise
+// (south), "n" that mirror (north). The wave's wiggle is opened toward this direction, so the SIGN of
+// the swing is what tells a letterform from its mirror (w vs e, s vs n) and its axis tells an upright
+// S from one turned on its side. Pen space has +y down. Empty / unknown defaults to the standard S.
+CalligraphicNeume::PointF SShapeSwing(const std::string &orient)
+{
+    if (orient == "e") return { 1.0, 0.0 };
+    if (orient == "s") return { 0.0, 1.0 };
+    if (orient == "n") return { 0.0, -1.0 };
+    return { -1.0, 0.0 }; // "w" and default
+}
+
+// A rotated S ("s" / "n") lies on its side: its spine runs level rather than upright, and it reads a
+// touch longer and shallower than the upright S ("w" / "e"). Used to pick the default travel axis (when
+// no @tilt steers it) and the length / amplitude tuning.
+bool SShapeRotated(const std::string &orient)
+{
+    return orient == "s" || orient == "n";
+}
+
 //----------------------------------------------------------------------------
 // Scribal ductus: attack & release weighting, and the forward (italic) slant
 //----------------------------------------------------------------------------
@@ -481,14 +503,16 @@ CalligraphicNeume::Stroke CalligraphicNeume::ObliqueShape(double x, double y, Po
 }
 
 // S-shaped oriscus / quassus stroke. It travels along @tilt (so tilt="se" makes the wave descend,
-// exiting low so a following ascent can spring from it); the @s-shape value sets the wiggle (flat
-// for "n"). Without @tilt it defaults to a vertical S ("n" -> horizontal).
+// exiting low so a following ascent can spring from it); the @s-shape value sets the initial swing -
+// the direction the pen first moves - which orients the S and its mirror / rotated forms: "w" the
+// standard letter S, "e" its mirror, "s" the S turned 90° anti-clockwise, "n" that mirror (see
+// SShapeSwing). Without @tilt the spine runs perpendicular to that swing: upright for w/e, level for s/n.
 CalligraphicNeume::Stroke CalligraphicNeume::Wave(double x, double y, const std::string &orient, int tilt)
 {
-    const std::string o = orient.empty() ? "w" : orient;
+    const bool rotated = SShapeRotated(orient);
     PointF dir = TiltVec(tilt);
-    if (dir.x == 0.0 && dir.y == 0.0) dir = (o == "n") ? TiltVec(COMPASSDIRECTION_e) : TiltVec(COMPASSDIRECTION_n);
-    const double len = (o == "n") ? 24.0 : 22.0;
+    if (dir.x == 0.0 && dir.y == 0.0) dir = rotated ? TiltVec(COMPASSDIRECTION_e) : TiltVec(COMPASSDIRECTION_n);
+    const double len = rotated ? 24.0 : 22.0;
     // centre the wave on (x, y) by backing the start off by half its travel
     return WaveFrom({ x - dir.x * len / 2, y - dir.y * len / 2 }, orient, tilt);
 }
@@ -498,17 +522,25 @@ CalligraphicNeume::Stroke CalligraphicNeume::Wave(double x, double y, const std:
 // the previous stroke's tip rather than be centred on a cell.
 CalligraphicNeume::Stroke CalligraphicNeume::WaveFrom(PointF s, const std::string &orient, int tilt)
 {
-    const std::string o = orient.empty() ? "w" : orient;
+    const bool rotated = SShapeRotated(orient);
     PointF dir = TiltVec(tilt);
-    if (dir.x == 0.0 && dir.y == 0.0) dir = (o == "n") ? TiltVec(COMPASSDIRECTION_e) : TiltVec(COMPASSDIRECTION_n);
-    const double len = (o == "n") ? 26.0 : 24.0;
+    // No @tilt: the spine runs perpendicular to the initial swing - upright for an upright S, level
+    // for one turned on its side.
+    if (dir.x == 0.0 && dir.y == 0.0) dir = rotated ? TiltVec(COMPASSDIRECTION_e) : TiltVec(COMPASSDIRECTION_n);
+    const double len = rotated ? 26.0 : 24.0;
     // The amplitude must clear the broad nib (NIB_W = 6 px) comfortably, otherwise the sweep absorbs
     // the wiggle into the ribbon width and the S stops reading as an S.
-    const double amp = (o == "n") ? 9.0 : 12.0;
+    const double amp = rotated ? 9.0 : 12.0;
     const PointF e = { s.x + dir.x * len, s.y + dir.y * len };
-    const double px = -dir.y, py = dir.x; // perpendicular: the wiggle axis
-    const PointF c1 = { s.x + dir.x * len * 0.3 + px * amp, s.y + dir.y * len * 0.3 + py * amp };
-    const PointF c2 = { e.x - dir.x * len * 0.3 - px * amp, e.y - dir.y * len * 0.3 - py * amp };
+    // The wiggle axis is the @s-shape's initial swing, projected perpendicular to the travel so the S
+    // still runs along @tilt but opens toward @s-shape. The sign carried by that swing is what
+    // distinguishes a letterform from its mirror (w vs e, s vs n); a fixed quarter-turn of the travel
+    // is the fallback when the swing is parallel to it (a degenerate projection).
+    const PointF t = dir.Unit(TiltVec(COMPASSDIRECTION_n));
+    const PointF swing = SShapeSwing(orient);
+    PointF wig = (swing - t * swing.Dot(t)).Unit(PointF{ -t.y, t.x });
+    const PointF c1 = { s.x + dir.x * len * 0.3 + wig.x * amp, s.y + dir.y * len * 0.3 + wig.y * amp };
+    const PointF c2 = { e.x - dir.x * len * 0.3 - wig.x * amp, e.y - dir.y * len * 0.3 - wig.y * amp };
     return { Cubic(s, c1, c2, e), e };
 }
 
@@ -1079,8 +1111,8 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(const std::vector<NcIn
         const NcInfo &n = ncs[k];
         if (n.episemata.empty()) return false;
         // Only shapes the pen can flow cleanly on from at a free end - a plain note or a strophicus hook -
-        // not the wavy quilisma, the looping liquescent or an oriscus wave.
-        if (n.quilisma || n.liquescent || n.oriscus || !n.sShape.empty()) return false;
+        // not the wavy quilisma, the looping liquescent or an s-shaped oriscus wave (@s-shape).
+        if (n.quilisma || n.liquescent || !n.sShape.empty()) return false;
         // The first episema must reach OUT from the note: an explicit left / right @place, an explicit
         // horizontal @form, or the default bar of a CHAIN, which reaches out to clear space for the upright
         // that crosses it. A lone default episema stays a centred tenuto, not a one-sided foot.
@@ -1215,7 +1247,7 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(const std::vector<NcIn
                     pen = sh.exit;
                 }
             }
-            else if (hasSShape || nc.oriscus) {
+            else if (hasSShape) {
                 // Centred on the anchor when first or a level repeat; a stepped detached wave springs
                 // forward from the gap anchor so it stacks up the contour (the oriscus of a salicus).
                 Stroke sh = centred ? Wave(anchor.x, anchor.y, nc.sShape, tilt) : WaveFrom(anchor, nc.sShape, tilt);
@@ -1307,7 +1339,7 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(const std::vector<NcIn
                     }
                 }
             }
-            else if (hasSShape || nc.oriscus) {
+            else if (hasSShape) {
                 Stroke sh = WaveFrom(pen, nc.sShape, tilt); // connected oriscus / quassus (virga strata)
                 pts = sh.pts;
                 pen = sh.exit;

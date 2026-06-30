@@ -31,7 +31,7 @@
               <syllable>
                 <syl>Oriscus curved</syl>
                 <neume>
-                  <nc>
+                  <nc s-shape="e">
                     <oriscus />
                   </nc>
                 </neume>
@@ -47,7 +47,8 @@
               <syllable>
                 <syl>Oriscus wave</syl>
                 <neume>
-                  <nc tilt="e" curve="c"/>
+                  <nc tilt="e" curve="c">
+                  </nc>
                 </neume>
               </syllable>
               <syllable>
@@ -109,7 +110,7 @@
               <syllable>
                 <syl>Pes quassus [oriscus?]</syl>
                 <neume>
-                  <nc tilt="se" intm="n">
+                  <nc tilt="s" intm="n" s-shape="w">
                     <oriscus />
                   </nc>
                   <nc tilt="ne" rellen="l" intm="u" />
@@ -383,7 +384,7 @@
                 <syl>Salicus</syl>
                 <neume>
                   <nc />
-                  <nc s-shape="n" con="g" intm="u">
+                  <nc s-shape="n" con="g" intm="u" tilt="e">
                     <oriscus />
                   </nc>
                   <nc con="g" intm="u" tilt="ne" />
@@ -393,7 +394,7 @@
                 <syl>Salicus episema</syl>
                 <neume>
                   <nc />
-                  <nc con="g" curve="c" tilt="ne" intm="u">
+                  <nc con="g" curve="c" tilt="e" intm="u">
                     <oriscus />
                   </nc>
                   <nc con="g" tilt="ne" intm="u">
@@ -405,7 +406,7 @@
                 <syl>Salicus episema</syl>
                 <neume>
                   <nc />
-                  <nc con="g" intm="u" s-shape="n">
+                  <nc con="g" intm="u" tilt="e" s-shape="n">
                     <oriscus />
                   </nc>
                   <nc con="g" intm="u" tilt="ne">
@@ -417,7 +418,7 @@
                 <syl>Salicus flexus</syl>
                 <neume>
                   <nc />
-                  <nc con="g" intm="u">
+                  <nc con="g" intm="u" tilt="e" curve="c">
                     <oriscus />
                   </nc>
                   <nc con="g" tilt="ne" curve="c" intm="u" />
@@ -428,7 +429,7 @@
                 <syl>Salicus flexus episema</syl>
                 <neume>
                   <nc />
-                  <nc con="g" intm="u">
+                  <nc con="g" intm="u" tilt="e" curve="c">
                     <oriscus />
                   </nc>
                   <nc con="g" curve="c" tilt="ne" intm="u">
@@ -763,7 +764,7 @@
                 <neume>
                   <nc tilt="se" />
                   <nc tilt="ne" rellen="l" intm="u">
-                    <episema place="below-left" />
+                    <episema place="left" />
                   </nc>
                   <nc con="g" tilt="e" intm="d" />
                   <nc con="g" tilt="e" intm="d" />
@@ -1354,7 +1355,7 @@
                 <syl>Salicus liquescent</syl>
                 <neume>
                   <nc />
-                  <nc con="g" intm="u">
+                  <nc con="g" intm="u" curve="c" tilt="e">
                     <oriscus />
                   </nc>
                   <nc con="g" tilt="ne" intm="u">

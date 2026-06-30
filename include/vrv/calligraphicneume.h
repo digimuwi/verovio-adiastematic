@@ -74,7 +74,6 @@ public:
         bool shortStroke = false; ///< @rellen == s
         char intm = 0; ///< first char of @intm (u / d / s), 0 if absent
         bool gapped = false; ///< @con == g: detached from the previous component (a fresh gesture)
-        bool oriscus = false; ///< has an <oriscus> child
         bool strophicus = false; ///< has a <strophicus> child
         bool quilisma = false; ///< has a <quilisma> child: drawn as a wavy ascending stroke
         int waves = 0; ///< @waves: number of crests of the quilisma's wavy line (0 = use default)

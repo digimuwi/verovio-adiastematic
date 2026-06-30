@@ -347,10 +347,14 @@ void View::DrawNeumeAdiastematic(DeviceContext *dc, Neume *neume, Staff *staff)
                 const int form = episema->HasForm() ? episema->GetForm() : episemaVis_FORM_v;
                 info.episemata.push_back({ form, episema->GetPlace() });
             }
+            else if (grandChild->Is(ORISCUS)) {
+                // <oriscus> is a purely semantic ("inhaltliche") marking: the oriscus's visual pen form
+                // is carried by @s-shape, so the element itself has no effect on the rendered gesture -
+                // it leaves the nc shaped by its attributes alone (a bare oriscus stays a punctum).
+            }
             else {
                 info.hasNonEpisemaChild = true;
-                if (grandChild->Is(ORISCUS)) info.oriscus = true;
-                else if (grandChild->Is(STROPHICUS)) info.strophicus = true;
+                if (grandChild->Is(STROPHICUS)) info.strophicus = true;
                 else if (grandChild->Is(QUILISMA)) {
                     info.quilisma = true;
                     Quilisma *quilisma = vrv_cast<Quilisma *>(grandChild);
