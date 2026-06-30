@@ -333,6 +333,9 @@ void View::DrawNeumeAdiastematic(DeviceContext *dc, Neume *neume, Staff *staff)
         CalligraphicNeume::NcInfo info;
         info.tilt = nc->GetTilt();
         info.curve = nc->GetCurve();
+        // @angled is not in verovio's <nc> model, so it arrives as an unsupported attribute (captured by
+        // ReadNc); read it straight off the element. It draws @curve's deviation as a sharp right angle.
+        info.angled = nc->HasAttribute("angled", "true");
         info.sShape = nc->GetSShape();
         info.longStroke = (nc->GetRellen() == ncForm_RELLEN_l);
         info.shortStroke = (nc->GetRellen() == ncForm_RELLEN_s);

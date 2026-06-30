@@ -7407,6 +7407,9 @@ bool MEIInput::ReadNc(Object *parent, pugi::xml_node nc)
     vrvNc->ReadNcForm(nc);
 
     parent->AddChild(vrvNc);
+    // Capture any remaining attributes (e.g. @angled, not in verovio's <nc> model) as unsupported so
+    // they are preserved on output and readable in the adiastematic renderer, as <liquescent> does.
+    this->ReadUnsupportedAttr(nc, vrvNc);
     return this->ReadLayerChildren(vrvNc, nc, vrvNc);
 }
 

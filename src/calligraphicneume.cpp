@@ -678,10 +678,40 @@ std::vector<CalligraphicNeume::PointF> CalligraphicNeume::Curl(PointF tip, Point
 // outgoing (@p tOut) travel directions so the stroke flows smoothly out of the previous component
 // and into the next instead of scooping independently (the cause of the old over-curved look).
 CalligraphicNeume::Stroke CalligraphicNeume::CurvedStroke(
-    PointF s, int tilt, int hand, double len, PointF tIn, PointF tOut)
+    PointF s, int tilt, int hand, double len, PointF tIn, PointF tOut, bool angled)
 {
     PointF d = TiltVec(tilt);
     if (d.x == 0.0 && d.y == 0.0) d = TiltVec(COMPASSDIRECTION_e);
+    const PointF e = { s.x + d.x * len, s.y + d.y * len };
+    const double px = -d.y, py = d.x; // chord perpendicular = bow axis
+    const double sigma = (hand == curvatureDirection_CURVE_a) ? 1.0 : -1.0; // a anticlockwise, c clockwise
+
+    if (angled) {
+        // The angled counterpart of the bow (@angled): the centreline does not curve, it BREAKS at a
+        // single apex to the @curve side, so the same one-sided deviation reads as a sharp corner (an
+        // angular porrectus / torculus) instead of a rounded scoop. The corner is a true RIGHT ANGLE:
+        // its two legs meet at 90°. By Thales' theorem a point that sees the chord at a right angle
+        // lies on the circle with the chord as diameter; the symmetric such point sits half the chord
+        // length out from the midpoint, so each leg makes 45° with the chord and the legs are
+        // perpendicular to each other. The legs are sampled densely so the nib taper stays smooth, and
+        // they meet at a duplicated apex knot: the centripetal resampling in InkRun passes a knot
+        // through twice as a corner, so the angle survives instead of being rounded away with the spine.
+        const double depth = len / 2.0; // half the chord -> a 90° apex
+        constexpr int kLeg = 9; // samples per straight leg
+        const PointF apex = { (s.x + e.x) / 2 + px * sigma * depth, (s.y + e.y) / 2 + py * sigma * depth };
+        std::vector<PointF> pts;
+        pts.reserve(2 * (kLeg + 1));
+        for (int i = 0; i <= kLeg; ++i) {
+            const double t = (double)i / kLeg;
+            pts.push_back({ s.x + (apex.x - s.x) * t, s.y + (apex.y - s.y) * t });
+        }
+        for (int i = 0; i <= kLeg; ++i) {
+            const double t = (double)i / kLeg;
+            pts.push_back({ apex.x + (e.x - apex.x) * t, apex.y + (e.y - apex.y) * t });
+        }
+        return { pts, e };
+    }
+
     tIn = tIn.Unit(d);
     tOut = tOut.Unit(d);
     // Lean the end tangents partway back toward this stroke's own travel (@tilt). With pure
@@ -694,9 +724,6 @@ CalligraphicNeume::Stroke CalligraphicNeume::CurvedStroke(
     constexpr double kOwnLean = 0.35; // fraction of the chord direction mixed into each end tangent
     tIn = (tIn + (d - tIn) * kOwnLean).Unit(d);
     tOut = (tOut + (d - tOut) * kOwnLean).Unit(d);
-    const PointF e = { s.x + d.x * len, s.y + d.y * len };
-    const double px = -d.y, py = d.x; // chord perpendicular = bow axis
-    const double sigma = (hand == curvatureDirection_CURVE_a) ? 1.0 : -1.0; // a anticlockwise, c clockwise
 
     // A gentle symmetric bow whose end tangents lean toward the neighbouring strokes.
     constexpr double kBowDepth = 9.0; // bow depth in pen px (the old deep arc used 13)
@@ -725,10 +752,10 @@ CalligraphicNeume::Stroke CalligraphicNeume::CurvedStroke(
 // by CurvedStroke, then the terminal curl springs off the bow's exit tangent so the curve flows into
 // the curl as one gesture. So an <nc> carrying both @curve and a <liquescent> child reads as a curved
 // stroke ending in the curl, instead of the @curve being dropped for a straight stem. See the header.
-CalligraphicNeume::Stroke CalligraphicNeume::CurvedLoop(
-    PointF s, int tilt, int curveHand, double len, PointF tIn, PointF tOut, int curlHand, bool looped, double r0)
+CalligraphicNeume::Stroke CalligraphicNeume::CurvedLoop(PointF s, int tilt, int curveHand, double len, PointF tIn,
+    PointF tOut, int curlHand, bool looped, double r0, bool angled)
 {
-    const Stroke lead = CurvedStroke(s, tilt, curveHand, len, tIn, tOut);
+    const Stroke lead = CurvedStroke(s, tilt, curveHand, len, tIn, tOut, angled);
     std::vector<PointF> pts = lead.pts;
     // The curl leaves the bow tangent to its exit direction (the last leg of the cubic), so curve and
     // curl join without a kink; fall back to the chord direction for a degenerate one-point lead-in.
@@ -1098,8 +1125,8 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(const std::vector<NcIn
     // neighbour lookahead both go through these, so the rule has a single definition.
     auto bareOf = [&](size_t k) -> bool {
         const NcInfo &n = ncs[k];
-        return (n.tilt == COMPASSDIRECTION_NONE) && (n.curve == curvatureDirection_CURVE_NONE) && n.sShape.empty()
-            && !n.hasNonEpisemaChild;
+        return (n.tilt == COMPASSDIRECTION_NONE) && (n.curve == curvatureDirection_CURVE_NONE) && !n.angled
+            && n.sShape.empty() && !n.hasNonEpisemaChild;
     };
     // Whether component k begins a fresh pen gesture (an explicit gap or a bare punctum).
     auto breaksBefore = [&](size_t k) -> bool { return k > 0 && (ncs[k].gapped || bareOf(k)); };
@@ -1165,7 +1192,11 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(const std::vector<NcIn
         const int tilt = EffectiveTilt(nc);
         const bool hasTilt = (tilt != COMPASSDIRECTION_NONE);
         const bool hasExplicitTilt = (nc.tilt != COMPASSDIRECTION_NONE); // @tilt, not an @intm default
-        const bool hasCurve = (nc.curve != curvatureDirection_CURVE_NONE);
+        // @angled draws a curved stroke as a sharp chevron instead of a bow, so it travels every path a
+        // @curve does. With no explicit @curve it defaults to the clockwise (c) hand, so a bare @angled
+        // reads as "@curve='c', but angled" - the curveHand used everywhere the bow's side is set.
+        const bool hasCurve = (nc.curve != curvatureDirection_CURVE_NONE) || nc.angled;
+        const int curveHand = (nc.curve != curvatureDirection_CURVE_NONE) ? nc.curve : curvatureDirection_CURVE_c;
         const bool hasSShape = !nc.sShape.empty();
         // A liquescent with no explicit @tilt has no melodic stroke of its own: the whole note is a
         // curl hooking off the previous nc. With @tilt it draws its own stroke and curls at the tip.
@@ -1234,13 +1265,13 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(const std::vector<NcIn
                 // The <nc>'s @curve bows that lead-in into a curved stroke flowing into the curl; the
                 // curl hand comes from the <liquescent>'s own @curve, falling back to the <nc>'s @curve.
                 const int curlHand
-                    = (nc.liquescentCurve != curvatureDirection_CURVE_NONE) ? nc.liquescentCurve : nc.curve;
+                    = (nc.liquescentCurve != curvatureDirection_CURVE_NONE) ? nc.liquescentCurve : curveHand;
                 if (hasCurve) {
                     PointF cd = TiltVec(tilt);
                     if (cd.x == 0.0 && cd.y == 0.0) cd = TiltVec(COMPASSDIRECTION_e);
                     const PointF tOut = (i + 1 < ncs.size() && !breaksBefore(i + 1)) ? chordDirOf(i + 1) : cd;
-                    Stroke sh
-                        = CurvedLoop(anchor, tilt, nc.curve, len, cd, tOut, curlHand, nc.liquescentLooped, LIQ_CURL_R);
+                    Stroke sh = CurvedLoop(
+                        anchor, tilt, curveHand, len, cd, tOut, curlHand, nc.liquescentLooped, LIQ_CURL_R, nc.angled);
                     pts = sh.pts;
                     pen = sh.exit;
                 }
@@ -1273,7 +1304,7 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(const std::vector<NcIn
                 // the gap anchor and travels forward.
                 const PointF cs = centred ? PointF{ anchor.x - cd.x * clen / 2, anchor.y - cd.y * clen / 2 } : anchor;
                 PointF tOut = (i + 1 < ncs.size() && !breaksBefore(i + 1)) ? chordDirOf(i + 1) : cd;
-                Stroke sh = CurvedStroke(cs, tilt, nc.curve, clen, cd, tOut);
+                Stroke sh = CurvedStroke(cs, tilt, curveHand, clen, cd, tOut, nc.angled);
                 pts = sh.pts;
                 pen = sh.exit;
             }
@@ -1323,15 +1354,15 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(const std::vector<NcIn
                     // springs off the bow's tip. The curl hand comes from the <liquescent>'s own @curve,
                     // falling back to the <nc>'s @curve.
                     const int curlHand
-                        = (nc.liquescentCurve != curvatureDirection_CURVE_NONE) ? nc.liquescentCurve : nc.curve;
+                        = (nc.liquescentCurve != curvatureDirection_CURVE_NONE) ? nc.liquescentCurve : curveHand;
                     if (hasCurve) {
                         const PointF off = aboutFaceShift(dir);
                         const PointF start = { pen.x + off.x, pen.y + off.y };
                         const PointF tIn = (prevExitDir.x != 0.0 || prevExitDir.y != 0.0) ? prevExitDir : chordDirOf(i);
                         const PointF tOut
                             = (i + 1 < ncs.size() && !breaksBefore(i + 1)) ? chordDirOf(i + 1) : chordDirOf(i);
-                        Stroke sh = CurvedLoop(
-                            start, tilt, nc.curve, len, tIn, tOut, curlHand, nc.liquescentLooped, LIQ_CURL_R);
+                        Stroke sh = CurvedLoop(start, tilt, curveHand, len, tIn, tOut, curlHand, nc.liquescentLooped,
+                            LIQ_CURL_R, nc.angled);
                         pts = sh.pts;
                         pen = sh.exit;
                     }
@@ -1361,7 +1392,7 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(const std::vector<NcIn
                 const PointF start = { pen.x + off.x, pen.y + off.y };
                 const PointF tIn = (prevExitDir.x != 0.0 || prevExitDir.y != 0.0) ? prevExitDir : chordDirOf(i);
                 const PointF tOut = (i + 1 < ncs.size() && !breaksBefore(i + 1)) ? chordDirOf(i + 1) : chordDirOf(i);
-                Stroke sh = CurvedStroke(start, tilt, nc.curve, len, tIn, tOut);
+                Stroke sh = CurvedStroke(start, tilt, curveHand, len, tIn, tOut, nc.angled);
                 pts = sh.pts;
                 pen = sh.exit;
             }

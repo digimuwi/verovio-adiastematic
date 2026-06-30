@@ -69,6 +69,7 @@ public:
     struct NcInfo {
         int tilt = 0; ///< data_COMPASSDIRECTION
         int curve = 0; ///< curvatureDirection_CURVE (a / c)
+        bool angled = false; ///< @angled: draw @curve's deviation as a sharp apex (a chevron), not a smooth bow
         std::string sShape; ///< @s-shape (w / n / s)
         bool longStroke = false; ///< @rellen == l
         bool shortStroke = false; ///< @rellen == s
@@ -222,8 +223,13 @@ private:
      * the join flows without a kink. When the following nc is also curved the two strokes share the
      * joint tangent, so their bows read as one continuous calligraphic curve rather than two
      * independent scoops. Falls back to the chord direction when a neighbour tangent is absent.
+     * When @p angled is set (the <nc>'s @angled), the smooth bow is replaced by a sharp RIGHT ANGLE:
+     * the centreline breaks at a single apex offset half the chord to the @p hand side, so the two
+     * straight legs each make 45° with the chord and meet at 90°. The same deviation then reads as a
+     * corner rather than a scoop, and the neighbour tangents @p tIn / @p tOut are unused.
      */
-    static Stroke CurvedStroke(PointF s, int tilt, int hand, double len, PointF tIn, PointF tOut);
+    static Stroke CurvedStroke(
+        PointF s, int tilt, int hand, double len, PointF tIn, PointF tOut, bool angled = false);
     /**
      * A liquescent whose melodic lead-in is itself a curved stroke: @p curveHand (the <nc>'s @curve)
      * bows the lead-in via CurvedStroke, then the terminal curl springs off its exit tangent via Curl.
@@ -232,8 +238,8 @@ private:
      * @p tIn / @p tOut are the CurvedStroke lead-in parameters; @p curlHand / @p looped / @p r0 shape
      * the curl (the <liquescent>'s own @curve / @looped, the hand falling back to the <nc>'s @curve).
      */
-    static Stroke CurvedLoop(
-        PointF s, int tilt, int curveHand, double len, PointF tIn, PointF tOut, int curlHand, bool looped, double r0);
+    static Stroke CurvedLoop(PointF s, int tilt, int curveHand, double len, PointF tIn, PointF tOut, int curlHand,
+        bool looped, double r0, bool angled = false);
     /**
      * The run a stroke flows on into when its <episema> is drawn as a continuation rather than a separate
      * accent: the foot / tail the pen lays without lifting as it leaves the note (a clivis descent flicking
