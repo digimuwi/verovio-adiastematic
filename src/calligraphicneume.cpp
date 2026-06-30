@@ -32,7 +32,7 @@ namespace {
 // Each melodic stroke spans exactly one level from foot to head at its own angle, so however vertical
 // and diagonal strokes are mixed, an up-stroke then a down-stroke always returns to the level it left:
 // the foot/head levels stay aligned across the neume. @rellen scales the reach (see RellenFactor): l
-// doubles it (a leap), s halves it (a small step). The horizontal advance follows from the stroke's
+// lengthens it and s shortens it by the same ratio. The horizontal advance follows from the stroke's
 // @tilt aspect, so a diagonal that reaches one level is correspondingly longer than a vertical one but
 // keeps its 45-degree pen angle (and so its broad-nib thickness).
 constexpr double LEVEL_STEP = 2.0 * CalligraphicNeume::s_unitPx; // one interline
@@ -73,11 +73,13 @@ constexpr double EPISEMA_BOW = 0.30;
 // upright) are drawn nearly straight, so the stepped shape reads as ruled strokes meeting squarely.
 constexpr double EPISEMA_BOW_CHAIN = 0.07;
 
-// How many levels a stroke reaches, from @rellen: a normal stroke spans one level, a long one (l) two
-// (a leap), a short one (s) half (a small step).
+// How many levels a stroke reaches, from @rellen. The reach scales symmetrically about a normal stroke
+// (1.0): a long one (l) and a short one (s) are reciprocals of one ratio (3:2), so the normal reach is
+// their exact geometric mean. 3/2 keeps a long stroke a clear step above normal without the dramatic
+// doubling a leap (2.0) would give.
 double RellenFactor(bool longStroke, bool shortStroke)
 {
-    return longStroke ? 2.0 : (shortStroke ? 0.5 : 1.0);
+    return longStroke ? 3.0 / 2.0 : (shortStroke ? 2.0 / 3.0 : 1.0);
 }
 
 // @intm is a logical (melodic) attribute, but when @tilt is absent it supplies a sensible default
@@ -699,6 +701,27 @@ CalligraphicNeume::Stroke CalligraphicNeume::CurvedLoop(
     return { pts, pts.back() };
 }
 
+// The run a stroke flows on into when its episema is drawn as a continuation rather than a separate accent
+// - the foot / tail the pen lays down without lifting as it leaves the note (a clivis descent flicking into
+// a tenuto, a stropha hook running on into a tail, a virga flagging off at the top). The pen leaves @p
+// corner still travelling along the stroke's exit direction @p exitDir, overshoots a touch so the turn
+// rounds rather than kinks, then settles onto a straight run in direction @p runDir (its caller sets this
+// 90° to the base stroke for a default episema, level for an @form="h" one). Returns only the points PAST
+// @p corner (already the stroke's last centreline point), so the caller appends them to extend the run.
+std::vector<CalligraphicNeume::PointF> CalligraphicNeume::EpisemaFoot(PointF corner, PointF exitDir, PointF runDir)
+{
+    const PointF t = exitDir.Unit(runDir); // travel arriving at the corner
+    const PointF u = runDir.Unit(t); // direction the episema runs out in
+    constexpr double FOOT_LEN = 13.0; // reach of the episema (about its full length)
+    constexpr double FOOT_DROP = 3.5; // overshoot along the stroke before the turn - rounds the corner
+    constexpr double kHandle = 0.40; // arrival handle, so the run settles cleanly onto u
+    const PointF tip = corner + u * FOOT_LEN; // far end of the run
+    const PointF c1 = corner + t * FOOT_DROP; // leave along the stroke
+    const PointF c2 = tip - u * (FOOT_LEN * kHandle); // arrive running along u
+    const std::vector<PointF> arc = Cubic(corner, c1, c2, tip, 14);
+    return std::vector<PointF>(arc.begin() + 1, arc.end()); // drop corner: already the stroke's last point
+}
+
 //----------------------------------------------------------------------------
 // Build
 //----------------------------------------------------------------------------
@@ -817,6 +840,10 @@ void CalligraphicNeume::BuildEpisemata(
         const Seg &s = run[si];
         const NcInfo &nc = ncs[s.ncIndex];
         if (nc.episemata.empty() || s.pts.empty()) continue;
+        // A footed nc had its first episema inked back in Build as the stroke's continuation foot. A lone
+        // foot is then complete; a chained one still needs its upright(s), drawn below crossing the foot's
+        // outer tip - the centreline's last point, where the foot reached out to. See @ref startEi below.
+        if (s.footEpisema && nc.episemata.size() <= 1) continue;
         const PointF end = s.pts.back();
         // The marked stroke's travel as it reaches the marked point: its actual end tangent.
         PointF along = (s.pts.size() >= 2) ? segDir(s.pts[s.pts.size() - 2], s.pts.back())
@@ -863,11 +890,26 @@ void CalligraphicNeume::BuildEpisemata(
         // shape rather than a heap of marks piled on the same point.
         bool linked = false;
         PointF linkEnd; // the far end of the previous accent in the chain (pen space, pre-slant)
-        for (const EpisemaInfo &e : nc.episemata) {
+        // A footed chain skips its first episema (already the drawn foot) and seeds the chain on the foot's
+        // outer tip, so the upright(s) cross that tip just as a normal chain's uprights cross the first
+        // bar's reaching-out end.
+        size_t startEi = 0;
+        if (s.footEpisema) {
+            startEi = 1;
+            linked = true;
+            linkEnd = end; // the foot tip
+        }
+        for (size_t ei = startEi; ei < nc.episemata.size(); ++ei) {
+            const EpisemaInfo &e = nc.episemata[ei];
             // The accent's orientation, half-length, and the two centreline ends a -> b.
             PointF ori;
             double HL;
             PointF a, b;
+            // An end-cap accent: a lone, default-placed episema crossing the FREE end of a stroke (no
+            // following joint to lean into, no @place offset to lift or slide it clear). It is hung from
+            // its dish trough rather than its chord so the crossing point lands on the tip - see the
+            // sweep below. Chained, lifted, summit and forced-horizontal accents keep the plain dish.
+            bool endCap = false;
             if (!linked) {
                 // First (or only) accent: placed against the marked stroke per @form / @place.
                 const bool above = (e.place == EVENTREL_above || e.place == EVENTREL_above_left
@@ -927,17 +969,36 @@ void CalligraphicNeume::BuildEpisemata(
                 const double cy = anchor.y + up.y * lift + axis.y * (shift + away);
                 a = { cx - ori.x * HL, cy - ori.y * HL };
                 b = { cx + ori.x * HL, cy + ori.y * HL };
+                // Flag a default accent lying across the FREE end of this stroke (no following joint, no
+                // @place offset): it crosses the tip rather than sitting clear of it. Centred on the
+                // centreline end its freehand dish sags away from the tip, leaving the inked point to
+                // poke out past the accent (the tractulus's east stroke peeking out under its episema).
+                // The sweep below hangs such an accent from its dish trough instead, dropping it onto
+                // the tip to cap it.
+                endCap = (nc.episemata.size() == 1) && !onSummit && (e.form != episemaVis_FORM_h)
+                    && (si + 1 >= run.size()) && (lift == 0.0) && (shift == 0.0);
             }
             else {
                 // A chained accent stands vertically (pen -y) and CROSSES the far end of the accent
-                // before it: the junction sits one third up from the upright's foot, so it reaches well
-                // above the previous bar with a short tail below - the stroke that crosses the outer end
-                // of a clivis foot's horizontal episema. Its length matches a vertical accent's (2 * HL).
+                // before it - the stroke that crosses the outer end of a clivis foot's horizontal
+                // episema. By default it is centred on that junction (equal above and below); @place
+                // then slides it one half-length clear so it sits above the junction (rising from it)
+                // or below it (hanging from it). Its length matches a vertical accent's (2 * HL).
                 ori = { 0.0, -1.0 };
                 HL = 6.0;
-                const double L = 2.0 * HL;
-                a = { linkEnd.x - ori.x * (L / 3.0), linkEnd.y - ori.y * (L / 3.0) };             // lower (tail)
-                b = { linkEnd.x + ori.x * (2.0 * L / 3.0), linkEnd.y + ori.y * (2.0 * L / 3.0) }; // upper
+                double placeLift = 0.0; // along ori (up): +HL puts the junction at the foot, -HL at the top
+                switch (e.place) {
+                    case EVENTREL_above:
+                    case EVENTREL_above_left:
+                    case EVENTREL_above_right: placeLift = HL; break;
+                    case EVENTREL_below:
+                    case EVENTREL_below_left:
+                    case EVENTREL_below_right: placeLift = -HL; break;
+                    default: break;
+                }
+                const PointF c = { linkEnd.x + ori.x * placeLift, linkEnd.y + ori.y * placeLift };
+                a = { c.x - ori.x * HL, c.y - ori.y * HL }; // lower end
+                b = { c.x + ori.x * HL, c.y + ori.y * HL }; // upper end
             }
             // Sweep the broad nib along the accent's centreline at full, untapered width: a short
             // stroke in the same hand as the neume, set just clear of the ink. The centreline is not
@@ -952,12 +1013,20 @@ void CalligraphicNeume::BuildEpisemata(
             // stepped clivis foot reads as ruled strokes meeting at a right angle rather than two
             // scoops. Their depth at mid-length is a fraction of the half-length.
             const double bow = HL * (nc.episemata.size() > 1 ? EPISEMA_BOW_CHAIN : EPISEMA_BOW);
+            // An end-cap accent is hung from its dish TROUGH (the deepest point, dip = bow at mid - the
+            // part that crosses the marked stroke) instead of from its chord. Subtracting the full dip
+            // there translates the whole centreline by -perp*bow, dropping that trough exactly onto the
+            // anchor (the stroke's tip) so the broad accent caps the point. The offset is exact - the
+            // trough dip IS bow - so it needs no tuning and holds at any stroke angle. Apply it only
+            // when the dish sags back toward the stroke (perp opposing the exit); a stroke whose dish
+            // already bows outward - a vertical descent - caps cleanly and keeps the plain chord.
+            const double trough = (endCap && perp.Dot(along) < 0.0) ? bow : 0.0;
             constexpr int kSamples = 10;
             std::vector<PointF> centre;
             centre.reserve(kSamples + 1);
             for (int k = 0; k <= kSamples; ++k) {
                 const double u = (double)k / kSamples;
-                const double dip = bow * 4.0 * u * (1.0 - u); // parabola: 0 at the ends, max at mid
+                const double dip = bow * 4.0 * u * (1.0 - u) - trough; // 0 at the ends, max at mid, less the trough
                 centre.push_back({ a.x + (b.x - a.x) * u + perp.x * dip,
                                    a.y + (b.y - a.y) * u + perp.y * dip });
             }
@@ -998,6 +1067,30 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(const std::vector<NcIn
     };
     // Whether component k begins a fresh pen gesture (an explicit gap or a bare punctum).
     auto breaksBefore = [&](size_t k) -> bool { return k > 0 && (ncs[k].gapped || bareOf(k)); };
+    // A continuation episema is written in one pen motion with its note: reaching the note, the pen flows
+    // on - without lifting - into the episema, instead of the bar being set beside it as a separate accent
+    // (the clivis whose descent flicks into a tenuto, the virga that flags off at the top, the stropha
+    // whose hook runs on into a tail). It applies to an episema that reaches OUT from the note to one side
+    // - not one that sits above / below it as a lifted cap - on a stroke the pen can flow cleanly off. The
+    // reach is appended to the stroke's centreline below as a smooth turn into a level run (see
+    // EpisemaFoot), so InkRun sweeps note and episema as one ribbon; a lone reach is then skipped by
+    // BuildEpisemata, a chained one keeps the upright(s) that cross its tip.
+    auto episemaFoot = [&](size_t k) -> bool {
+        const NcInfo &n = ncs[k];
+        if (n.episemata.empty()) return false;
+        // Only shapes the pen can flow cleanly on from at a free end - a plain note or a strophicus hook -
+        // not the wavy quilisma, the looping liquescent or an oriscus wave.
+        if (n.quilisma || n.liquescent || n.oriscus || !n.sShape.empty()) return false;
+        // The first episema must reach OUT from the note: an explicit left / right @place, an explicit
+        // horizontal @form, or the default bar of a CHAIN, which reaches out to clear space for the upright
+        // that crosses it. A lone default episema stays a centred tenuto, not a one-sided foot.
+        const EpisemaInfo &first = n.episemata[0];
+        const bool sideways = (first.place == EVENTREL_left || first.place == EVENTREL_right);
+        const bool horizontal = (first.form == episemaVis_FORM_h);
+        const bool chainReach = (first.place == EVENTREL_NONE && n.episemata.size() > 1);
+        if (!sideways && !horizontal && !chainReach) return false;
+        return (k + 1 >= ncs.size()) || breaksBefore(k + 1); // must end its run
+    };
     // The travel direction of component k's stroke (for neighbour tangents); 0 for a bare dab.
     auto chordDirOf = [&](size_t k) -> PointF {
         if (bareOf(k)) return { 0.0, 0.0 };
@@ -1263,11 +1356,35 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(const std::vector<NcIn
             if (mm > 1e-9) prevExitDir = { mx / mm, my / mm };
         }
 
+        // Episema foot: a continuation episema on this run-ending stroke is the tail of the same gesture,
+        // not a separate accent. Extend the stroke's centreline with the foot - built from its true exit
+        // direction, pre-slant - so InkRun sweeps stroke and foot as one ribbon. For a lone episema
+        // BuildEpisemata then skips it; for a chain it crosses the foot's tip with the remaining upright(s).
+        // The foot side is the first episema's @place (left, else right). prevExitDir is read above
+        // (pre-foot) so a later detached component still gaps from the stroke, not the foot tip.
+        bool footEpisema = false;
+        if (!dot && episemaFoot(i)) {
+            const EpisemaInfo &ep = nc.episemata[0];
+            const int side = (ep.place == EVENTREL_left) ? -1 : 1; // left -> -1; right / default -> +1
+            const PointF exitDir = (prevExitDir.x != 0.0 || prevExitDir.y != 0.0) ? prevExitDir : TiltVec(tilt);
+            // The episema stands at 90° to its base stroke, reaching toward the @place side. A default
+            // "vertical" episema takes the real stroke (its exit tangent); an explicit @form="h" takes a
+            // nominal vertical stroke, so its 90° is a globally horizontal tail. runDir is that base's
+            // quarter-turn, flipped to the side.
+            const PointF base = (ep.form == episemaVis_FORM_h) ? PointF{ 0.0, 1.0 } : exitDir.Unit({ 0.0, 1.0 });
+            PointF runDir = base.Perp();
+            if (runDir.x * side < 0.0) runDir = runDir * -1.0;
+            const std::vector<PointF> foot = EpisemaFoot(pen, exitDir, runDir);
+            pts.insert(pts.end(), foot.begin(), foot.end());
+            pen = pts.back();
+            footEpisema = true;
+        }
+
         // Start a new run on a gap, and isolate a punctum into its own run so its single dab is never
         // folded into a neighbouring continuous gesture.
         const bool prevWasDot = !runs.empty() && !runs.back().empty() && runs.back().back().isDot;
         if (runs.empty() || brk || dot || prevWasDot) runs.push_back({});
-        runs.back().push_back({ std::move(pts), tilt, (int)i, dot });
+        runs.back().push_back({ std::move(pts), tilt, (int)i, dot, footEpisema });
     }
 
     // 2) Ink each run as one continuous gesture, cut into per-nc slices.

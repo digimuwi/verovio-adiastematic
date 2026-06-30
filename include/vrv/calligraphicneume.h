@@ -152,6 +152,7 @@ private:
         int tilt = 0;
         int ncIndex = 0;
         bool isDot = false; ///< a bare punctum: a single pen dab, not a swept stroke
+        bool footEpisema = false; ///< the nc's first left/right episema is inked as a continuation foot of this stroke
     };
 
     /** The unit travel vector of a @tilt compass direction (pen space, +y down). */
@@ -235,6 +236,16 @@ private:
      */
     static Stroke CurvedLoop(PointF s, int tilt, int curveHand, double len, PointF tIn, PointF tOut,
         int curlHand, bool looped, double r0);
+    /**
+     * The run a stroke flows on into when its <episema> is drawn as a continuation rather than a separate
+     * accent: the foot / tail the pen lays without lifting as it leaves the note (a clivis descent flicking
+     * into a tenuto, a stropha hook running on into a tail, a virga flagging off at the top). A smooth turn
+     * leaves @p corner along the stroke's exit direction @p exitDir, rounds the corner and settles onto a
+     * straight run in direction @p runDir - 90° to the base stroke for a default "vertical" episema, level
+     * for an @form="h" one. Returns only the centreline points PAST @p corner (already the stroke's last
+     * point), to be appended so the run sweeps note and episema as one continuous ribbon.
+     */
+    static std::vector<PointF> EpisemaFoot(PointF corner, PointF exitDir, PointF runDir);
 
     /**
      * Sweep the fixed nib along a centreline, producing the two offset edges of the ribbon (one
@@ -269,7 +280,10 @@ private:
      * Ink the episema accents of every marked nc across @p runs into @p geo (phase 3 of Build,
      * factored out so the accent-placement convention is one self-contained unit). Each episema is a
      * short broad-nib stroke set just clear of the ink of the stroke it marks; @place chooses the
-     * side and @form the orientation - see the .cpp for the full convention.
+     * side and @form the orientation - see the .cpp for the full convention. The one exception is a
+     * Seg flagged @ref Seg::footEpisema, whose first episema was already inked as a continuation foot
+     * of its stroke back in Build: a lone foot is skipped here, a chained one keeps only the upright(s)
+     * that cross the foot's tip.
      */
     static void BuildEpisemata(
         const std::vector<std::vector<Seg>> &runs, const std::vector<NcInfo> &ncs, NeumeGeometry &geo, Slant slant);

@@ -128,8 +128,8 @@
                 <syl>Pes quassus flexus</syl>
                 <neume>
                   <nc s-shape="s" tilt="se" />
-                  <nc intm="u" rellen="l" tilt="ne" curve="c" />
-                  <nc intm="d" tilt="s" rellen="s" />
+                  <nc intm="u" tilt="ne" curve="c" />
+                  <nc intm="d" tilt="s" />
                 </neume>
               </syllable>
               <syllable>
@@ -139,14 +139,14 @@
                   <nc intm="u" rellen="l" tilt="ne" curve="c">
                     <episema place="above" />
                   </nc>
-                  <nc intm="d" tilt="s" rellen="s" />
+                  <nc intm="d" tilt="s" />
                 </neume>
               </syllable>
               <syllable>
                 <syl>Clivis</syl>
                 <neume>
                   <nc tilt="ne" curve="c" />
-                  <nc tilt="s" intm="d" rellen="s" />
+                  <nc tilt="s" intm="d" />
                 </neume>
               </syllable>
               <syllable>
@@ -163,7 +163,7 @@
                 <neume>
                   <nc tilt="ne" curve="c" />
                   <nc tilt="s" intm="d">
-                    <episema place="below-right" />
+                    <episema place="right" />
                   </nc>
                 </neume>
               </syllable>
@@ -219,7 +219,7 @@
                     <episema place="left" />
                   </nc>
                   <nc s-shape="n" intm="s" />
-                  <nc con="g" tilt="e" intm="d" />
+                  <nc con="g" tilt="e" rellen="s" intm="d" />
                 </neume>
               </syllable>
               <syllable>
@@ -243,8 +243,8 @@
               <syllable>
                 <syl>Scandicus</syl>
                 <neume>
-                  <nc rellen="short" tilt="e" />
-                  <nc con="g" tilt="e" intm="u" />
+                  <nc rellen="s" tilt="e" />
+                  <nc con="g" rellen="s" tilt="e" intm="u" />
                   <nc con="g" tilt="ne" rellen="l" intm="u" />
                 </neume>
               </syllable>
@@ -373,7 +373,7 @@
                 <syl>Salicus</syl>
                 <neume>
                   <nc />
-                  <nc curve="c" con="g" intm="u">
+                  <nc curve="c" con="g" tilt="e" intm="u">
                     <oriscus />
                   </nc>
                   <nc con="g" intm="u" tilt="ne" />
@@ -483,7 +483,7 @@
                   <nc tilt="s" rellen="s" intm="d">
                     <episema place="right" />
                   </nc>
-                  <nc con="g" tilt="e" intm="d" />
+                  <nc con="g" tilt="e" intm="d" rellen="s" />
                 </neume>
               </syllable>
               <syllable>
@@ -530,7 +530,7 @@
                   <nc curve="a" tilt="se" rellen="s" />
                   <nc tilt="ne" curve="c" intm="u" />
                   <nc tilt="s" intm="d">
-                    <episema place="right" />
+                    <episema />
                     <episema place="below" />
                   </nc>
                 </neume>
@@ -700,18 +700,18 @@
                   <nc curve="a" />
                   <nc tilt="ne" rellen="l" intm="u" />
                   <nc con="g" tilt="e" rellen="s" intm="d" />
-                  <nc con="g" tilt="e" intm="d" />
+                  <nc con="g" tilt="e" rellen="s" intm="d" />
                 </neume>
               </syllable>
               <syllable>
                 <syl>Pes subbipunctis 3</syl>
                 <neume>
-                  <nc curve="a" />
-                  <nc tilt="ne" rellen="l" intm="u" />
-                  <nc curve="c" tilt="s" rellen="s" intm="d">
-                    <episema place="below-right" />
+                  <nc curve="a" rellen="s" />
+                  <nc tilt="ne" intm="u" curve="c" />
+                  <nc tilt="s" rellen="s" intm="d">
+                    <episema place="right" />
                   </nc>
-                  <nc con="g" tilt="e" intm="d" />
+                  <nc con="g" rellen="s" tilt="e" intm="d" />
                 </neume>
               </syllable>
               <syllable>
