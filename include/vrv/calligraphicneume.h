@@ -84,7 +84,6 @@ public:
         std::vector<EpisemaInfo> episemata;
     };
 
-
     /**
      * The geometry attributable to a single <nc>. A ligature is inked as one continuous pen
      * gesture, but the ribbon is cut along cross-sections into per-nc slices so each <nc> owns its
@@ -233,8 +232,8 @@ private:
      * @p tIn / @p tOut are the CurvedStroke lead-in parameters; @p curlHand / @p looped / @p r0 shape
      * the curl (the <liquescent>'s own @curve / @looped, the hand falling back to the <nc>'s @curve).
      */
-    static Stroke CurvedLoop(PointF s, int tilt, int curveHand, double len, PointF tIn, PointF tOut,
-        int curlHand, bool looped, double r0);
+    static Stroke CurvedLoop(
+        PointF s, int tilt, int curveHand, double len, PointF tIn, PointF tOut, int curlHand, bool looped, double r0);
     /**
      * The run a stroke flows on into when its <episema> is drawn as a continuation rather than a separate
      * accent: the foot / tail the pen lays without lifting as it leaves the note (a clivis descent flicking

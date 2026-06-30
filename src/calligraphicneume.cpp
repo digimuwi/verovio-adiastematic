@@ -25,168 +25,169 @@ namespace vrv {
 
 namespace {
 
-// The vertical grid the whole gesture is built on. Adiastematic neumes are heightless, but they read
-// far more clearly when every component lands on a consistent set of vertical levels instead of
-// drifting by the accident of its stroke angle. One LEVEL is one interline - the gap between two staff
-// lines, 2 verovio drawing units (= 2 * s_unitPx pen px), the currency verovio naturally thinks in.
-// Each melodic stroke spans exactly one level from foot to head at its own angle, so however vertical
-// and diagonal strokes are mixed, an up-stroke then a down-stroke always returns to the level it left:
-// the foot/head levels stay aligned across the neume. @rellen scales the reach (see RellenFactor): l
-// lengthens it and s shortens it by the same ratio. The horizontal advance follows from the stroke's
-// @tilt aspect, so a diagonal that reaches one level is correspondingly longer than a vertical one but
-// keeps its 45-degree pen angle (and so its broad-nib thickness).
-constexpr double LEVEL_STEP = 2.0 * CalligraphicNeume::s_unitPx; // one interline
-constexpr double MED = LEVEL_STEP; // a one-level stroke; also the curl-radius reference below
-// Placement of a detached component (@con == g). A pitch-changing step moves along the melodic contour
-// (@intm), advancing past the previous stroke's forward reach so ascending (salicus) / descending
-// (climacus) components stack without colliding; a repeated same-pitch stroke instead slides tight
-// sideways (a bivirga). Adiastematic sources are heightless, so these are conventions, not intervals.
-constexpr double BREAK_GAP = 15.0; // pen-lift advance past a detached component's clearance
-constexpr double REPEAT_DX = 14.0; // horizontal slide of a repeated same-pitch stroke (bivirga, distropha)
-// Liquescent curl radii. A liquescent that carries its own melodic stroke ends in a small terminal
-// flourish; one with no @tilt is the whole note rendered as a hook off the previous nc, so its curl
-// is note-sized rather than a tiny ornament.
-constexpr double LIQ_CURL_R = MED * 0.30; // terminal curl at the tip of a liquescent's own stroke
-constexpr double LIQ_HOOK_R = MED * 0.50; // a whole-note hook (no lead-in stroke): note-sized
-// Sideways nudge for a plain stroke that about-faces (travels back along its predecessor's line, e.g.
-// an s after an n): without it the two strokes retrace each other and collapse into one. Sized a touch
-// above the broad nib (NIB_W = 6) so the parallel pair reads as two distinct strokes, not one mass.
-constexpr double ANTIPARALLEL_SHIFT = 8.0;
-// Direction tests on the dot product of two unit travel vectors. A pair pointing nearly opposite
-// (dot <= ANTIPARALLEL_COS) about-faces and needs the sideways nudge above; a pair pointing nearly
-// the same way (dot >= PARALLEL_COS) is a same-pitch repeat (a bivirga) that slides tight sideways.
-constexpr double ANTIPARALLEL_COS = -0.9;
-constexpr double PARALLEL_COS = 0.9;
+    // The vertical grid the whole gesture is built on. Adiastematic neumes are heightless, but they read
+    // far more clearly when every component lands on a consistent set of vertical levels instead of
+    // drifting by the accident of its stroke angle. One LEVEL is one interline - the gap between two staff
+    // lines, 2 verovio drawing units (= 2 * s_unitPx pen px), the currency verovio naturally thinks in.
+    // Each melodic stroke spans exactly one level from foot to head at its own angle, so however vertical
+    // and diagonal strokes are mixed, an up-stroke then a down-stroke always returns to the level it left:
+    // the foot/head levels stay aligned across the neume. @rellen scales the reach (see RellenFactor): l
+    // lengthens it and s shortens it by the same ratio. The horizontal advance follows from the stroke's
+    // @tilt aspect, so a diagonal that reaches one level is correspondingly longer than a vertical one but
+    // keeps its 45-degree pen angle (and so its broad-nib thickness).
+    constexpr double LEVEL_STEP = 2.0 * CalligraphicNeume::s_unitPx; // one interline
+    constexpr double MED = LEVEL_STEP; // a one-level stroke; also the curl-radius reference below
+    // Placement of a detached component (@con == g). A pitch-changing step moves along the melodic contour
+    // (@intm), advancing past the previous stroke's forward reach so ascending (salicus) / descending
+    // (climacus) components stack without colliding; a repeated same-pitch stroke instead slides tight
+    // sideways (a bivirga). Adiastematic sources are heightless, so these are conventions, not intervals.
+    constexpr double BREAK_GAP = 15.0; // pen-lift advance past a detached component's clearance
+    constexpr double REPEAT_DX = 14.0; // horizontal slide of a repeated same-pitch stroke (bivirga, distropha)
+    // Liquescent curl radii. A liquescent that carries its own melodic stroke ends in a small terminal
+    // flourish; one with no @tilt is the whole note rendered as a hook off the previous nc, so its curl
+    // is note-sized rather than a tiny ornament.
+    constexpr double LIQ_CURL_R = MED * 0.30; // terminal curl at the tip of a liquescent's own stroke
+    constexpr double LIQ_HOOK_R = MED * 0.50; // a whole-note hook (no lead-in stroke): note-sized
+    // Sideways nudge for a plain stroke that about-faces (travels back along its predecessor's line, e.g.
+    // an s after an n): without it the two strokes retrace each other and collapse into one. Sized a touch
+    // above the broad nib (NIB_W = 6) so the parallel pair reads as two distinct strokes, not one mass.
+    constexpr double ANTIPARALLEL_SHIFT = 8.0;
+    // Direction tests on the dot product of two unit travel vectors. A pair pointing nearly opposite
+    // (dot <= ANTIPARALLEL_COS) about-faces and needs the sideways nudge above; a pair pointing nearly
+    // the same way (dot >= PARALLEL_COS) is a same-pitch repeat (a bivirga) that slides tight sideways.
+    constexpr double ANTIPARALLEL_COS = -0.9;
+    constexpr double PARALLEL_COS = 0.9;
 
-constexpr double DEG = M_PI / 180.0;
-// The broad nib is held at a fixed 45-degree diagonal for the whole hand, its edge running NE-SW. A
-// stroke travelling along that edge (a virga: bottom -> NE) comes out thin; one travelling across it
-// (the start of a pes: -> SE) comes out broad. Pen space has +y down, so NE is (+x, -y).
-constexpr double NIB_ANGLE = -45.0 * DEG;
-constexpr double NIB_W = 6.0; // broadest (across the nib)
-constexpr double NIB_MIN = 1.8; // thinnest (along the nib)
-constexpr double EPISEMA_NIB = 0.55; // episemata are drawn with a finer nib than the note strokes
-// The scribe's episema is not a ruled bar: drawn freehand it bows into a shallow concave-up dish, a
-// low middle with the ends flicking up. Sized as a fraction of the accent's half-length.
-constexpr double EPISEMA_BOW = 0.30;
-// Chained accents (several stacked on one nc - a clivis foot's horizontal stroke crossed by an
-// upright) are drawn nearly straight, so the stepped shape reads as ruled strokes meeting squarely.
-constexpr double EPISEMA_BOW_CHAIN = 0.07;
+    constexpr double DEG = M_PI / 180.0;
+    // The broad nib is held at a fixed 45-degree diagonal for the whole hand, its edge running NE-SW. A
+    // stroke travelling along that edge (a virga: bottom -> NE) comes out thin; one travelling across it
+    // (the start of a pes: -> SE) comes out broad. Pen space has +y down, so NE is (+x, -y).
+    constexpr double NIB_ANGLE = -45.0 * DEG;
+    constexpr double NIB_W = 6.0; // broadest (across the nib)
+    constexpr double NIB_MIN = 1.8; // thinnest (along the nib)
+    constexpr double EPISEMA_NIB = 0.55; // episemata are drawn with a finer nib than the note strokes
+    // The scribe's episema is not a ruled bar: drawn freehand it bows into a shallow concave-up dish, a
+    // low middle with the ends flicking up. Sized as a fraction of the accent's half-length.
+    constexpr double EPISEMA_BOW = 0.30;
+    // Chained accents (several stacked on one nc - a clivis foot's horizontal stroke crossed by an
+    // upright) are drawn nearly straight, so the stepped shape reads as ruled strokes meeting squarely.
+    constexpr double EPISEMA_BOW_CHAIN = 0.07;
 
-// How many levels a stroke reaches, from @rellen. The reach scales symmetrically about a normal stroke
-// (1.0): a long one (l) and a short one (s) are reciprocals of one ratio (3:2), so the normal reach is
-// their exact geometric mean. 3/2 keeps a long stroke a clear step above normal without the dramatic
-// doubling a leap (2.0) would give.
-double RellenFactor(bool longStroke, bool shortStroke)
-{
-    return longStroke ? 3.0 / 2.0 : (shortStroke ? 2.0 / 3.0 : 1.0);
-}
-
-// @intm is a logical (melodic) attribute, but when @tilt is absent it supplies a sensible default
-// direction: u (up) -> ne, d (down) -> se. An explicit @tilt always wins.
-int IntmDefaultTilt(char intm)
-{
-    if (intm == 'u') return COMPASSDIRECTION_ne;
-    if (intm == 'd') return COMPASSDIRECTION_se;
-    return COMPASSDIRECTION_NONE;
-}
-
-// The direction the pen jumps to lay down the next *detached* component (@con="g"), following the
-// melodic contour (@intm): u rises (ne), d falls (se), s stays level (e).
-int IntmGapTilt(char intm)
-{
-    if (intm == 'u') return COMPASSDIRECTION_ne;
-    if (intm == 'd') return COMPASSDIRECTION_se;
-    if (intm == 's') return COMPASSDIRECTION_e;
-    return COMPASSDIRECTION_NONE;
-}
-
-// The initial swing of an @s-shape: the compass direction the pen first moves as it starts the S.
-// Per the MEI definition this orients the letterform and its reflections - "w" the standard letter S
-// (initial swing west), "e" its left-right mirror (east), "s" the S turned 90° anti-clockwise
-// (south), "n" that mirror (north). The wave's wiggle is opened toward this direction, so the SIGN of
-// the swing is what tells a letterform from its mirror (w vs e, s vs n) and its axis tells an upright
-// S from one turned on its side. Pen space has +y down. Empty / unknown defaults to the standard S.
-CalligraphicNeume::PointF SShapeSwing(const std::string &orient)
-{
-    if (orient == "e") return { 1.0, 0.0 };
-    if (orient == "s") return { 0.0, 1.0 };
-    if (orient == "n") return { 0.0, -1.0 };
-    return { -1.0, 0.0 }; // "w" and default
-}
-
-// A rotated S ("s" / "n") lies on its side: its spine runs level rather than upright, and it reads a
-// touch longer and shallower than the upright S ("w" / "e"). Used to pick the default travel axis (when
-// no @tilt steers it) and the length / amplitude tuning.
-bool SShapeRotated(const std::string &orient)
-{
-    return orient == "s" || orient == "n";
-}
-
-//----------------------------------------------------------------------------
-// Scribal ductus: attack & release weighting, and the forward (italic) slant
-//----------------------------------------------------------------------------
-
-// Hermite smoothstep on [0, 1] (clamped): the classic 3t^2 - 2t^3 ease, used to shape the stroke's
-// attack and release shoulders.
-double SmoothStep(double t)
-{
-    t = std::clamp(t, 0.0, 1.0);
-    return t * t * (3.0 - 2.0 * t);
-}
-
-// Scribal attack & release. A real pen LANDS firm - a blunt attack, not a hairline birth - and LIFTS
-// slowly into a hairline, so the along-stroke weight is asymmetric: a short attack shoulder rising
-// from ATTACK_LAND to full, then a long release shoulder tapering down to RELEASE_LIFT.
-constexpr double ATTACK_LAND = 0.85; // weight the instant the pen lands
-constexpr double ATTACK_LEN = 0.18; // fraction of the gesture over which the attack settles to full
-constexpr double RELEASE_LIFT = 0.15; // weight the instant the pen leaves (the lifted tail)
-constexpr double RELEASE_LEN = 0.55; // fraction of the gesture over which the release tapers away
-
-// The unit pull axis of a right hand: up and to the right. Pen space has +y down, so "up" is -y; the
-// diagonal (1, -1)/sqrt(2) is the direction the hand naturally drags the pen.
-constexpr CalligraphicNeume::PointF PULL_AXIS = { 0.7071067811865476, -0.7071067811865476 };
-
-// The local strength of the forward slant for a stroke travelling in direction @p t. A stroke aligned
-// with the pull (up-right, alignment +1) leans fully; one running against it (a descent, alignment
-// -1) leans by only (1 - bias); a directionless dab takes the neutral middle. This anisotropy is what
-// keeps a firm downstroke from leaning as drunkenly as the up-right flick.
-double SlantStrength(CalligraphicNeume::PointF t, double bias)
-{
-    const double m = std::hypot(t.x, t.y);
-    const double a = (m > 1e-9) ? (t.x * PULL_AXIS.x + t.y * PULL_AXIS.y) / m : 0.0;
-    return 1.0 - bias * (1.0 - a) / 2.0;
-}
-
-// Shear one centreline point travelling in direction @p t toward the upper-right. Pen space +y is
-// down, so x -= strength * tan * y pulls points above the baseline (y < 0) right and lets points
-// below it drift left - the forward lean - by a direction-dependent amount.
-CalligraphicNeume::PointF SlantShear(CalligraphicNeume::PointF p, CalligraphicNeume::PointF t, CalligraphicNeume::Slant s)
-{
-    return { p.x - SlantStrength(t, s.bias) * s.tan * p.y, p.y };
-}
-
-// Shear a whole centreline in place, taking each point's travel direction from its neighbours (the
-// same central difference the nib sweep uses). Because the tangent varies continuously along a
-// densified spine, so does the lean - even a sharp joint between an up-stroke and a down-stroke is
-// sheared without a seam.
-void SlantApply(std::vector<CalligraphicNeume::PointF> &pts, CalligraphicNeume::Slant s)
-{
-    using PointF = CalligraphicNeume::PointF;
-    const int n = (int)pts.size();
-    if (n == 0) return;
-    // Shear in place: SlantShear only moves a point's x, and the per-point tangent comes from the
-    // ORIGINAL neighbours, so carry the previous point's pre-shear value forward (the point ahead is
-    // still untouched as we sweep left-to-right) - no scratch copy of the whole spine is needed.
-    PointF prev = pts[0];
-    for (int i = 0; i < n; ++i) {
-        const PointF cur = pts[i];
-        const PointF a = (i > 0) ? prev : cur;
-        const PointF b = pts[std::min(n - 1, i + 1)];
-        pts[i] = SlantShear(cur, { b.x - a.x, b.y - a.y }, s);
-        prev = cur;
+    // How many levels a stroke reaches, from @rellen. The reach scales symmetrically about a normal stroke
+    // (1.0): a long one (l) and a short one (s) are reciprocals of one ratio (3:2), so the normal reach is
+    // their exact geometric mean. 3/2 keeps a long stroke a clear step above normal without the dramatic
+    // doubling a leap (2.0) would give.
+    double RellenFactor(bool longStroke, bool shortStroke)
+    {
+        return longStroke ? 3.0 / 2.0 : (shortStroke ? 2.0 / 3.0 : 1.0);
     }
-}
+
+    // @intm is a logical (melodic) attribute, but when @tilt is absent it supplies a sensible default
+    // direction: u (up) -> ne, d (down) -> se. An explicit @tilt always wins.
+    int IntmDefaultTilt(char intm)
+    {
+        if (intm == 'u') return COMPASSDIRECTION_ne;
+        if (intm == 'd') return COMPASSDIRECTION_se;
+        return COMPASSDIRECTION_NONE;
+    }
+
+    // The direction the pen jumps to lay down the next *detached* component (@con="g"), following the
+    // melodic contour (@intm): u rises (ne), d falls (se), s stays level (e).
+    int IntmGapTilt(char intm)
+    {
+        if (intm == 'u') return COMPASSDIRECTION_ne;
+        if (intm == 'd') return COMPASSDIRECTION_se;
+        if (intm == 's') return COMPASSDIRECTION_e;
+        return COMPASSDIRECTION_NONE;
+    }
+
+    // The initial swing of an @s-shape: the compass direction the pen first moves as it starts the S.
+    // Per the MEI definition this orients the letterform and its reflections - "w" the standard letter S
+    // (initial swing west), "e" its left-right mirror (east), "s" the S turned 90° anti-clockwise
+    // (south), "n" that mirror (north). The wave's wiggle is opened toward this direction, so the SIGN of
+    // the swing is what tells a letterform from its mirror (w vs e, s vs n) and its axis tells an upright
+    // S from one turned on its side. Pen space has +y down. Empty / unknown defaults to the standard S.
+    CalligraphicNeume::PointF SShapeSwing(const std::string &orient)
+    {
+        if (orient == "e") return { 1.0, 0.0 };
+        if (orient == "s") return { 0.0, 1.0 };
+        if (orient == "n") return { 0.0, -1.0 };
+        return { -1.0, 0.0 }; // "w" and default
+    }
+
+    // A rotated S ("s" / "n") lies on its side: its spine runs level rather than upright, and it reads a
+    // touch longer and shallower than the upright S ("w" / "e"). Used to pick the default travel axis (when
+    // no @tilt steers it) and the length / amplitude tuning.
+    bool SShapeRotated(const std::string &orient)
+    {
+        return orient == "s" || orient == "n";
+    }
+
+    //----------------------------------------------------------------------------
+    // Scribal ductus: attack & release weighting, and the forward (italic) slant
+    //----------------------------------------------------------------------------
+
+    // Hermite smoothstep on [0, 1] (clamped): the classic 3t^2 - 2t^3 ease, used to shape the stroke's
+    // attack and release shoulders.
+    double SmoothStep(double t)
+    {
+        t = std::clamp(t, 0.0, 1.0);
+        return t * t * (3.0 - 2.0 * t);
+    }
+
+    // Scribal attack & release. A real pen LANDS firm - a blunt attack, not a hairline birth - and LIFTS
+    // slowly into a hairline, so the along-stroke weight is asymmetric: a short attack shoulder rising
+    // from ATTACK_LAND to full, then a long release shoulder tapering down to RELEASE_LIFT.
+    constexpr double ATTACK_LAND = 0.85; // weight the instant the pen lands
+    constexpr double ATTACK_LEN = 0.18; // fraction of the gesture over which the attack settles to full
+    constexpr double RELEASE_LIFT = 0.15; // weight the instant the pen leaves (the lifted tail)
+    constexpr double RELEASE_LEN = 0.55; // fraction of the gesture over which the release tapers away
+
+    // The unit pull axis of a right hand: up and to the right. Pen space has +y down, so "up" is -y; the
+    // diagonal (1, -1)/sqrt(2) is the direction the hand naturally drags the pen.
+    constexpr CalligraphicNeume::PointF PULL_AXIS = { 0.7071067811865476, -0.7071067811865476 };
+
+    // The local strength of the forward slant for a stroke travelling in direction @p t. A stroke aligned
+    // with the pull (up-right, alignment +1) leans fully; one running against it (a descent, alignment
+    // -1) leans by only (1 - bias); a directionless dab takes the neutral middle. This anisotropy is what
+    // keeps a firm downstroke from leaning as drunkenly as the up-right flick.
+    double SlantStrength(CalligraphicNeume::PointF t, double bias)
+    {
+        const double m = std::hypot(t.x, t.y);
+        const double a = (m > 1e-9) ? (t.x * PULL_AXIS.x + t.y * PULL_AXIS.y) / m : 0.0;
+        return 1.0 - bias * (1.0 - a) / 2.0;
+    }
+
+    // Shear one centreline point travelling in direction @p t toward the upper-right. Pen space +y is
+    // down, so x -= strength * tan * y pulls points above the baseline (y < 0) right and lets points
+    // below it drift left - the forward lean - by a direction-dependent amount.
+    CalligraphicNeume::PointF SlantShear(
+        CalligraphicNeume::PointF p, CalligraphicNeume::PointF t, CalligraphicNeume::Slant s)
+    {
+        return { p.x - SlantStrength(t, s.bias) * s.tan * p.y, p.y };
+    }
+
+    // Shear a whole centreline in place, taking each point's travel direction from its neighbours (the
+    // same central difference the nib sweep uses). Because the tangent varies continuously along a
+    // densified spine, so does the lean - even a sharp joint between an up-stroke and a down-stroke is
+    // sheared without a seam.
+    void SlantApply(std::vector<CalligraphicNeume::PointF> &pts, CalligraphicNeume::Slant s)
+    {
+        using PointF = CalligraphicNeume::PointF;
+        const int n = (int)pts.size();
+        if (n == 0) return;
+        // Shear in place: SlantShear only moves a point's x, and the per-point tangent comes from the
+        // ORIGINAL neighbours, so carry the previous point's pre-shear value forward (the point ahead is
+        // still untouched as we sweep left-to-right) - no scratch copy of the whole spine is needed.
+        PointF prev = pts[0];
+        for (int i = 0; i < n; ++i) {
+            const PointF cur = pts[i];
+            const PointF a = (i > 0) ? prev : cur;
+            const PointF b = pts[std::min(n - 1, i + 1)];
+            pts[i] = SlantShear(cur, { b.x - a.x, b.y - a.y }, s);
+            prev = cur;
+        }
+    }
 
 } // namespace
 
@@ -324,7 +325,8 @@ void CalligraphicNeume::NibEdges(const std::vector<PointF> &pts, double scale, s
         // release tapering down to the RELEASE_LIFT hairline. taperStart/taperEnd drop the matching
         // shoulder to hold that end at full width (an episema accent keeps both ends square).
         const double attack = taperStart ? ATTACK_LAND + (1.0 - ATTACK_LAND) * SmoothStep(tc / ATTACK_LEN) : 1.0;
-        const double release = taperEnd ? RELEASE_LIFT + (1.0 - RELEASE_LIFT) * SmoothStep((1.0 - tc) / RELEASE_LEN) : 1.0;
+        const double release
+            = taperEnd ? RELEASE_LIFT + (1.0 - RELEASE_LIFT) * SmoothStep((1.0 - tc) / RELEASE_LEN) : 1.0;
         const double cap = attack * release;
         const double w = ((NIB_MIN + (NIB_W - NIB_MIN) * sinA) * scale * cap) / 2.0;
         left[i] = { pts[i].x - ty * w, pts[i].y + tx * w };
@@ -347,8 +349,7 @@ void CalligraphicNeume::SmoothPolyline(std::vector<PointF> &p, int passes)
         PointF prev = p[0];
         for (int i = 1; i < n - 1; ++i) {
             const PointF cur = p[i];
-            p[i] = { 0.25 * prev.x + 0.5 * cur.x + 0.25 * p[i + 1].x,
-                0.25 * prev.y + 0.5 * cur.y + 0.25 * p[i + 1].y };
+            p[i] = { 0.25 * prev.x + 0.5 * cur.x + 0.25 * p[i + 1].x, 0.25 * prev.y + 0.5 * cur.y + 0.25 * p[i + 1].y };
             prev = cur;
         }
     }
@@ -363,9 +364,9 @@ std::vector<CalligraphicNeume::PointF> CalligraphicNeume::Punctum(PointF c)
     const PointF perp = { -nib.y, nib.x };
     constexpr double LA = 4.0; // half-length along the nib edge
     constexpr double SA = 2.6; // half-width across it
-    const std::vector<PointF> diamond = { { c.x + nib.x * LA, c.y + nib.y * LA },
-        { c.x + perp.x * SA, c.y + perp.y * SA }, { c.x - nib.x * LA, c.y - nib.y * LA },
-        { c.x - perp.x * SA, c.y - perp.y * SA } };
+    const std::vector<PointF> diamond
+        = { { c.x + nib.x * LA, c.y + nib.y * LA }, { c.x + perp.x * SA, c.y + perp.y * SA },
+              { c.x - nib.x * LA, c.y - nib.y * LA }, { c.x - perp.x * SA, c.y - perp.y * SA } };
     return SmoothClosed(diamond);
 }
 
@@ -550,7 +551,8 @@ CalligraphicNeume::Stroke CalligraphicNeume::WaveFrom(PointF s, const std::strin
 // and lifting at the bottom of the last trough. @p rise switches the two readings of a <quilisma>:
 // false makes the WHOLE note the wavy line; true makes it a PREAMBLE that then sweeps up out of the
 // last trough toward @p tilt over @p len - the ascent of a quilismapes, internal to this one nc.
-CalligraphicNeume::Stroke CalligraphicNeume::Quilisma(PointF s, int tilt, int waves, double len, bool rise, bool centred)
+CalligraphicNeume::Stroke CalligraphicNeume::Quilisma(
+    PointF s, int tilt, int waves, double len, bool rise, bool centred)
 {
     if (waves < 1) waves = 2; // default number of crests
     const PointF east = TiltVec(COMPASSDIRECTION_e); // the wiggle always runs level, whatever the @tilt
@@ -610,8 +612,10 @@ CalligraphicNeume::Stroke CalligraphicNeume::Loop(PointF s, PointF dir, int curv
 {
     PointF d = dir;
     const double dm = std::hypot(d.x, d.y);
-    if (dm < 1e-9) d = TiltVec(COMPASSDIRECTION_se);
-    else d = { d.x / dm, d.y / dm }; // a unit travel direction, whatever its source
+    if (dm < 1e-9)
+        d = TiltVec(COMPASSDIRECTION_se);
+    else
+        d = { d.x / dm, d.y / dm }; // a unit travel direction, whatever its source
 
     // 1) The note's own melodic stroke, so a stem-led liquescent reads as that stroke fading into the
     //    curl rather than a loop floating free of the ligature. A whole-note hook (@p stem == 0) has
@@ -637,8 +641,10 @@ CalligraphicNeume::Stroke CalligraphicNeume::Loop(PointF s, PointF dir, int curv
 std::vector<CalligraphicNeume::PointF> CalligraphicNeume::Curl(PointF tip, PointF d, int curve, bool looped, double r0)
 {
     const double dm = std::hypot(d.x, d.y);
-    if (dm < 1e-9) d = TiltVec(COMPASSDIRECTION_se);
-    else d = { d.x / dm, d.y / dm }; // a unit travel direction, whatever its source
+    if (dm < 1e-9)
+        d = TiltVec(COMPASSDIRECTION_se);
+    else
+        d = { d.x / dm, d.y / dm }; // a unit travel direction, whatever its source
 
     // The curl's centre sits one radius to the curl side of the tip - left for an anticlockwise @curve,
     // right for a clockwise one - and the spiral leaves the tip tangent to @p d. @looped chooses the
@@ -868,211 +874,209 @@ void CalligraphicNeume::BuildEpisemata(
     auto segDir = [](PointF from, PointF to) -> PointF { return (to - from).Unit(); };
 
     for (const std::vector<Seg> &run : runs)
-    for (size_t si = 0; si < run.size(); ++si) {
-        const Seg &s = run[si];
-        const NcInfo &nc = ncs[s.ncIndex];
-        if (nc.episemata.empty() || s.pts.empty()) continue;
-        // A footed nc had its first episema inked back in Build as the stroke's continuation foot. A lone
-        // foot is then complete; a chained one still needs its upright(s), drawn below crossing the foot's
-        // outer tip - the centreline's last point, where the foot reached out to. See @ref startEi below.
-        if (s.footEpisema && nc.episemata.size() <= 1) continue;
-        const PointF end = s.pts.back();
-        // The marked stroke's travel as it reaches the marked point: its actual end tangent.
-        PointF along = (s.pts.size() >= 2) ? segDir(s.pts[s.pts.size() - 2], s.pts.back())
-                                           : PointF{ 0.0, 0.0 };
-        if (along.x == 0.0 && along.y == 0.0) along = tiltUnit(s.tilt);
-        const PointF across = { -along.y, along.x }; // perpendicular to the stroke
+        for (size_t si = 0; si < run.size(); ++si) {
+            const Seg &s = run[si];
+            const NcInfo &nc = ncs[s.ncIndex];
+            if (nc.episemata.empty() || s.pts.empty()) continue;
+            // A footed nc had its first episema inked back in Build as the stroke's continuation foot. A lone
+            // foot is then complete; a chained one still needs its upright(s), drawn below crossing the foot's
+            // outer tip - the centreline's last point, where the foot reached out to. See @ref startEi below.
+            if (s.footEpisema && nc.episemata.size() <= 1) continue;
+            const PointF end = s.pts.back();
+            // The marked stroke's travel as it reaches the marked point: its actual end tangent.
+            PointF along = (s.pts.size() >= 2) ? segDir(s.pts[s.pts.size() - 2], s.pts.back()) : PointF{ 0.0, 0.0 };
+            if (along.x == 0.0 && along.y == 0.0) along = tiltUnit(s.tilt);
+            const PointF across = { -along.y, along.x }; // perpendicular to the stroke
 
-        // The default orientation: the joint tangent when this nc hands off to a following connected
-        // one, otherwise across the stroke. The joint tangent is the unit mean of the two strokes'
-        // tangents at the corner - the marked stroke's end tangent and the next stroke's start
-        // tangent, both read from the sampled curve, so curving is honoured. A near-antiparallel pair
-        // (a hairpin turn) has no meaningful mean, but the tangent there lies across the limbs anyway,
-        // so it falls back to the perpendicular.
-        PointF tangent = across;
-        if (si + 1 < run.size()) {
-            const Seg &nx = run[si + 1];
-            PointF out = (nx.pts.size() >= 2) ? segDir(nx.pts.front(), nx.pts[1]) : PointF{ 0.0, 0.0 };
-            if (out.x == 0.0 && out.y == 0.0) out = tiltUnit(nx.tilt);
-            const PointF t = { along.x + out.x, along.y + out.y };
-            const double tl = std::hypot(t.x, t.y);
-            if (tl > 1e-6) tangent = { t.x / tl, t.y / tl };
-        }
+            // The default orientation: the joint tangent when this nc hands off to a following connected
+            // one, otherwise across the stroke. The joint tangent is the unit mean of the two strokes'
+            // tangents at the corner - the marked stroke's end tangent and the next stroke's start
+            // tangent, both read from the sampled curve, so curving is honoured. A near-antiparallel pair
+            // (a hairpin turn) has no meaningful mean, but the tangent there lies across the limbs anyway,
+            // so it falls back to the perpendicular.
+            PointF tangent = across;
+            if (si + 1 < run.size()) {
+                const Seg &nx = run[si + 1];
+                PointF out = (nx.pts.size() >= 2) ? segDir(nx.pts.front(), nx.pts[1]) : PointF{ 0.0, 0.0 };
+                if (out.x == 0.0 && out.y == 0.0) out = tiltUnit(nx.tilt);
+                const PointF t = { along.x + out.x, along.y + out.y };
+                const double tl = std::hypot(t.x, t.y);
+                if (tl > 1e-6) tangent = { t.x / tl, t.y / tl };
+            }
 
-        // The summit of the marked stroke: its highest centreline point (pen +y is down). An "above"
-        // episema marks the peak of the note's stroke, and on a stroke that arches over - rising to a
-        // summit and then curving down past it before it hands off (a clivis's first limb) - that
-        // summit sits in the stroke's interior, while the end-joint has already slid down the far
-        // shoulder. So when the summit is a genuine interior peak the accent is anchored there rather
-        // than at the end, lying flat along the horizontal tangent a summit has by definition - on top
-        // of the curve, not tilted on its shoulder. A stroke that does not arch has its summit at the
-        // end, so this collapses back to the end / joint placement.
-        int apexIdx = 0;
-        for (int q = 1; q < (int)s.pts.size(); ++q)
-            if (s.pts[q].y < s.pts[apexIdx].y) apexIdx = q;
-        const bool arched = (apexIdx > 0 && apexIdx + 1 < (int)s.pts.size());
-        PointF summitTan = arched ? segDir(s.pts[apexIdx - 1], s.pts[apexIdx + 1]) : PointF{ 0.0, 0.0 };
-        if (summitTan.x == 0.0 && summitTan.y == 0.0) summitTan = { 1.0, 0.0 };
+            // The summit of the marked stroke: its highest centreline point (pen +y is down). An "above"
+            // episema marks the peak of the note's stroke, and on a stroke that arches over - rising to a
+            // summit and then curving down past it before it hands off (a clivis's first limb) - that
+            // summit sits in the stroke's interior, while the end-joint has already slid down the far
+            // shoulder. So when the summit is a genuine interior peak the accent is anchored there rather
+            // than at the end, lying flat along the horizontal tangent a summit has by definition - on top
+            // of the curve, not tilted on its shoulder. A stroke that does not arch has its summit at the
+            // end, so this collapses back to the end / joint placement.
+            int apexIdx = 0;
+            for (int q = 1; q < (int)s.pts.size(); ++q)
+                if (s.pts[q].y < s.pts[apexIdx].y) apexIdx = q;
+            const bool arched = (apexIdx > 0 && apexIdx + 1 < (int)s.pts.size());
+            PointF summitTan = arched ? segDir(s.pts[apexIdx - 1], s.pts[apexIdx + 1]) : PointF{ 0.0, 0.0 };
+            if (summitTan.x == 0.0 && summitTan.y == 0.0) summitTan = { 1.0, 0.0 };
 
-        // Episemata chain. Usually an nc carries one accent, placed independently against the stroke
-        // it marks. When several are stacked on the same nc they are CHAINED into one stepped gesture:
-        // the first reaches out from the marked point toward the open side, and each one after it
-        // stands vertically and CROSSES the far end of the accent before it. So a clivis's foot - a
-        // horizontal episema with an upright crossing its outer end - reads as a single hand-drawn
-        // shape rather than a heap of marks piled on the same point.
-        bool linked = false;
-        PointF linkEnd; // the far end of the previous accent in the chain (pen space, pre-slant)
-        // A footed chain skips its first episema (already the drawn foot) and seeds the chain on the foot's
-        // outer tip, so the upright(s) cross that tip just as a normal chain's uprights cross the first
-        // bar's reaching-out end.
-        size_t startEi = 0;
-        if (s.footEpisema) {
-            startEi = 1;
-            linked = true;
-            linkEnd = end; // the foot tip
+            // Episemata chain. Usually an nc carries one accent, placed independently against the stroke
+            // it marks. When several are stacked on the same nc they are CHAINED into one stepped gesture:
+            // the first reaches out from the marked point toward the open side, and each one after it
+            // stands vertically and CROSSES the far end of the accent before it. So a clivis's foot - a
+            // horizontal episema with an upright crossing its outer end - reads as a single hand-drawn
+            // shape rather than a heap of marks piled on the same point.
+            bool linked = false;
+            PointF linkEnd; // the far end of the previous accent in the chain (pen space, pre-slant)
+            // A footed chain skips its first episema (already the drawn foot) and seeds the chain on the foot's
+            // outer tip, so the upright(s) cross that tip just as a normal chain's uprights cross the first
+            // bar's reaching-out end.
+            size_t startEi = 0;
+            if (s.footEpisema) {
+                startEi = 1;
+                linked = true;
+                linkEnd = end; // the foot tip
+            }
+            for (size_t ei = startEi; ei < nc.episemata.size(); ++ei) {
+                const EpisemaInfo &e = nc.episemata[ei];
+                // The accent's orientation, half-length, and the two centreline ends a -> b.
+                PointF ori;
+                double HL;
+                PointF a, b;
+                // An end-cap accent: a lone, default-placed episema crossing the FREE end of a stroke (no
+                // following joint to lean into, no @place offset to lift or slide it clear). It is hung from
+                // its dish trough rather than its chord so the crossing point lands on the tip - see the
+                // sweep below. Chained, lifted, summit and forced-horizontal accents keep the plain dish.
+                bool endCap = false;
+                if (!linked) {
+                    // First (or only) accent: placed against the marked stroke per @form / @place.
+                    const bool above = (e.place == EVENTREL_above || e.place == EVENTREL_above_left
+                        || e.place == EVENTREL_above_right);
+                    // Anchor an "above" accent on an arched stroke's summit (flat on top); otherwise on the
+                    // end / joint as before. @form="h" (forced along-stroke) keeps its explicit orientation.
+                    const bool onSummit = arched && above && (e.form != episemaVis_FORM_h);
+                    const PointF anchor = onSummit ? s.pts[apexIdx] : end;
+                    ori = (e.form == episemaVis_FORM_h) ? along : (onSummit ? summitTan : tangent);
+                    HL = (e.form == episemaVis_FORM_h) ? 7.0 : 6.0;
+                    const double GAP = 4.0, NUDGE = 7.0;
+                    // The vertical clearance of the accent from the marked point. On a summit the air gap is
+                    // measured from the inked edge, not the centreline: the ribbon stands half a nib-width
+                    // proud of its spine at the peak, so add that half-width (from the broad-nib law at the
+                    // summit's horizontal tangent) to keep the same clean gap the end placement has.
+                    double clear = GAP;
+                    if (onSummit) {
+                        const PointF nib = { std::cos(NIB_ANGLE), std::sin(NIB_ANGLE) };
+                        const double sinA = std::fabs(ori.x * nib.y - ori.y * nib.x); // |T x n̂|
+                        clear = GAP + (NIB_MIN + (NIB_W - NIB_MIN) * sinA) / 2.0;
+                    }
+                    // Centre the accent on the marked point, then set it clear of the ink in the accent's
+                    // own frame so the point always stays at its midpoint instead of sliding to a corner:
+                    // @place's vertical part (above / below) lifts it perpendicular to its length, its
+                    // horizontal part (left / right) shifts it along its length to one side. @up is the
+                    // accent normal oriented upward (pen -y); @axis runs along the accent toward +x so
+                    // left / right read as expected.
+                    PointF up = { -ori.y, ori.x };
+                    if (up.y > 0.0) up = { -up.x, -up.y };
+                    const PointF axis = (ori.x < 0.0) ? PointF{ -ori.x, -ori.y } : ori;
+                    double lift = 0.0, shift = 0.0;
+                    switch (e.place) {
+                        case EVENTREL_above:
+                        case EVENTREL_above_left:
+                        case EVENTREL_above_right: lift = clear; break;
+                        case EVENTREL_below:
+                        case EVENTREL_below_left:
+                        case EVENTREL_below_right: lift = -clear; break;
+                        default: break;
+                    }
+                    switch (e.place) {
+                        case EVENTREL_above_left:
+                        case EVENTREL_below_left: shift = -NUDGE; break;
+                        case EVENTREL_above_right:
+                        case EVENTREL_below_right: shift = NUDGE; break;
+                        case EVENTREL_left: shift = -GAP; break;
+                        case EVENTREL_right: shift = GAP; break;
+                        default: break;
+                    }
+                    // A lone accent stays centred on the marked point. When this nc carries a chain, the
+                    // first accent instead slides one half-length along its axis toward the open side (+x,
+                    // away from the neume body), so one end sits on the marked point and the bar reaches
+                    // out into clear space - giving the upright that follows a far end to cross that is
+                    // clear of the stroke.
+                    const double away = (nc.episemata.size() > 1) ? HL : 0.0;
+                    const double cx = anchor.x + up.x * lift + axis.x * (shift + away);
+                    const double cy = anchor.y + up.y * lift + axis.y * (shift + away);
+                    a = { cx - ori.x * HL, cy - ori.y * HL };
+                    b = { cx + ori.x * HL, cy + ori.y * HL };
+                    // Flag a default accent lying across the FREE end of this stroke (no following joint, no
+                    // @place offset): it crosses the tip rather than sitting clear of it. Centred on the
+                    // centreline end its freehand dish sags away from the tip, leaving the inked point to
+                    // poke out past the accent (the tractulus's east stroke peeking out under its episema).
+                    // The sweep below hangs such an accent from its dish trough instead, dropping it onto
+                    // the tip to cap it.
+                    endCap = (nc.episemata.size() == 1) && !onSummit && (e.form != episemaVis_FORM_h)
+                        && (si + 1 >= run.size()) && (lift == 0.0) && (shift == 0.0);
+                }
+                else {
+                    // A chained accent stands vertically (pen -y) and CROSSES the far end of the accent
+                    // before it - the stroke that crosses the outer end of a clivis foot's horizontal
+                    // episema. By default it is centred on that junction (equal above and below); @place
+                    // then slides it one half-length clear so it sits above the junction (rising from it)
+                    // or below it (hanging from it). Its length matches a vertical accent's (2 * HL).
+                    ori = { 0.0, -1.0 };
+                    HL = 6.0;
+                    double placeLift = 0.0; // along ori (up): +HL puts the junction at the foot, -HL at the top
+                    switch (e.place) {
+                        case EVENTREL_above:
+                        case EVENTREL_above_left:
+                        case EVENTREL_above_right: placeLift = HL; break;
+                        case EVENTREL_below:
+                        case EVENTREL_below_left:
+                        case EVENTREL_below_right: placeLift = -HL; break;
+                        default: break;
+                    }
+                    const PointF c = { linkEnd.x + ori.x * placeLift, linkEnd.y + ori.y * placeLift };
+                    a = { c.x - ori.x * HL, c.y - ori.y * HL }; // lower end
+                    b = { c.x + ori.x * HL, c.y + ori.y * HL }; // upper end
+                }
+                // Sweep the broad nib along the accent's centreline at full, untapered width: a short
+                // stroke in the same hand as the neume, set just clear of the ink. The centreline is not
+                // a ruled bar but a shallow concave-up dish - the broad nib drawn freehand sags in the
+                // middle and flicks up at the ends - so the accent reads as a hand-drawn stroke, not a
+                // straight line.
+                // Perpendicular to the accent's length, oriented visually downward (pen +y), so the bow
+                // dips the middle below the chord while the ends ride up - a concave-up valley.
+                PointF perp = { -ori.y, ori.x };
+                if (perp.y < 0.0) perp = { -perp.x, -perp.y };
+                // A lone accent keeps the freehand dish; chained accents are drawn nearly straight, so the
+                // stepped clivis foot reads as ruled strokes meeting at a right angle rather than two
+                // scoops. Their depth at mid-length is a fraction of the half-length.
+                const double bow = HL * (nc.episemata.size() > 1 ? EPISEMA_BOW_CHAIN : EPISEMA_BOW);
+                // An end-cap accent is hung from its dish TROUGH (the deepest point, dip = bow at mid - the
+                // part that crosses the marked stroke) instead of from its chord. Subtracting the full dip
+                // there translates the whole centreline by -perp*bow, dropping that trough exactly onto the
+                // anchor (the stroke's tip) so the broad accent caps the point. The offset is exact - the
+                // trough dip IS bow - so it needs no tuning and holds at any stroke angle. Apply it only
+                // when the dish sags back toward the stroke (perp opposing the exit); a stroke whose dish
+                // already bows outward - a vertical descent - caps cleanly and keeps the plain chord.
+                const double trough = (endCap && perp.Dot(along) < 0.0) ? bow : 0.0;
+                constexpr int kSamples = 10;
+                std::vector<PointF> centre;
+                centre.reserve(kSamples + 1);
+                for (int k = 0; k <= kSamples; ++k) {
+                    const double u = (double)k / kSamples;
+                    const double dip = bow * 4.0 * u * (1.0 - u) - trough; // 0 at the ends, max at mid, less the trough
+                    centre.push_back({ a.x + (b.x - a.x) * u + perp.x * dip, a.y + (b.y - a.y) * u + perp.y * dip });
+                }
+                // The accent is a separate pen stroke, so it rides the same forward slant as the ribbon,
+                // which also carries its anchor across to meet the leaned stroke end it marks.
+                if (!slant.IsNone()) SlantApply(centre, slant);
+                geo.ncs[s.ncIndex].episemata.push_back(NibRibbon(centre, EPISEMA_NIB, false, false));
+                // The next link crosses this accent's far end: the endpoint reaching farthest into open
+                // space - the rightmost (+x), or for an upright accent (equal x) its top. Recorded
+                // pre-slant so the shear that follows leaves the chain joined.
+                linkEnd = (std::fabs(a.x - b.x) > 1e-6) ? (a.x > b.x ? a : b) : (a.y < b.y ? a : b);
+                linked = true;
+            }
         }
-        for (size_t ei = startEi; ei < nc.episemata.size(); ++ei) {
-            const EpisemaInfo &e = nc.episemata[ei];
-            // The accent's orientation, half-length, and the two centreline ends a -> b.
-            PointF ori;
-            double HL;
-            PointF a, b;
-            // An end-cap accent: a lone, default-placed episema crossing the FREE end of a stroke (no
-            // following joint to lean into, no @place offset to lift or slide it clear). It is hung from
-            // its dish trough rather than its chord so the crossing point lands on the tip - see the
-            // sweep below. Chained, lifted, summit and forced-horizontal accents keep the plain dish.
-            bool endCap = false;
-            if (!linked) {
-                // First (or only) accent: placed against the marked stroke per @form / @place.
-                const bool above = (e.place == EVENTREL_above || e.place == EVENTREL_above_left
-                    || e.place == EVENTREL_above_right);
-                // Anchor an "above" accent on an arched stroke's summit (flat on top); otherwise on the
-                // end / joint as before. @form="h" (forced along-stroke) keeps its explicit orientation.
-                const bool onSummit = arched && above && (e.form != episemaVis_FORM_h);
-                const PointF anchor = onSummit ? s.pts[apexIdx] : end;
-                ori = (e.form == episemaVis_FORM_h) ? along : (onSummit ? summitTan : tangent);
-                HL = (e.form == episemaVis_FORM_h) ? 7.0 : 6.0;
-                const double GAP = 4.0, NUDGE = 7.0;
-                // The vertical clearance of the accent from the marked point. On a summit the air gap is
-                // measured from the inked edge, not the centreline: the ribbon stands half a nib-width
-                // proud of its spine at the peak, so add that half-width (from the broad-nib law at the
-                // summit's horizontal tangent) to keep the same clean gap the end placement has.
-                double clear = GAP;
-                if (onSummit) {
-                    const PointF nib = { std::cos(NIB_ANGLE), std::sin(NIB_ANGLE) };
-                    const double sinA = std::fabs(ori.x * nib.y - ori.y * nib.x); // |T x n̂|
-                    clear = GAP + (NIB_MIN + (NIB_W - NIB_MIN) * sinA) / 2.0;
-                }
-                // Centre the accent on the marked point, then set it clear of the ink in the accent's
-                // own frame so the point always stays at its midpoint instead of sliding to a corner:
-                // @place's vertical part (above / below) lifts it perpendicular to its length, its
-                // horizontal part (left / right) shifts it along its length to one side. @up is the
-                // accent normal oriented upward (pen -y); @axis runs along the accent toward +x so
-                // left / right read as expected.
-                PointF up = { -ori.y, ori.x };
-                if (up.y > 0.0) up = { -up.x, -up.y };
-                const PointF axis = (ori.x < 0.0) ? PointF{ -ori.x, -ori.y } : ori;
-                double lift = 0.0, shift = 0.0;
-                switch (e.place) {
-                    case EVENTREL_above:
-                    case EVENTREL_above_left:
-                    case EVENTREL_above_right: lift = clear; break;
-                    case EVENTREL_below:
-                    case EVENTREL_below_left:
-                    case EVENTREL_below_right: lift = -clear; break;
-                    default: break;
-                }
-                switch (e.place) {
-                    case EVENTREL_above_left:
-                    case EVENTREL_below_left: shift = -NUDGE; break;
-                    case EVENTREL_above_right:
-                    case EVENTREL_below_right: shift = NUDGE; break;
-                    case EVENTREL_left: shift = -GAP; break;
-                    case EVENTREL_right: shift = GAP; break;
-                    default: break;
-                }
-                // A lone accent stays centred on the marked point. When this nc carries a chain, the
-                // first accent instead slides one half-length along its axis toward the open side (+x,
-                // away from the neume body), so one end sits on the marked point and the bar reaches
-                // out into clear space - giving the upright that follows a far end to cross that is
-                // clear of the stroke.
-                const double away = (nc.episemata.size() > 1) ? HL : 0.0;
-                const double cx = anchor.x + up.x * lift + axis.x * (shift + away);
-                const double cy = anchor.y + up.y * lift + axis.y * (shift + away);
-                a = { cx - ori.x * HL, cy - ori.y * HL };
-                b = { cx + ori.x * HL, cy + ori.y * HL };
-                // Flag a default accent lying across the FREE end of this stroke (no following joint, no
-                // @place offset): it crosses the tip rather than sitting clear of it. Centred on the
-                // centreline end its freehand dish sags away from the tip, leaving the inked point to
-                // poke out past the accent (the tractulus's east stroke peeking out under its episema).
-                // The sweep below hangs such an accent from its dish trough instead, dropping it onto
-                // the tip to cap it.
-                endCap = (nc.episemata.size() == 1) && !onSummit && (e.form != episemaVis_FORM_h)
-                    && (si + 1 >= run.size()) && (lift == 0.0) && (shift == 0.0);
-            }
-            else {
-                // A chained accent stands vertically (pen -y) and CROSSES the far end of the accent
-                // before it - the stroke that crosses the outer end of a clivis foot's horizontal
-                // episema. By default it is centred on that junction (equal above and below); @place
-                // then slides it one half-length clear so it sits above the junction (rising from it)
-                // or below it (hanging from it). Its length matches a vertical accent's (2 * HL).
-                ori = { 0.0, -1.0 };
-                HL = 6.0;
-                double placeLift = 0.0; // along ori (up): +HL puts the junction at the foot, -HL at the top
-                switch (e.place) {
-                    case EVENTREL_above:
-                    case EVENTREL_above_left:
-                    case EVENTREL_above_right: placeLift = HL; break;
-                    case EVENTREL_below:
-                    case EVENTREL_below_left:
-                    case EVENTREL_below_right: placeLift = -HL; break;
-                    default: break;
-                }
-                const PointF c = { linkEnd.x + ori.x * placeLift, linkEnd.y + ori.y * placeLift };
-                a = { c.x - ori.x * HL, c.y - ori.y * HL }; // lower end
-                b = { c.x + ori.x * HL, c.y + ori.y * HL }; // upper end
-            }
-            // Sweep the broad nib along the accent's centreline at full, untapered width: a short
-            // stroke in the same hand as the neume, set just clear of the ink. The centreline is not
-            // a ruled bar but a shallow concave-up dish - the broad nib drawn freehand sags in the
-            // middle and flicks up at the ends - so the accent reads as a hand-drawn stroke, not a
-            // straight line.
-            // Perpendicular to the accent's length, oriented visually downward (pen +y), so the bow
-            // dips the middle below the chord while the ends ride up - a concave-up valley.
-            PointF perp = { -ori.y, ori.x };
-            if (perp.y < 0.0) perp = { -perp.x, -perp.y };
-            // A lone accent keeps the freehand dish; chained accents are drawn nearly straight, so the
-            // stepped clivis foot reads as ruled strokes meeting at a right angle rather than two
-            // scoops. Their depth at mid-length is a fraction of the half-length.
-            const double bow = HL * (nc.episemata.size() > 1 ? EPISEMA_BOW_CHAIN : EPISEMA_BOW);
-            // An end-cap accent is hung from its dish TROUGH (the deepest point, dip = bow at mid - the
-            // part that crosses the marked stroke) instead of from its chord. Subtracting the full dip
-            // there translates the whole centreline by -perp*bow, dropping that trough exactly onto the
-            // anchor (the stroke's tip) so the broad accent caps the point. The offset is exact - the
-            // trough dip IS bow - so it needs no tuning and holds at any stroke angle. Apply it only
-            // when the dish sags back toward the stroke (perp opposing the exit); a stroke whose dish
-            // already bows outward - a vertical descent - caps cleanly and keeps the plain chord.
-            const double trough = (endCap && perp.Dot(along) < 0.0) ? bow : 0.0;
-            constexpr int kSamples = 10;
-            std::vector<PointF> centre;
-            centre.reserve(kSamples + 1);
-            for (int k = 0; k <= kSamples; ++k) {
-                const double u = (double)k / kSamples;
-                const double dip = bow * 4.0 * u * (1.0 - u) - trough; // 0 at the ends, max at mid, less the trough
-                centre.push_back({ a.x + (b.x - a.x) * u + perp.x * dip,
-                                   a.y + (b.y - a.y) * u + perp.y * dip });
-            }
-            // The accent is a separate pen stroke, so it rides the same forward slant as the ribbon,
-            // which also carries its anchor across to meet the leaned stroke end it marks.
-            if (!slant.IsNone()) SlantApply(centre, slant);
-            geo.ncs[s.ncIndex].episemata.push_back(NibRibbon(centre, EPISEMA_NIB, false, false));
-            // The next link crosses this accent's far end: the endpoint reaching farthest into open
-            // space - the rightmost (+x), or for an upright accent (equal x) its top. Recorded
-            // pre-slant so the shear that follows leaves the chain joined.
-            linkEnd = (std::fabs(a.x - b.x) > 1e-6) ? (a.x > b.x ? a : b) : (a.y < b.y ? a : b);
-            linked = true;
-        }
-    }
 }
 
 CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(const std::vector<NcInfo> &ncs, double scale, Slant slant)
@@ -1190,8 +1194,7 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(const std::vector<NcIn
             // slides tight sideways and is centred like the first component, so the pair's feet share one
             // horizontal line and their tips another, instead of stacking up a diagonal.
             const PointF stepDir = chordDirOf(i);
-            const bool levelRepeat = brk && (nc.intm == 's' || nc.intm == 0)
-                && prevExitDir.Dot(stepDir) > PARALLEL_COS;
+            const bool levelRepeat = brk && (nc.intm == 's' || nc.intm == 0) && prevExitDir.Dot(stepDir) > PARALLEL_COS;
             // Centred on the anchor for the first component and a level repeat; a stepped detached
             // component is foot-anchored at the gap point so it continues up/down the contour.
             const bool centred = !brk || levelRepeat;
@@ -1327,8 +1330,8 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(const std::vector<NcIn
                         const PointF tIn = (prevExitDir.x != 0.0 || prevExitDir.y != 0.0) ? prevExitDir : chordDirOf(i);
                         const PointF tOut
                             = (i + 1 < ncs.size() && !breaksBefore(i + 1)) ? chordDirOf(i + 1) : chordDirOf(i);
-                        Stroke sh
-                            = CurvedLoop(start, tilt, nc.curve, len, tIn, tOut, curlHand, nc.liquescentLooped, LIQ_CURL_R);
+                        Stroke sh = CurvedLoop(
+                            start, tilt, nc.curve, len, tIn, tOut, curlHand, nc.liquescentLooped, LIQ_CURL_R);
                         pts = sh.pts;
                         pen = sh.exit;
                     }

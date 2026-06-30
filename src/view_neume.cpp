@@ -354,7 +354,8 @@ void View::DrawNeumeAdiastematic(DeviceContext *dc, Neume *neume, Staff *staff)
             }
             else {
                 info.hasNonEpisemaChild = true;
-                if (grandChild->Is(STROPHICUS)) info.strophicus = true;
+                if (grandChild->Is(STROPHICUS))
+                    info.strophicus = true;
                 else if (grandChild->Is(QUILISMA)) {
                     info.quilisma = true;
                     Quilisma *quilisma = vrv_cast<Quilisma *>(grandChild);

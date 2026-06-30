@@ -749,8 +749,7 @@ void SvgDeviceContext::DrawClosedBezierPath(const std::vector<Point> &cp)
 
     std::string d = StringFormat("M%d,%d", cp[0].x, cp[0].y);
     for (size_t i = 1; i + 2 < cp.size(); i += 3) {
-        d += StringFormat(
-            " C%d,%d %d,%d %d,%d", cp[i].x, cp[i].y, cp[i + 1].x, cp[i + 1].y, cp[i + 2].x, cp[i + 2].y);
+        d += StringFormat(" C%d,%d %d,%d %d,%d", cp[i].x, cp[i].y, cp[i + 1].x, cp[i + 1].y, cp[i + 2].x, cp[i + 2].y);
     }
     d += " Z";
 

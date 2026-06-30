@@ -422,8 +422,7 @@ protected:
      * Draw the significative letters (<signifLet>) of a neume as upright text, positioned relative
      * to the inked gesture's logical bounding box according to each letter's @place.
      */
-    void DrawNeumeSignifLets(
-        DeviceContext *dc, Neume *neume, Staff *staff, int x1, int y1, int x2, int y2);
+    void DrawNeumeSignifLets(DeviceContext *dc, Neume *neume, Staff *staff, int x1, int y1, int x2, int y2);
     ///@}
 
     /**
