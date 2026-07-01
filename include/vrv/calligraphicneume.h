@@ -184,17 +184,14 @@ private:
      * e.g. the second component of a virga strata) rather than being centred on a point. */
     static Stroke WaveFrom(PointF s, const std::string &orient, int tilt);
     /**
-     * A quilisma: a wavy horizontal flourish, modelled on the liquescent. The wiggle ALWAYS runs level
-     * (east) - the broad nib swept over it draws the characteristic toothed quilisma - landing on the
-     * first crest and lifting at the last trough; @p waves (from @waves) sets the crest count. When
-     * @p rise is false the WHOLE note is this wavy line (the parent nc carries no @tilt). When @p rise
-     * is true the wiggle is only a PREAMBLE: the note then sweeps up out of the last trough toward
-     * @p tilt over length @p len, the climb of a quilismapes (its shallow foot travels across the nib
-     * and inks broad, tapering as it steepens). @p centred backs the preamble off by half its length
-     * so a standalone wavy note sits on @p s; otherwise the flourish springs forward from @p s (a
-     * connected or stepped component).
+     * A quilisma: a wavy flourish, modelled on the liquescent. The WHOLE note is this wavy line - the
+     * broad nib swept over it draws the characteristic toothed quilisma - starting on the first crest
+     * and lifting at the last trough, whence the next nc's ascent springs. The wiggle runs along
+     * @p tilt (defaulting to e, so a plain quilisma is level); @p waves (from @waves) sets the crest
+     * count. @p centred backs the line off by half its travel so a standalone wavy note sits on @p s;
+     * otherwise the flourish springs forward from @p s (a connected or stepped component).
      */
-    static Stroke Quilisma(PointF s, int tilt, int waves, double len, bool rise, bool centred);
+    static Stroke Quilisma(PointF s, int tilt, int waves, bool centred);
     static Stroke Comma(double x, double y, int tilt);
     /**
      * A liquescent stroke (cephalicus / epiphonus). When @p stem > 0 the note's own melodic stroke of

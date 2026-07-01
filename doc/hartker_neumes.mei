@@ -252,19 +252,21 @@
               <syllable>
                 <syl>Quilismascandicus</syl>
                 <neume>
-                  <nc tilt="e" />
-                  <nc con="g" intm="u" tilt="ne" rellen="l">
+                  <nc tilt="e" rellen="s" />
+                  <nc con="g" intm="u">
                     <quilisma waves="3" />
                   </nc>
+                  <nc tilt="ne" rellen="l" />
                 </neume>
               </syllable>
               <syllable>
                 <syl>Quilismascandicus</syl>
                 <neume>
-                  <nc tilt="e" />
-                  <nc con="g" intm="u" tilt="ne" rellen="l">
+                  <nc tilt="e" rellen="s" />
+                  <nc con="g" intm="u">
                     <quilisma waves="2" />
                   </nc>
+                  <nc tilt="ne" rellen="l" />
                 </neume>
               </syllable>
               <syllable>
@@ -292,9 +294,10 @@
                 <neume>
                   <nc tilt="e" />
                   <nc tilt="e" con="g" intm="u" />
-                  <nc con="g" intm="u" tilt="ne" rellen="l">
+                  <nc con="g" intm="u">
                     <quilisma waves="3" />
                   </nc>
+                  <nc tilt="ne" rellen="l" />
                 </neume>
               </syllable>
               <syllable>
@@ -302,9 +305,10 @@
                 <neume>
                   <nc tilt="e" />
                   <nc tilt="e" con="g" intm="u" />
-                  <nc con="g" intm="u" tilt="ne" rellen="l">
+                  <nc con="g" intm="u">
                     <quilisma waves="2" />
                   </nc>
+                  <nc tilt="ne" rellen="l" />
                 </neume>
               </syllable>
               <syllable>
@@ -364,9 +368,11 @@
                 <syl>Quilismascandicus flexus</syl>
                 <neume>
                   <nc tilt="e" />
-                  <nc con="g" intm="u" tilt="ne" rellen="l">
+                  <nc tilt="e" con="g" intm="u" />
+                  <nc con="g" intm="u">
                     <quilisma waves="3" />
                   </nc>
+                  <nc intm="u" tilt="ne" curve="c" rellen="l"/>
                   <nc tilt="s" rellen="s" intm="d" />
                 </neume>
               </syllable>

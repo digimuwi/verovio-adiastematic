@@ -212,10 +212,10 @@ CalligraphicNeume::PointF CalligraphicNeume::TiltVec(int tilt)
 
 int CalligraphicNeume::EffectiveTilt(const NcInfo &nc)
 {
-    if (nc.tilt != COMPASSDIRECTION_NONE) return nc.tilt; // an explicit @tilt: the quilismapes ascent
-    // A quilisma with no @tilt is the whole wavy note: it runs level, so it defaults to e rather than
-    // taking the @intm direction (u would otherwise tilt it ne). With a @tilt the wiggle is only a
-    // preamble and that @tilt (handled above) steers the ascent the note then makes.
+    if (nc.tilt != COMPASSDIRECTION_NONE) return nc.tilt; // an explicit @tilt always wins
+    // A quilisma is always the whole wavy note; it runs level, so it defaults to e rather than taking
+    // the @intm direction (u would otherwise tilt it ne). The ascent of a quilismapes belongs to the
+    // next nc, not to the wavy line itself.
     if (nc.quilisma) return COMPASSDIRECTION_e;
     return IntmDefaultTilt(nc.intm);
 }
@@ -545,50 +545,35 @@ CalligraphicNeume::Stroke CalligraphicNeume::WaveFrom(PointF s, const std::strin
     return { Cubic(s, c1, c2, e), e };
 }
 
-// quilisma: a wavy horizontal flourish modelled on the liquescent (see the header). The wiggle ALWAYS
-// runs level (east) - the broad nib swept over it draws the toothed quilisma - landing at the top of
-// the first crest and dipping from there (so the stroke opens on a wave, not a half-swing up to one)
-// and lifting at the bottom of the last trough. @p rise switches the two readings of a <quilisma>:
-// false makes the WHOLE note the wavy line; true makes it a PREAMBLE that then sweeps up out of the
-// last trough toward @p tilt over @p len - the ascent of a quilismapes, internal to this one nc.
-CalligraphicNeume::Stroke CalligraphicNeume::Quilisma(
-    PointF s, int tilt, int waves, double len, bool rise, bool centred)
+// quilisma: a wavy flourish modelled on the liquescent (see the header). The WHOLE note is this wavy
+// line - the broad nib swept over it draws the characteristic toothed quilisma - starting at the top
+// of the first crest (so the stroke opens on a wave, not a half-swing up to one) and lifting at the
+// bottom of the last trough, whence the next nc's ascent springs. The wiggle runs along @p tilt
+// (defaulting to e, so a plain quilisma is level); @p waves (from @waves) sets the crest count.
+CalligraphicNeume::Stroke CalligraphicNeume::Quilisma(PointF s, int tilt, int waves, bool centred)
 {
     if (waves < 1) waves = 2; // default number of crests
-    const PointF east = TiltVec(COMPASSDIRECTION_e); // the wiggle always runs level, whatever the @tilt
+    PointF dir = TiltVec(tilt); // the wavy line travels along @tilt...
+    if (dir.x == 0.0 && dir.y == 0.0) dir = TiltVec(COMPASSDIRECTION_e); // ...level by default
+    const PointF perp = { -dir.y, dir.x }; // the wiggle swings to either side of that axis
     constexpr double WAVE_LEN = 13.0; // travel per crest (along the stroke)
     constexpr double AMP = 7.5; // perpendicular swing of the wiggle (rounder, taller humps)
     constexpr int PER = 10; // samples per crest
     const double total = WAVE_LEN * waves;
-    // A standalone wavy note (@p centred) sits on its anchor, so back the preamble off by half its
-    // length; a connected or stepped flourish springs forward from @p s.
-    const PointF foot = centred ? PointF{ s.x - east.x * total / 2, s.y } : s;
+    // A standalone wavy note (@p centred) sits on its anchor, so back the line off by half its travel;
+    // a connected or stepped flourish springs forward from @p s.
+    const PointF foot = centred ? PointF{ s.x - dir.x * total / 2, s.y - dir.y * total / 2 } : s;
     const int n = waves * PER;
-    // Phase the swing so it starts at a crest (top, -AMP) and ends at a trough (bottom, +AMP): an
-    // integer count of crests with half a cycle to spare puts the lift exactly at the final trough,
-    // its tangent momentarily level, so the ascent that follows springs cleanly out of the low point.
+    // Phase the swing so it starts at a crest (-AMP) and ends at a trough (+AMP): an integer count of
+    // crests with half a cycle to spare puts the lift exactly at the final trough, its tangent
+    // momentarily along the axis, so the next nc's ascent springs cleanly out of that low point.
     const double cycles = (double)waves - 0.5;
     std::vector<PointF> pts;
-    pts.reserve(n + 1 + 25);
+    pts.reserve(n + 1);
     for (int i = 0; i <= n; ++i) {
         const double t = (double)i / n; // 0..1 along the travel
-        const double off = -AMP * std::cos(2.0 * M_PI * cycles * t); // top -> ... -> bottom
-        pts.push_back({ foot.x + east.x * total * t, foot.y + off }); // east's perpendicular is straight down
-    }
-    if (rise) {
-        // The note's own ascent, springing out of the final trough toward @tilt. The start tangent is
-        // level (continuing the wavy baseline) and the end tangent runs along @tilt, so the swoosh
-        // leaves shallow and steepens as it climbs.
-        PointF dir = TiltVec(tilt);
-        if (dir.x == 0.0 && dir.y == 0.0) dir = east;
-        const PointF base = pts.back();
-        const PointF end = { base.x + dir.x * len, base.y + dir.y * len };
-        constexpr double kFoot = 0.45; // horizontal foot handle: holds the sweep low before it lifts
-        constexpr double kHead = 0.40; // head handle along the note's own rise
-        const PointF c1 = { base.x + east.x * len * kFoot, base.y + east.y * len * kFoot };
-        const PointF c2 = { end.x - dir.x * len * kHead, end.y - dir.y * len * kHead };
-        const std::vector<PointF> arc = Cubic(base, c1, c2, end, 24);
-        pts.insert(pts.end(), arc.begin() + 1, arc.end()); // skip the base point, already in pts
+        const double off = -AMP * std::cos(2.0 * M_PI * cycles * t); // crest -> ... -> trough
+        pts.push_back({ foot.x + dir.x * total * t + perp.x * off, foot.y + dir.y * total * t + perp.y * off });
     }
     return { pts, pts.back() };
 }
@@ -1268,10 +1253,8 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(const std::vector<NcIn
                 pen = anchor;
             }
             else if (nc.quilisma) {
-                // A <quilisma>: the whole note is the wavy line when the nc has no @tilt; with a @tilt
-                // the wiggle is a preamble that then rises in that direction (the liquescent model).
-                const bool rise = hasExplicitTilt && std::fabs(TiltVec(tilt).y) > 1e-6;
-                Stroke sh = Quilisma(anchor, tilt, nc.waves, len, rise, centred);
+                // A <quilisma>: the whole note is the wavy line, running along @tilt (level by default).
+                Stroke sh = Quilisma(anchor, tilt, nc.waves, centred);
                 pts = sh.pts;
                 pen = sh.exit;
             }
@@ -1346,10 +1329,9 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(const std::vector<NcIn
             PointF dir = TiltVec(tilt);
             if (dir.x == 0.0 && dir.y == 0.0) dir = TiltVec(COMPASSDIRECTION_e);
             if (nc.quilisma) {
-                // Within a ligature the wiggle springs from the pen; with a @tilt it then rises in that
-                // direction, otherwise the whole component is the wavy line (the liquescent model).
-                const bool rise = hasExplicitTilt && std::fabs(TiltVec(tilt).y) > 1e-6;
-                Stroke sh = Quilisma(pen, tilt, nc.waves, len, rise, false);
+                // Within a ligature the whole component is the wavy line, springing from the pen and
+                // running along @tilt (level by default).
+                Stroke sh = Quilisma(pen, tilt, nc.waves, false);
                 pts = sh.pts;
                 pen = sh.exit;
             }
