@@ -1148,7 +1148,14 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(const std::vector<NcIn
         // horizontal @form, or the default bar of a CHAIN, which reaches out to clear space for the upright
         // that crosses it. A lone default episema stays a centred tenuto, not a one-sided foot.
         const EpisemaInfo &first = n.episemata[0];
-        const bool sideways = (first.place == EVENTREL_left || first.place == EVENTREL_right);
+        // A LEFT-reaching episema is never written in one go with its note. The broad nib is dragged up
+        // and to the right (PULL_AXIS); a tail flicking back to the left would run against that drag, which
+        // the period hand avoids - it lifts the pen and re-lays the bar as a separate RIGHT-going accent
+        // instead. So a left @place drops out of the continuation foot here and is drawn by BuildEpisemata
+        // as a lifted accent to the note's left (shift = -GAP). Only a left @place ever produces a leftward
+        // foot (side = -1 in the foot builder is set for EVENTREL_left alone).
+        if (first.place == EVENTREL_left) return false;
+        const bool sideways = (first.place == EVENTREL_right); // left already dropped out above
         const bool horizontal = (first.form == episemaVis_FORM_h);
         const bool chainReach = (first.place == EVENTREL_NONE && n.episemata.size() > 1);
         if (!sideways && !horizontal && !chainReach) return false;
