@@ -43,6 +43,8 @@ namespace {
     // sideways (a bivirga). Adiastematic sources are heightless, so these are conventions, not intervals.
     constexpr double BREAK_GAP = 15.0; // pen-lift advance past a detached component's clearance
     constexpr double REPEAT_DX = 14.0; // horizontal slide of a repeated same-pitch stroke (bivirga, distropha)
+    constexpr double NESTLE_GAP = 7.0; // perpendicular clearance between two @place-stacked parallel strokes
+                                       // (a hairline above the broad nib, NIB_W = 6, so they still read apart)
     // Liquescent curl radii. A liquescent that carries its own melodic stroke ends in a small terminal
     // flourish; one with no @tilt is the whole note rendered as a hook off the previous nc, so its curl
     // is note-sized rather than a tiny ornament.
@@ -1179,6 +1181,61 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(const std::vector<NcIn
         return (std::fabs(dir.y) > 1e-6) ? reachOf(k) / std::fabs(dir.y) : reachOf(k);
     };
 
+    // The previous gesture's ink (the just-completed connected run) resolved in an explicit @place's gap
+    // frame - the axis along @p gapDir and the cross axis across it. parMin / parMax bound its reach along
+    // gapDir; perMid is the midline of its cross extent, where a placed component sits so it lands over the
+    // neume's CENTRE (not its foot / ligature end). `any` is false for an empty run.
+    struct GapFrame {
+        PointF perp;
+        double parMin, parMax, perMid;
+        bool any;
+    };
+    auto placeFrame = [&](const std::vector<Seg> &run, PointF gapDir) -> GapFrame {
+        const PointF perp = gapDir.Perp();
+        bool any = false;
+        double parMin = 0.0, parMax = 0.0, perMin = 0.0, perMax = 0.0;
+        for (const Seg &seg : run) {
+            for (const PointF &p : seg.pts) {
+                const double par = p.Dot(gapDir), per = p.Dot(perp);
+                if (!any) {
+                    parMin = parMax = par, perMin = perMax = per, any = true;
+                }
+                else {
+                    parMin = std::min(parMin, par), parMax = std::max(parMax, par);
+                    perMin = std::min(perMin, per), perMax = std::max(perMax, per);
+                }
+            }
+        }
+        return { perp, parMin, parMax, (perMin + perMax) / 2.0, any };
+    };
+
+    // The tightest centre-to-centre offset along @p gapDir at which a parallel repeat - the previous run
+    // translated (cross-aligned) onto the placed spot - still holds a @p gap perpendicular clearance from
+    // its predecessor. Parallel shapes keep a constant perpendicular gap however far one slides along the
+    // axis, so a fixed centre distance (REPEAT_DX) over-spaces a shallow shape (two flat chevrons stacked)
+    // while crowding a steep one; solving per point-pair for the offset that yields a nib-sized gap nestles
+    // them tight at any angle. For pair (a, b) with difference d, the translated a clears b by @p gap when
+    // |d + t*gapDir| >= gap; the binding t is -(d.gapDir) + sqrt(gap^2 - d_perp^2) over pairs that can touch
+    // (d_perp <= gap). The a == b pair alone forces t >= gap, so the result is never below the gap itself.
+    auto nestleOffset = [&](const std::vector<Seg> &run, PointF gapDir, double gap) -> double {
+        const double gap2 = gap * gap;
+        double t = 0.0;
+        for (const Seg &sa : run) {
+            for (const PointF &a : sa.pts) {
+                for (const Seg &sb : run) {
+                    for (const PointF &b : sb.pts) {
+                        const double dx = a.x - b.x, dy = a.y - b.y;
+                        const double dg = dx * gapDir.x + dy * gapDir.y;
+                        const double disc = gap2 - (dx * dx + dy * dy - dg * dg); // gap^2 - d_perp^2
+                        if (disc <= 0.0) continue; // this pair is already more than a gap apart across the axis
+                        t = std::max(t, -dg + std::sqrt(disc));
+                    }
+                }
+            }
+        }
+        return t;
+    };
+
     for (size_t i = 0; i < ncs.size(); ++i) {
         const NcInfo &nc = ncs[i];
         const int tilt = EffectiveTilt(nc);
@@ -1227,23 +1284,57 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(const std::vector<NcIn
             // @place opts out - it is honoured as a literal gap step, not second-guessed into a slide.
             const bool levelRepeat
                 = brk && !hasPlace && (nc.intm == 's' || nc.intm == 0) && prevExitDir.Dot(stepDir) > PARALLEL_COS;
-            // Centred on the anchor for the first component and a level repeat; a stepped detached
-            // component is foot-anchored at the gap point so it continues up/down the contour.
-            const bool centred = !brk || levelRepeat;
+            // Centred on the anchor for the first component, a level repeat, and an explicit @place (which
+            // sets the whole component down centred over the placed spot, like a first stroke relocated).
+            // A @intm-stepped detached component is foot-anchored at the gap point so it continues up/down
+            // the contour.
+            const bool centred = !brk || levelRepeat || hasPlace;
             PointF anchor = { 0.0, 0.0 };
             if (levelRepeat) {
                 anchor = { lastAnchor.x + REPEAT_DX, lastAnchor.y };
             }
             else if (brk) {
-                // Step along the contour, clearing the previous stroke's forward reach (how far its ink
-                // extends along the gap direction) so an ascending salicus / descending climacus stacks
-                // without colliding. A punctum has no reach, so plain subpuncta step by BREAK_GAP alone.
                 PointF gapDir = TiltVec(gapTilt);
                 if (gapDir.x == 0.0 && gapDir.y == 0.0) gapDir = TiltVec(COMPASSDIRECTION_e);
-                const double reach
-                    = std::max(0.0, (pen.x - lastAnchor.x) * gapDir.x + (pen.y - lastAnchor.y) * gapDir.y);
-                const double advance = reach + BREAK_GAP;
-                anchor = { lastAnchor.x + gapDir.x * advance, lastAnchor.y + gapDir.y * advance };
+                if (hasPlace && !runs.empty()) {
+                    // An explicit @place is set down relative to the whole previous gesture, centred on
+                    // its cross-axis: "above" lands over the neume's centre, not its foot / ligature end.
+                    // The @intm contour default keeps the foot-relative step below.
+                    const GapFrame f = placeFrame(runs.back(), gapDir);
+                    // A @place repeat of a single parallel stroke - two stacked chevrons, a punctum above
+                    // a like punctum - follows the bivirga rule: parallel shapes keep a constant separation
+                    // however far one slides along the gap, so they nestle tight (the upper's feet dropping
+                    // in beside the lower's peak) instead of clearing the full peak-high reach. Only when the
+                    // previous run is one stroke of the same tilt.
+                    const bool parallelRepeat = f.any && runs.back().size() == 1 && !bare
+                        && (tilt != COMPASSDIRECTION_NONE) && (EffectiveTilt(ncs[i - 1]) == tilt);
+                    double par;
+                    if (parallelRepeat) {
+                        // Offset centre to centre by just enough that the two keep a nib-sized perpendicular
+                        // gap (a hairline of white, so they still read as two strokes) - tight at any angle,
+                        // where a fixed REPEAT_DX would over-space this shallow chevron.
+                        par = (f.parMin + f.parMax) / 2.0 + nestleOffset(runs.back(), gapDir, NESTLE_GAP);
+                    }
+                    else {
+                        // Clear the previous neume's far edge by BREAK_GAP. Since @place draws the component
+                        // CENTRED on the anchor, add half its own reach along the gap, so its near edge still
+                        // clears - matters only when the stroke travels along the gap (a virga placed
+                        // straight above); a cross-running stroke (tilt="e" placed above) projects to zero.
+                        const PointF td = TiltVec(tilt);
+                        par = f.parMax + BREAK_GAP + 0.5 * len * std::fabs(td.x * gapDir.x + td.y * gapDir.y);
+                    }
+                    if (f.any) anchor = { gapDir.x * par + f.perp.x * f.perMid, gapDir.y * par + f.perp.y * f.perMid };
+                }
+                else {
+                    // Step along the contour, clearing the previous stroke's forward reach (how far its
+                    // ink extends along the gap direction) so an ascending salicus / descending climacus
+                    // stacks without colliding. A punctum has no reach, so plain subpuncta step by
+                    // BREAK_GAP alone.
+                    const double reach
+                        = std::max(0.0, (pen.x - lastAnchor.x) * gapDir.x + (pen.y - lastAnchor.y) * gapDir.y);
+                    const double advance = reach + BREAK_GAP;
+                    anchor = { lastAnchor.x + gapDir.x * advance, lastAnchor.y + gapDir.y * advance };
+                }
             }
             // A bare component (no @tilt and no special shape) is a single pen dab; the anchor above
             // has already stepped it along @intm so a run of plain ncs reads as separate puncta.
