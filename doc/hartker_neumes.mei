@@ -121,7 +121,7 @@
                 <neume>
                   <nc s-shape="w" tilt="se" />
                   <nc intm="u" tilt="ne">
-                    <episema place="above" />
+                    <episema />
                   </nc>
                 </neume>
               </syllable>
@@ -174,7 +174,7 @@
                   <nc tilt="ne" curve="c"/>
                   <nc tilt="s" intm="d">
                     <episema />
-                    <episema />
+                    <episema place="below" />
                   </nc>
                 </neume>
               </syllable>
@@ -568,7 +568,7 @@
                   <nc curve="a" tilt="s" />
                   <nc curve="c" tilt="ne" intm="u" />
                   <nc tilt="s" intm="d" rellen="l">
-                    <episema place="below-right" />
+                    <episema place="right" />
                   </nc>
                 </neume>
               </syllable>

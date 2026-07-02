@@ -184,14 +184,28 @@ private:
      * e.g. the second component of a virga strata) rather than being centred on a point. */
     static Stroke WaveFrom(PointF s, const std::string &orient, int tilt);
     /**
+     * Ride a wavy wiggle on an arbitrary spine: @p spine is the axis the wave follows (a straight
+     * chord, a bow, an angled chevron), resampled evenly by arc length and displaced perpendicular to
+     * its local travel by a cosine, so the toothed line tracks whatever path the spine traces. @p waves
+     * sets the crest count (spread evenly along the spine's length), @p amp the perpendicular swing.
+     * Phased crest -> trough: it opens on a crest and lifts at a trough, its tangent momentarily along
+     * the axis at the end so a following ascent springs cleanly out of the low point.
+     */
+    static std::vector<PointF> Wavify(const std::vector<PointF> &spine, int waves, double amp);
+    /**
      * A quilisma: a wavy flourish, modelled on the liquescent. The WHOLE note is this wavy line - the
      * broad nib swept over it draws the characteristic toothed quilisma - starting on the first crest
-     * and lifting at the last trough, whence the next nc's ascent springs. The wiggle runs along
-     * @p tilt (defaulting to e, so a plain quilisma is level); @p waves (from @waves) sets the crest
-     * count. @p centred backs the line off by half its travel so a standalone wavy note sits on @p s;
-     * otherwise the flourish springs forward from @p s (a connected or stepped component).
+     * and lifting at the last trough, whence the next nc's ascent springs. "quilisma" means only "make
+     * the line wavy", so it composes with the stroke's own shape: the wiggle rides a straight chord
+     * along @p tilt by default, but when the <nc> also carries @curve / @angled (@p hasCurve, with
+     * @p curveHand the bow side and @p angled a right-angle break, easing between the neighbour tangents
+     * @p tIn / @p tOut) it rides the very bow or chevron those would draw. @p waves (from @waves) sets
+     * the crest count and the line's length; @p centred backs the axis off by half its travel so a
+     * standalone wavy note sits on @p s, otherwise the flourish springs forward from @p s (a connected
+     * or stepped component).
      */
-    static Stroke Quilisma(PointF s, int tilt, int waves, bool centred);
+    static Stroke Quilisma(PointF s, int tilt, int waves, bool centred, int curveHand, bool hasCurve, bool angled,
+        PointF tIn, PointF tOut);
     static Stroke Comma(double x, double y, int tilt);
     /**
      * A liquescent stroke (cephalicus / epiphonus). When @p stem > 0 the note's own melodic stroke of
@@ -255,16 +269,13 @@ private:
 
     /**
      * Sweep the fixed nib along a centreline, producing the two offset edges of the ribbon (one
-     * point per centreline point). The stroke width law and the along-stroke taper are applied here,
-     * so the edges must be computed over the whole gesture before being cut into per-nc slices.
+     * point per centreline point). The stroke width follows the broad-pen |T x n̂| direction law and
+     * is otherwise uniform along the stroke.
      */
     static void NibEdges(const std::vector<PointF> &pts, double scale, std::vector<PointF> &left,
-        std::vector<PointF> &right, bool taperStart = true, bool taperEnd = true);
-    /** Sweep the fixed nib along a centreline and return one closed outline (the whole gesture).
-     * @p taperStart / @p taperEnd hold the corresponding end at full nib width instead of lifting it
-     * to a hairline - used where an episema joins the stroke end so the ink reads as one shape. */
-    static std::vector<PointF> NibRibbon(
-        const std::vector<PointF> &pts, double scale = 1.0, bool taperStart = true, bool taperEnd = true);
+        std::vector<PointF> &right);
+    /** Sweep the fixed nib along a centreline and return one closed outline (the whole gesture). */
+    static std::vector<PointF> NibRibbon(const std::vector<PointF> &pts, double scale = 1.0);
     /** A punctum: the rounded footprint of a single broad-nib dab centred at @p c (pen space). */
     static std::vector<PointF> Punctum(PointF c);
     /** Endpoint-preserving binomial low-pass of a polyline (removes finite-difference edge noise). */

@@ -126,24 +126,8 @@ namespace {
     }
 
     //----------------------------------------------------------------------------
-    // Scribal ductus: attack & release weighting, and the forward (italic) slant
+    // Scribal ductus: the forward (italic) slant
     //----------------------------------------------------------------------------
-
-    // Hermite smoothstep on [0, 1] (clamped): the classic 3t^2 - 2t^3 ease, used to shape the stroke's
-    // attack and release shoulders.
-    double SmoothStep(double t)
-    {
-        t = std::clamp(t, 0.0, 1.0);
-        return t * t * (3.0 - 2.0 * t);
-    }
-
-    // Scribal attack & release. A real pen LANDS firm - a blunt attack, not a hairline birth - and LIFTS
-    // slowly into a hairline, so the along-stroke weight is asymmetric: a short attack shoulder rising
-    // from ATTACK_LAND to full, then a long release shoulder tapering down to RELEASE_LIFT.
-    constexpr double ATTACK_LAND = 0.85; // weight the instant the pen lands
-    constexpr double ATTACK_LEN = 0.18; // fraction of the gesture over which the attack settles to full
-    constexpr double RELEASE_LIFT = 0.15; // weight the instant the pen leaves (the lifted tail)
-    constexpr double RELEASE_LEN = 0.55; // fraction of the gesture over which the release tapers away
 
     // The unit pull axis of a right hand: up and to the right. Pen space has +y down, so "up" is -y; the
     // diagonal (1, -1)/sqrt(2) is the direction the hand naturally drags the pen.
@@ -301,10 +285,11 @@ std::vector<CalligraphicNeume::PointF> CalligraphicNeume::Densify(
 //----------------------------------------------------------------------------
 
 // The two offset edges of the broad-nib ribbon. The stroke width at each point follows the classic
-// law w proportional to |T x n̂|, modulated by an along-stroke taper. Computed over the whole
-// gesture so the taper and the tangents are continuous before any per-nc slicing.
-void CalligraphicNeume::NibEdges(const std::vector<PointF> &pts, double scale, std::vector<PointF> &left,
-    std::vector<PointF> &right, bool taperStart, bool taperEnd)
+// broad-pen law w proportional to |T x n̂|: the fixed -45 degree nib comes out thin where the stroke
+// runs along its edge and broad where it runs across it, which is the calligraphic thick / thin. The
+// width is otherwise uniform along the stroke - there is no along-stroke taper.
+void CalligraphicNeume::NibEdges(
+    const std::vector<PointF> &pts, double scale, std::vector<PointF> &left, std::vector<PointF> &right)
 {
     const int n = (int)pts.size();
     left.assign(n, {});
@@ -321,16 +306,7 @@ void CalligraphicNeume::NibEdges(const std::vector<PointF> &pts, double scale, s
             ty /= m;
         }
         const double sinA = std::fabs(tx * nib.y - ty * nib.x); // |T x n̂|
-        const double tc = std::clamp((double)i / (n - 1), 0.0, 1.0);
-        // Scribal attack & release. The pen lands firm and lifts slowly, so the along-stroke weight is
-        // the product of two shoulders: a short attack rising from ATTACK_LAND to full, and a long
-        // release tapering down to the RELEASE_LIFT hairline. taperStart/taperEnd drop the matching
-        // shoulder to hold that end at full width (an episema accent keeps both ends square).
-        const double attack = taperStart ? ATTACK_LAND + (1.0 - ATTACK_LAND) * SmoothStep(tc / ATTACK_LEN) : 1.0;
-        const double release
-            = taperEnd ? RELEASE_LIFT + (1.0 - RELEASE_LIFT) * SmoothStep((1.0 - tc) / RELEASE_LEN) : 1.0;
-        const double cap = attack * release;
-        const double w = ((NIB_MIN + (NIB_W - NIB_MIN) * sinA) * scale * cap) / 2.0;
+        const double w = ((NIB_MIN + (NIB_W - NIB_MIN) * sinA) * scale) / 2.0;
         left[i] = { pts[i].x - ty * w, pts[i].y + tx * w };
         right[i] = { pts[i].x + ty * w, pts[i].y - tx * w };
     }
@@ -373,11 +349,10 @@ std::vector<CalligraphicNeume::PointF> CalligraphicNeume::Punctum(PointF c)
 }
 
 // A smooth filled outline for the fixed nib swept along a whole centreline.
-std::vector<CalligraphicNeume::PointF> CalligraphicNeume::NibRibbon(
-    const std::vector<PointF> &pts, double scale, bool taperStart, bool taperEnd)
+std::vector<CalligraphicNeume::PointF> CalligraphicNeume::NibRibbon(const std::vector<PointF> &pts, double scale)
 {
     std::vector<PointF> left, right;
-    NibEdges(pts, scale, left, right, taperStart, taperEnd);
+    NibEdges(pts, scale, left, right);
     if (left.size() < 2) return {};
     SmoothPolyline(left, 2);
     SmoothPolyline(right, 2);
@@ -547,36 +522,80 @@ CalligraphicNeume::Stroke CalligraphicNeume::WaveFrom(PointF s, const std::strin
     return { Cubic(s, c1, c2, e), e };
 }
 
+// Ride a quilisma's wiggle on an arbitrary spine (see the header): @p spine is the axis the wave
+// follows, resampled evenly by arc length so the @p waves crests spread evenly along its length
+// however it bends, each sample displaced perpendicular to the LOCAL travel so the toothed line
+// tracks the spine's own shape (a straight chord, a bow, an angled chevron alike).
+std::vector<CalligraphicNeume::PointF> CalligraphicNeume::Wavify(const std::vector<PointF> &spine, int waves, double amp)
+{
+    if (waves < 1) waves = 2; // default number of crests
+    constexpr int PER = 10; // samples per crest
+    const int n = waves * PER;
+    // Phase the swing so it starts at a crest (-amp) and ends at a trough (+amp): an integer count of
+    // crests with half a cycle to spare puts the lift exactly at the final trough, its tangent
+    // momentarily along the axis, so the next nc's ascent springs cleanly out of that low point.
+    const double cycles = (double)waves - 0.5;
+    // Cumulative arc length of the spine, so t maps to a position an equal distance along it.
+    const int m = (int)spine.size();
+    std::vector<double> cum(std::max(m, 1), 0.0);
+    for (int k = 1; k < m; ++k) cum[k] = cum[k - 1] + (spine[k] - spine[k - 1]).Len();
+    const double total = (m > 0) ? cum[m - 1] : 0.0;
+    std::vector<PointF> pts;
+    if (m < 2 || total < 1e-9) { // degenerate spine: nothing to ride on
+        pts.assign(std::max(1, m), spine.empty() ? PointF{} : spine[0]);
+        return pts;
+    }
+    pts.reserve(n + 1);
+    int k = 0; // current spine segment [k, k+1], advanced monotonically as t grows
+    for (int i = 0; i <= n; ++i) {
+        const double t = (double)i / n; // 0..1 along the spine
+        const double sarc = t * total; // target arc length
+        // Skip to the segment containing sarc; <= steps past any zero-length segment (the duplicated
+        // apex knot of an angled chevron) so the tangent comes from a real leg, not the coincident pair.
+        while (k < m - 2 && cum[k + 1] <= sarc) ++k;
+        const PointF a = spine[k], b = spine[k + 1];
+        const double segLen = cum[k + 1] - cum[k];
+        const double u = (segLen > 1e-9) ? (sarc - cum[k]) / segLen : 0.0;
+        const PointF p = { a.x + (b.x - a.x) * u, a.y + (b.y - a.y) * u };
+        const PointF tan = (b - a).Unit(PointF{ 1.0, 0.0 }); // local travel of the spine here
+        const PointF perp = { -tan.y, tan.x }; // the wiggle swings to either side of it
+        const double off = -amp * std::cos(2.0 * M_PI * cycles * t); // crest -> ... -> trough
+        pts.push_back({ p.x + perp.x * off, p.y + perp.y * off });
+    }
+    return pts;
+}
+
 // quilisma: a wavy flourish modelled on the liquescent (see the header). The WHOLE note is this wavy
 // line - the broad nib swept over it draws the characteristic toothed quilisma - starting at the top
 // of the first crest (so the stroke opens on a wave, not a half-swing up to one) and lifting at the
-// bottom of the last trough, whence the next nc's ascent springs. The wiggle runs along @p tilt
-// (defaulting to e, so a plain quilisma is level); @p waves (from @waves) sets the crest count.
-CalligraphicNeume::Stroke CalligraphicNeume::Quilisma(PointF s, int tilt, int waves, bool centred)
+// bottom of the last trough, whence the next nc's ascent springs. "quilisma" means only "make the line
+// wavy", so the wiggle rides whatever axis the stroke's own shape traces: a straight chord along @tilt
+// by default, or - when the <nc> carries @curve / @angled - the very bow or right-angle chevron those
+// would draw. @p waves (from @waves) sets the crest count and the line's length.
+CalligraphicNeume::Stroke CalligraphicNeume::Quilisma(
+    PointF s, int tilt, int waves, bool centred, int curveHand, bool hasCurve, bool angled, PointF tIn, PointF tOut)
 {
     if (waves < 1) waves = 2; // default number of crests
     PointF dir = TiltVec(tilt); // the wavy line travels along @tilt...
     if (dir.x == 0.0 && dir.y == 0.0) dir = TiltVec(COMPASSDIRECTION_e); // ...level by default
-    const PointF perp = { -dir.y, dir.x }; // the wiggle swings to either side of that axis
     constexpr double WAVE_LEN = 13.0; // travel per crest (along the stroke)
     constexpr double AMP = 7.5; // perpendicular swing of the wiggle (rounder, taller humps)
-    constexpr int PER = 10; // samples per crest
-    const double total = WAVE_LEN * waves;
-    // A standalone wavy note (@p centred) sits on its anchor, so back the line off by half its travel;
+    const double total = WAVE_LEN * waves; // the quilisma sizes by its crest count, not @rellen
+    // A standalone wavy note (@p centred) sits on its anchor, so back the axis off by half its travel;
     // a connected or stepped flourish springs forward from @p s.
     const PointF foot = centred ? PointF{ s.x - dir.x * total / 2, s.y - dir.y * total / 2 } : s;
-    const int n = waves * PER;
-    // Phase the swing so it starts at a crest (-AMP) and ends at a trough (+AMP): an integer count of
-    // crests with half a cycle to spare puts the lift exactly at the final trough, its tangent
-    // momentarily along the axis, so the next nc's ascent springs cleanly out of that low point.
-    const double cycles = (double)waves - 0.5;
-    std::vector<PointF> pts;
-    pts.reserve(n + 1);
-    for (int i = 0; i <= n; ++i) {
-        const double t = (double)i / n; // 0..1 along the travel
-        const double off = -AMP * std::cos(2.0 * M_PI * cycles * t); // crest -> ... -> trough
-        pts.push_back({ foot.x + dir.x * total * t + perp.x * off, foot.y + dir.y * total * t + perp.y * off });
+    // The axis the wiggle rides. With @curve / @angled it is the same bow / chevron a non-wavy stroke
+    // would draw (built at the quilisma's own length), so "make the line wavy" composes with the shape;
+    // otherwise a plain straight chord along @tilt, which makes Wavify reproduce the level/tilted
+    // quilisma exactly - the local tangent is constant, so the perpendicular swing matches the old form.
+    std::vector<PointF> spine;
+    if (hasCurve) {
+        spine = CurvedStroke(foot, tilt, curveHand, total, tIn, tOut, angled).pts;
     }
+    else {
+        spine = { foot, { foot.x + dir.x * total, foot.y + dir.y * total } };
+    }
+    std::vector<PointF> pts = Wavify(spine, waves, AMP);
     return { pts, pts.back() };
 }
 
@@ -968,8 +987,22 @@ void CalligraphicNeume::BuildEpisemata(
                     // Anchor an "above" accent on an arched stroke's summit (flat on top); otherwise on the
                     // end / joint as before. @form="h" (forced along-stroke) keeps its explicit orientation.
                     const bool onSummit = arched && above && (e.form != episemaVis_FORM_h);
-                    const PointF anchor = onSummit ? s.pts[apexIdx] : end;
-                    ori = (e.form == episemaVis_FORM_h) ? along : (onSummit ? summitTan : tangent);
+                    // A left @place reaches OUT to the note's left as a separate accent (see episemaFoot). It
+                    // stands vertical to THIS stroke - across its own end tangent - looking out to the left,
+                    // and must never lean along a downstream joint tangent: on a virga strata the first
+                    // stroke's head is the joint the strophicus springs from, so the joint tangent runs level
+                    // into that following stroke and would bury the accent under the neume's body. So a left
+                    // accent keeps `across`, ignoring any following joint. A forced-horizontal @form="h" bar
+                    // keeps its own along-stroke orientation and placement (handled below), so it is excluded.
+                    const bool leftReach = (e.place == EVENTREL_left) && (e.form != episemaVis_FORM_h);
+                    // When the marked stroke hands off to a following one (a virga strata: the strophicus
+                    // springs from the head), the head is occupied, so a left accent slides down to the
+                    // middle of the rising stroke - clear of the neume body above, where the scribe set it -
+                    // rather than crowding the joint.
+                    const bool midStroke = leftReach && (si + 1 < run.size());
+                    const PointF anchor = onSummit ? s.pts[apexIdx] : (midStroke ? s.pts[s.pts.size() / 2] : end);
+                    ori = (e.form == episemaVis_FORM_h) ? along
+                        : (leftReach ? across : (onSummit ? summitTan : tangent));
                     HL = (e.form == episemaVis_FORM_h) ? 7.0 : 6.0;
                     const double GAP = 4.0, NUDGE = 7.0;
                     // The vertical clearance of the accent from the marked point. On a summit the air gap is
@@ -1083,7 +1116,7 @@ void CalligraphicNeume::BuildEpisemata(
                 // The accent is a separate pen stroke, so it rides the same forward slant as the ribbon,
                 // which also carries its anchor across to meet the leaned stroke end it marks.
                 if (!slant.IsNone()) SlantApply(centre, slant);
-                geo.ncs[s.ncIndex].episemata.push_back(NibRibbon(centre, EPISEMA_NIB, false, false));
+                geo.ncs[s.ncIndex].episemata.push_back(NibRibbon(centre, EPISEMA_NIB));
                 // The next link crosses this accent's far end: the endpoint reaching farthest into open
                 // space - the rightmost (+x), or for an upright accent (equal x) its top. Recorded
                 // pre-slant so the shear that follows leaves the chain joined.
@@ -1345,7 +1378,12 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(const std::vector<NcIn
             }
             else if (nc.quilisma) {
                 // A <quilisma>: the whole note is the wavy line, running along @tilt (level by default).
-                Stroke sh = Quilisma(anchor, tilt, nc.waves, centred);
+                // Any @curve / @angled bends the axis the wiggle rides (a wavy bow / chevron), easing
+                // toward the next component if one follows in the same gesture.
+                PointF cd = TiltVec(tilt);
+                if (cd.x == 0.0 && cd.y == 0.0) cd = TiltVec(COMPASSDIRECTION_e);
+                const PointF tOut = (i + 1 < ncs.size() && !breaksBefore(i + 1)) ? chordDirOf(i + 1) : cd;
+                Stroke sh = Quilisma(anchor, tilt, nc.waves, centred, curveHand, hasCurve, nc.angled, cd, tOut);
                 pts = sh.pts;
                 pen = sh.exit;
             }
@@ -1421,8 +1459,11 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(const std::vector<NcIn
             if (dir.x == 0.0 && dir.y == 0.0) dir = TiltVec(COMPASSDIRECTION_e);
             if (nc.quilisma) {
                 // Within a ligature the whole component is the wavy line, springing from the pen and
-                // running along @tilt (level by default).
-                Stroke sh = Quilisma(pen, tilt, nc.waves, false);
+                // running along @tilt (level by default). Any @curve / @angled bends the axis it rides,
+                // springing from the previous stroke's exit tangent and easing toward the next.
+                const PointF tIn = (prevExitDir.x != 0.0 || prevExitDir.y != 0.0) ? prevExitDir : chordDirOf(i);
+                const PointF tOut = (i + 1 < ncs.size() && !breaksBefore(i + 1)) ? chordDirOf(i + 1) : chordDirOf(i);
+                Stroke sh = Quilisma(pen, tilt, nc.waves, false, curveHand, hasCurve, nc.angled, tIn, tOut);
                 pts = sh.pts;
                 pen = sh.exit;
             }
