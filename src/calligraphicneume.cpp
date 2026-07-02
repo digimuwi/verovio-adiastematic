@@ -50,6 +50,11 @@ namespace {
     // is note-sized rather than a tiny ornament.
     constexpr double LIQ_CURL_R = MED * 0.30; // terminal curl at the tip of a liquescent's own stroke
     constexpr double LIQ_HOOK_R = MED * 0.50; // a whole-note hook (no lead-in stroke): note-sized
+    // The little cursive loop of a looped connection (@con="l"): the pen winds a small crossing loop of
+    // this radius at the joint between two components (Old Hispanic). Sized well under the liquescent's
+    // terminal flourish so the eye stays a small ink-choked knot (the manuscript counter is about one
+    // nib-width across) and the loop reads as a joint, not a note.
+    constexpr double LOOP_JOIN_R = MED * 0.18;
     // Sideways nudge for a plain stroke that about-faces (travels back along its predecessor's line, e.g.
     // an s after an n): without it the two strokes retrace each other and collapse into one. Sized a touch
     // above the broad nib (NIB_W = 6) so the parallel pair reads as two distinct strokes, not one mass.
@@ -679,6 +684,61 @@ std::vector<CalligraphicNeume::PointF> CalligraphicNeume::Curl(PointF tip, Point
     return pts;
 }
 
+// The looped connection (@con="l", Old Hispanic): a small cursive loop written at the joint between
+// two connected components - the pen arrives at @p p along @p tIn, winds the reflex way round a
+// circle of radius @p r and leaves tangent to @p tOut, crossing back over the entry path like the
+// bottom loop of a cursive descender. See the header for the parameters.
+std::vector<CalligraphicNeume::PointF> CalligraphicNeume::LoopJoint(PointF p, PointF tIn, PointF tOut, double r)
+{
+    const PointF ti = tIn.Unit({ 0.0, 1.0 });
+    const PointF to = tOut.Unit(ti);
+    // The shortest signed rotation from the entry tangent to the exit tangent, as a pen-space angle
+    // in (-pi, pi] (+y down, so a positive turn is clockwise on screen).
+    const double residual = std::atan2(ti.x * to.y - ti.y * to.x, ti.Dot(to));
+    // The compass-quantised joints sit at |residual| <= 3pi/4; only a curve-sampled entry tangent can
+    // land between that and the about-face, so the threshold merely splits the two regimes cleanly.
+    constexpr double kAboutFace = 7.0 * M_PI / 8.0;
+    double sweep;
+    if (std::fabs(residual) < kAboutFace) {
+        // The generic joint takes the REFLEX turn: wind the long way round, opposite the shortest
+        // rotation, sweeping 2pi - |residual| the other way. Winding against the turn is what makes
+        // the mark a true cursive loop - the exit stroke crosses back over the entry path (a
+        // descender's tail crossing its own descent), where winding the short way plus a full turn
+        // would only retrace the circle and can never cross. It also hangs the belly on the scribe's
+        // side: below a descent-into-ascent joint (a clockwise-on-screen g-tail), above an
+        // ascent-into-descent one (an anticlockwise ell-top). A straight-through joint (residual 0)
+        // winds positive - clockwise on screen, the ring tucked below / behind the advancing pen.
+        sweep = (residual > 1e-9) ? residual - 2.0 * M_PI : residual + 2.0 * M_PI;
+    }
+    else {
+        // An about-face (a descent looping straight into a parallel ascent) cannot cross whichever
+        // way the pen winds - the limbs leave parallel, 2r apart - so the joint keeps a full ring
+        // instead: one-and-a-half turns, the eye sealed between the limbs. It winds to the natural
+        // side - clockwise on screen off a descent (the right-hand descender tail), anticlockwise
+        // off an ascent (the ell-top) - tucking the ring behind the advancing pen either way.
+        const double w = (ti.y < -1e-9) ? -1.0 : 1.0;
+        double resW = residual; // the residual expressed as a rotation in the winding direction
+        if (resW * w < 0.0) resW += w * 2.0 * M_PI;
+        sweep = resW + w * 2.0 * M_PI;
+    }
+    const double w = (sweep < 0.0) ? -1.0 : 1.0; // winding sense (in pen space)
+    // The loop's centre sits one radius to the winding side of the entry point, so the circle leaves
+    // @p p tangent to the entry direction; the exit point then falls wherever the exit tangent is
+    // reached, and the following stroke springs from there across the entry path.
+    const PointF n = (w > 0.0) ? PointF{ -ti.y, ti.x } : PointF{ ti.y, -ti.x };
+    const PointF ctr = { p.x + n.x * r, p.y + n.y * r };
+    const double a0 = std::atan2(p.y - ctr.y, p.x - ctr.x);
+    const int N = std::max(24, (int)std::lround(40.0 * std::fabs(sweep) / (2.0 * M_PI)));
+    std::vector<PointF> pts;
+    pts.reserve(N);
+    for (int i = 1; i <= N; ++i) {
+        const double t = (double)i / N;
+        const double ang = a0 + sweep * t;
+        pts.push_back({ ctr.x + r * std::cos(ang), ctr.y + r * std::sin(ang) });
+    }
+    return pts;
+}
+
 // A gentle, neighbour-aware curved stroke (see header). The chord runs s -> s + dir*len along
 // @tilt; @curve sets the bow side. The end tangents are aligned to the incoming (@p tIn) and
 // outgoing (@p tOut) travel directions so the stroke flows smoothly out of the previous component
@@ -945,10 +1005,14 @@ void CalligraphicNeume::BuildEpisemata(
             // than at the end, lying flat along the horizontal tangent a summit has by definition - on top
             // of the curve, not tilted on its shoulder. A stroke that does not arch has its summit at the
             // end, so this collapses back to the end / joint placement.
-            int apexIdx = 0;
-            for (int q = 1; q < (int)s.pts.size(); ++q)
+            // Scan only the nc's own stroke: the prepended ink of a looped connection (@con="l") is
+            // the joint, not the note, so neither the summit nor the mid-stroke anchor below may land
+            // on it (an "above" accent must cap the note's stroke, never the connection loop).
+            const int s0 = std::min(s.strokeStart, (int)s.pts.size() - 1);
+            int apexIdx = s0;
+            for (int q = s0 + 1; q < (int)s.pts.size(); ++q)
                 if (s.pts[q].y < s.pts[apexIdx].y) apexIdx = q;
-            const bool arched = (apexIdx > 0 && apexIdx + 1 < (int)s.pts.size());
+            const bool arched = (apexIdx > s0 && apexIdx + 1 < (int)s.pts.size());
             PointF summitTan = arched ? segDir(s.pts[apexIdx - 1], s.pts[apexIdx + 1]) : PointF{ 0.0, 0.0 };
             if (summitTan.x == 0.0 && summitTan.y == 0.0) summitTan = { 1.0, 0.0 };
 
@@ -1000,7 +1064,8 @@ void CalligraphicNeume::BuildEpisemata(
                     // middle of the rising stroke - clear of the neume body above, where the scribe set it -
                     // rather than crowding the joint.
                     const bool midStroke = leftReach && (si + 1 < run.size());
-                    const PointF anchor = onSummit ? s.pts[apexIdx] : (midStroke ? s.pts[s.pts.size() / 2] : end);
+                    const PointF anchor
+                        = onSummit ? s.pts[apexIdx] : (midStroke ? s.pts[(s0 + (int)s.pts.size()) / 2] : end);
                     ori = (e.form == episemaVis_FORM_h) ? along
                         : (leftReach ? across : (onSummit ? summitTan : tangent));
                     HL = (e.form == episemaVis_FORM_h) ? 7.0 : 6.0;
@@ -1145,6 +1210,11 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(const std::vector<NcIn
     // neighbour lookahead both go through these, so the rule has a single definition.
     auto bareOf = [&](size_t k) -> bool {
         const NcInfo &n = ncs[k];
+        // A looped component (@con="l") is by definition JOINED to its predecessor, so it is never a
+        // detached punctum: even without a shape attribute it draws its connection loop and flows on
+        // along the @intm default (level when even that is absent). On the first component the
+        // connection has nothing to join, so bareness is judged by the shape attributes alone.
+        if (k > 0 && n.looped) return false;
         return (n.tilt == COMPASSDIRECTION_NONE) && (n.curve == curvatureDirection_CURVE_NONE) && !n.angled
             && n.sShape.empty() && !n.hasNonEpisemaChild;
     };
@@ -1299,6 +1369,7 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(const std::vector<NcIn
 
         std::vector<PointF> pts = { pen };
         bool dot = false;
+        int strokeStart = 0; // index into pts where the nc's own stroke begins (past a connection loop)
 
         if (i == 0 || brk) {
             // A fresh pen gesture. The first component sits at the origin; a detached one (@con="g") is
@@ -1457,6 +1528,29 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(const std::vector<NcIn
             // the ligature reads as one continuous gesture.
             PointF dir = TiltVec(tilt);
             if (dir.x == 0.0 && dir.y == 0.0) dir = TiltVec(COMPASSDIRECTION_e);
+            // A looped connection (@con="l"): before this component's stroke, the pen winds through a
+            // small cursive loop at the joint - arriving along the previous exit tangent, crossing its
+            // own path and leaving along the direction this stroke actually departs in (see LoopJoint).
+            // The stroke then springs from the loop's exit; the exit tangent IS its departure, so the
+            // stroke builders below (the about-face nudge, the neighbour-tangent handoffs) all see a
+            // clean straight join and simply flow on. The loop's ink belongs to this nc (prepended
+            // below). A whole-note-hook liquescent is exempt: its curl already coils at this very
+            // joint, so the curl IS the loop - a second ring would only knot the two into a blot.
+            std::vector<PointF> loopPts;
+            if (nc.looped && !wholeHook) {
+                // Every stroke builder departs along the chord except an @angled chevron, whose first
+                // leg leaves 45 degrees toward the bend side (see CurvedStroke's angled branch); the
+                // loop must stop where THAT tangent is reached or the ring meets the leg in a kink.
+                PointF depart = dir;
+                if (nc.angled) {
+                    const double sg = (curveHand == curvatureDirection_CURVE_a) ? 1.0 : -1.0;
+                    depart = PointF{ dir.x - sg * dir.y, dir.y + sg * dir.x }.Unit(dir);
+                }
+                const PointF enter = (prevExitDir.x != 0.0 || prevExitDir.y != 0.0) ? prevExitDir : depart;
+                loopPts = LoopJoint(pen, enter, depart, LOOP_JOIN_R);
+                pen = loopPts.back();
+                prevExitDir = depart;
+            }
             if (nc.quilisma) {
                 // Within a ligature the whole component is the wavy line, springing from the pen and
                 // running along @tilt (level by default). Any @curve / @angled bends the axis it rides,
@@ -1539,6 +1633,16 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(const std::vector<NcIn
                 pts = { start, { (start.x + end.x) / 2, (start.y + end.y) / 2 }, end };
                 pen = end;
             }
+            // Prepend the connection loop so the joint's ink is swept with - and attributed to - this
+            // component. The stroke's first point usually repeats the loop's exit; the duplicate is
+            // dropped so the joint knot is not doubled (a doubled knot reads as a deliberate corner
+            // to the centripetal resampling in InkRun, and this join must stay smooth).
+            if (!loopPts.empty()) {
+                const bool dup = !pts.empty()
+                    && std::hypot(pts.front().x - loopPts.back().x, pts.front().y - loopPts.back().y) < 1e-6;
+                pts.insert(pts.begin(), loopPts.begin(), dup ? loopPts.end() - 1 : loopPts.end());
+                strokeStart = (int)loopPts.size() - (dup ? 1 : 0);
+            }
             lastAnchor = pen; // a later detached component gaps from the ligature's end
         }
 
@@ -1580,7 +1684,7 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(const std::vector<NcIn
         // folded into a neighbouring continuous gesture.
         const bool prevWasDot = !runs.empty() && !runs.back().empty() && runs.back().back().isDot;
         if (runs.empty() || brk || dot || prevWasDot) runs.push_back({});
-        runs.back().push_back({ std::move(pts), tilt, (int)i, dot, footEpisema });
+        runs.back().push_back({ std::move(pts), tilt, (int)i, dot, footEpisema, strokeStart });
     }
 
     // 2) Ink each run as one continuous gesture, cut into per-nc slices.

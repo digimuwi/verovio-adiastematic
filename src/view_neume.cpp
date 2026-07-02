@@ -363,6 +363,7 @@ void View::DrawNeumeAdiastematic(DeviceContext *dc, Neume *neume, Staff *staff)
         info.longStroke = (nc->GetRellen() == ncForm_RELLEN_l);
         info.shortStroke = (nc->GetRellen() == ncForm_RELLEN_s);
         info.gapped = (nc->GetCon() == ncForm_CON_g);
+        info.looped = (nc->GetCon() == ncForm_CON_l);
         const std::string intm = nc->GetIntm();
         info.intm = intm.empty() ? 0 : intm.front();
         // @place is a non-standard placement override for a detached / gapped component, so it is not in

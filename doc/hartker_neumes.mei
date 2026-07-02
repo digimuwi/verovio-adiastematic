@@ -1369,6 +1369,13 @@
                   </nc>
                 </neume>
               </syllable>
+              <syllable>
+                <syl>Looped connection</syl>
+                <neume>
+                  <nc tilt="se" />
+                  <nc con="l" tilt="n" rellen="l" intm="u" />
+                </neume>
+              </syllable>
     </layer></staff></section>
   </score></mdiv></body></music>
 </mei>

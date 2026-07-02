@@ -75,6 +75,9 @@ public:
         bool shortStroke = false; ///< @rellen == s
         char intm = 0; ///< first char of @intm (u / d / s), 0 if absent
         bool gapped = false; ///< @con == g: detached from the previous component (a fresh gesture)
+        bool looped = false; ///< @con == l: joined to the previous component through a small cursive
+                             ///< loop - the pen winds a crossing loop at the joint before this
+                             ///< component's stroke (the Old Hispanic looped connection)
         int place = 0; ///< @place (data_COMPASSDIRECTION): the explicit direction the pen jumps to set a
                        ///< detached / gapped component down, overriding the @intm contour default. 0
                        ///< (NONE) = follow @intm. Lets a gap step where @intm cannot name it (straight
@@ -157,6 +160,9 @@ private:
         int ncIndex = 0;
         bool isDot = false; ///< a bare punctum: a single pen dab, not a swept stroke
         bool footEpisema = false; ///< the nc's first left/right episema is inked as a continuation foot of this stroke
+        int strokeStart = 0; ///< index into pts where the component's own stroke begins - past the
+                             ///< prepended ink of a looped connection (@con="l"), which belongs to
+                             ///< the joint, not to the note (episema anchors must skip it)
     };
 
     /** The unit travel vector of a @tilt compass direction (pen space, +y down). */
@@ -231,6 +237,18 @@ private:
      * of Loop so a straight stem (Loop) and a bowed lead-in (CurvedLoop) share the same curl.
      */
     static std::vector<PointF> Curl(PointF tip, PointF d, int curve, bool looped, double r0);
+    /**
+     * The looped connection (@con="l", Old Hispanic): the joint between two connected components
+     * is written as a small cursive loop of radius @p r. The pen reaches @p p travelling along
+     * @p tIn and leaves tangent to @p tOut, winding the REFLEX way round - opposite the shortest
+     * rotation from @p tIn to @p tOut - so the exit stroke crosses back over the entry path like
+     * the tail of a cursive descender, and the belly hangs on the scribe's side (below a
+     * descent-into-ascent joint, above its mirror). An exact about-face, whose parallel limbs
+     * cannot cross whichever way the pen winds, keeps a full ring at the joint instead, sealing
+     * the eye between the limbs. Returns only the points PAST @p p, ending at the loop's exit,
+     * whence the caller springs the component's own stroke.
+     */
+    static std::vector<PointF> LoopJoint(PointF p, PointF tIn, PointF tOut, double r);
     /**
      * A curved stroke whose @curve (a / c) bows the centreline gently to one side, but which is
      * primarily a *smooth transition* between the previous and next strokes. @p tIn is the travel
