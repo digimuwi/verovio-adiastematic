@@ -80,6 +80,11 @@ namespace vrv {
 #define NEUME_MEDIUM_SPACE Fraction(1, 8)
 // Small spacing between neume components is a 16th note space
 #define NEUME_SMALL_SPACE Fraction(1, 16)
+// Calligraphic (adiastematic) neumes are packed like handwriting: the alignment slot is kept
+// minimal (below the AdjustNeumeXFunctor gap) so that the ink width of each neume, not its
+// duration, drives the spacing. The values only keep the alignment times distinct.
+#define NEUME_CALLIGRAPHIC_SPACE Fraction(1, 1024)
+#define NEUME_CALLIGRAPHIC_SYL_SPACE Fraction(1, 512)
 
 //----------------------------------------------------------------------------
 // LayerElement
@@ -761,6 +766,10 @@ Fraction LayerElement::GetAlignmentDuration(
     else if (this->Is(NEUME)) {
         const Object *syllable = this->GetFirstAncestor(SYLLABLE);
         assert(syllable);
+        const Doc *doc = vrv_cast<const Doc *>(this->GetFirstAncestor(DOC));
+        if (doc && doc->GetOptions()->m_neumeCalligraphic.GetValue()) {
+            return (syllable->GetLast() == this) ? NEUME_CALLIGRAPHIC_SYL_SPACE : NEUME_CALLIGRAPHIC_SPACE;
+        }
         // Add a larger gap after the last neume of the syllable
         return (syllable->GetLast() == this) ? NEUME_MEDIUM_SPACE : NEUME_SMALL_SPACE;
     }

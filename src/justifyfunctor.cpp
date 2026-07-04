@@ -33,6 +33,9 @@ JustifyXFunctor::JustifyXFunctor(Doc *doc) : DocFunctor(doc)
     m_rightBarLineX = 0;
     m_systemFullWidth = 0;
     m_applySectionRestartShift = false;
+    m_packedNeumeLine = false;
+    m_measureBoundaryExtra = 0;
+    m_applyBoundaryExtra = false;
 }
 
 FunctorCode JustifyXFunctor::VisitAlignment(Alignment *alignment)
@@ -42,13 +45,25 @@ FunctorCode JustifyXFunctor::VisitAlignment(Alignment *alignment)
         // Nothing to do for all left scoreDef elements and the left barline
     }
     else if (alignmentType < ALIGNMENT_MEASURE_RIGHT_BARLINE) {
-        // All elements up to the next barline, move them but also take into account the leftBarlineX
-        alignment->SetXRel(ceil(((alignment->GetXRel() - m_leftBarLineX) * m_justifiableRatio) + m_leftBarLineX));
+        // On a packed calligraphic neume line the measure (= syllable) content is never spread
+        // apart by justification - a scribe fills the line with space between words, not within
+        // and between the neumes of a melisma - so the content alignments stay put.
+        if (!m_packedNeumeLine) {
+            // All elements up to the next barline, move them but also take into account the leftBarlineX
+            alignment->SetXRel(ceil(((alignment->GetXRel() - m_leftBarLineX) * m_justifiableRatio) + m_leftBarLineX));
+        }
     }
     else {
         // Now move the right barline and all right scoreDef elements
         int shift = alignment->GetXRel() - m_rightBarLineX;
-        alignment->SetXRel(ceil(((m_rightBarLineX - m_leftBarLineX) * m_justifiableRatio) + m_leftBarLineX + shift));
+        if (m_packedNeumeLine) {
+            // The line's slack lands here instead, as an even gap at each interior syllable boundary
+            alignment->SetXRel(m_rightBarLineX + (m_applyBoundaryExtra ? m_measureBoundaryExtra : 0) + shift);
+        }
+        else {
+            alignment->SetXRel(
+                ceil(((m_rightBarLineX - m_leftBarLineX) * m_justifiableRatio) + m_leftBarLineX + shift));
+        }
     }
 
     // Finally, when reaching the end of the measure, update the measureXRel for the next measure
@@ -71,6 +86,14 @@ FunctorCode JustifyXFunctor::VisitMeasure(Measure *measure)
     }
     else {
         m_measureXRel = measure->GetDrawingXRel();
+    }
+
+    // On a packed neume line the last measure takes no boundary slack, so the line's ink ends
+    // flush with the right margin
+    if (m_packedNeumeLine) {
+        const System *system = vrv_cast<const System *>(measure->GetFirstAncestor(SYSTEM));
+        assert(system);
+        m_applyBoundaryExtra = (measure != system->GetLast(MEASURE));
     }
 
     measure->m_measureAligner.Process(*this);
@@ -129,6 +152,18 @@ FunctorCode JustifyXFunctor::VisitSystem(System *system)
         if ((minLastJust > 0.0) && (m_justifiableRatio > (1.0 / minLastJust))) {
             return FUNCTOR_SIBLINGS;
         }
+    }
+
+    // A stretched calligraphic neume line is justified like a scribe fills a line: the syllable
+    // content stays packed and the slack is dealt out evenly at the interior syllable (= measure)
+    // boundaries. When compressing (ratio < 1) the plain proportional scaling applies instead.
+    m_packedNeumeLine = m_doc->GetOptions()->m_neumeCalligraphic.GetValue() && (m_justifiableRatio > 1.0);
+    m_measureBoundaryExtra = 0;
+    m_applyBoundaryExtra = false;
+    if (m_packedNeumeLine) {
+        const int slack = (m_systemFullWidth - nonJustifiableWidth) - system->m_drawingJustifiableWidth;
+        const int boundaries = system->GetChildCount(MEASURE) - 1;
+        if ((slack > 0) && (boundaries > 0)) m_measureBoundaryExtra = slack / boundaries;
     }
 
     return FUNCTOR_CONTINUE;

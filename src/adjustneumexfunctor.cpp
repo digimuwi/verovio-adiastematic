@@ -25,11 +25,18 @@ namespace vrv {
 // AdjustNeumeXFunctor
 //----------------------------------------------------------------------------
 
-AdjustNeumeXFunctor::AdjustNeumeXFunctor(Doc *doc) : DocFunctor(doc) {}
+AdjustNeumeXFunctor::AdjustNeumeXFunctor(Doc *doc) : DocFunctor(doc)
+{
+    m_minPos = VRV_UNSET;
+    m_neumeMinPos = VRV_UNSET;
+    m_firstNeumeInSyllable = false;
+}
 
 FunctorCode AdjustNeumeXFunctor::VisitLayer(Layer *layer)
 {
     m_minPos = VRV_UNSET;
+    m_neumeMinPos = VRV_UNSET;
+    m_firstNeumeInSyllable = false;
 
     return FUNCTOR_CONTINUE;
 }
@@ -55,7 +62,7 @@ FunctorCode AdjustNeumeXFunctor::VisitLayerEnd(Layer *layer)
 
 FunctorCode AdjustNeumeXFunctor::VisitNeume(Neume *neume)
 {
-    // It is 0 when we process the first neume of the syllable
+    // It is VRV_UNSET when we process the first neume of the layer
     if (m_neumeMinPos != VRV_UNSET) {
         Alignment *alignment = neume->GetAlignment();
 
@@ -63,8 +70,12 @@ FunctorCode AdjustNeumeXFunctor::VisitNeume(Neume *neume)
         if (selfLeft < m_neumeMinPos) {
             const int adjust = m_neumeMinPos - selfLeft;
             alignment->SetXRel(alignment->GetXRel() + adjust);
+            // The first neume of a syllable shares its alignment with the syl text, so pushing the
+            // neume has also moved the text - keep the min position for the next syl in sync
+            if (m_firstNeumeInSyllable && (m_minPos != VRV_UNSET)) m_minPos += adjust;
         }
     }
+    m_firstNeumeInSyllable = false;
 
     // Gap to the next neume. Classic glyph neumes are spaced a full unit apart; the calligraphic
     // (broad-nib) rendering reads as flowing handwriting, so its neumes are set much closer together
@@ -90,8 +101,10 @@ FunctorCode AdjustNeumeXFunctor::VisitSyl(Syl *syl)
 {
     Alignment *alignment = syl->GetAlignment();
 
-    // Indicates that the neume will be the first of the syllable
-    m_neumeMinPos = VRV_UNSET;
+    // The next neume starts a new syllable; m_neumeMinPos is kept from the previous neume so that
+    // the first neume of this syllable cannot overlap it either (its ink can reach left of the
+    // shared alignment point in the calligraphic rendering)
+    m_firstNeumeInSyllable = true;
 
     int selfLeft = syl->GetContentLeft();
     if (selfLeft < m_minPos) {

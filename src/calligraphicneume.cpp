@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <utility>
 
 //----------------------------------------------------------------------------
@@ -531,7 +532,8 @@ CalligraphicNeume::Stroke CalligraphicNeume::WaveFrom(PointF s, const std::strin
 // follows, resampled evenly by arc length so the @p waves crests spread evenly along its length
 // however it bends, each sample displaced perpendicular to the LOCAL travel so the toothed line
 // tracks the spine's own shape (a straight chord, a bow, an angled chevron alike).
-std::vector<CalligraphicNeume::PointF> CalligraphicNeume::Wavify(const std::vector<PointF> &spine, int waves, double amp)
+std::vector<CalligraphicNeume::PointF> CalligraphicNeume::Wavify(
+    const std::vector<PointF> &spine, int waves, double amp)
 {
     if (waves < 1) waves = 2; // default number of crests
     constexpr int PER = 10; // samples per crest
@@ -1067,7 +1069,7 @@ void CalligraphicNeume::BuildEpisemata(
                     const PointF anchor
                         = onSummit ? s.pts[apexIdx] : (midStroke ? s.pts[(s0 + (int)s.pts.size()) / 2] : end);
                     ori = (e.form == episemaVis_FORM_h) ? along
-                        : (leftReach ? across : (onSummit ? summitTan : tangent));
+                                                        : (leftReach ? across : (onSummit ? summitTan : tangent));
                     HL = (e.form == episemaVis_FORM_h) ? 7.0 : 6.0;
                     const double GAP = 4.0, NUDGE = 7.0;
                     // The vertical clearance of the accent from the marked point. On a summit the air gap is
@@ -1696,7 +1698,26 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(const std::vector<NcIn
     // 3) Episemata: short accent strokes set just clear of the ink they mark (see BuildEpisemata).
     BuildEpisemata(runs, ncs, geo, slant);
 
-    // 4) Scale from prototype pixels into verovio drawing units.
+    // 4) Anchor the gesture at its ink's left edge. Strokes are centred on their cells while
+    //    building, so the raw gesture reaches left of the origin; the caller aligns the origin with
+    //    the syllable's alignment point (where the syl text also starts), and ink left of it would
+    //    reach back over the preceding neume - which after cast-off lives in its own measure, where
+    //    no X-adjustment can push this one clear of it.
+    double inkLeft = std::numeric_limits<double>::max();
+    for (const NcGeometry &nc : geo.ncs) {
+        for (const PointF &p : nc.ribbon) inkLeft = std::min(inkLeft, p.x);
+        for (const std::vector<PointF> &epi : nc.episemata)
+            for (const PointF &p : epi) inkLeft = std::min(inkLeft, p.x);
+    }
+    if (inkLeft != std::numeric_limits<double>::max()) {
+        for (NcGeometry &nc : geo.ncs) {
+            for (PointF &p : nc.ribbon) p.x -= inkLeft;
+            for (std::vector<PointF> &epi : nc.episemata)
+                for (PointF &p : epi) p.x -= inkLeft;
+        }
+    }
+
+    // 5) Scale from prototype pixels into verovio drawing units.
     for (NcGeometry &nc : geo.ncs) {
         for (PointF &p : nc.ribbon) p = { p.x * scale, p.y * scale };
         for (std::vector<PointF> &epi : nc.episemata)

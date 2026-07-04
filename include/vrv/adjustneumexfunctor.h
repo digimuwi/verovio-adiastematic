@@ -58,6 +58,8 @@ private:
     int m_minPos;
     /** The minimum position of the next neume */
     int m_neumeMinPos;
+    /** Whether the next neume is the first of its syllable (and shares its alignment with the syl) */
+    bool m_firstNeumeInSyllable;
 };
 
 } // namespace vrv

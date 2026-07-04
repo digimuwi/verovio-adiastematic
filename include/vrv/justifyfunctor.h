@@ -69,6 +69,13 @@ private:
     int m_systemFullWidth;
     // Indicates shift of next measure due to section restart
     bool m_applySectionRestartShift;
+    // Whether the current system is stretched as a calligraphic neume line: the measure
+    // (= syllable) content stays packed and the slack goes to the measure boundaries instead
+    bool m_packedNeumeLine;
+    // The slack added at each interior measure boundary of a packed neume line
+    int m_measureBoundaryExtra;
+    // Whether the current measure of a packed neume line takes the boundary slack (all but the last)
+    bool m_applyBoundaryExtra;
 };
 
 //----------------------------------------------------------------------------
