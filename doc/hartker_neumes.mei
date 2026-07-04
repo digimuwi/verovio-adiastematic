@@ -1030,8 +1030,6 @@
                 <neume>
                   <nc tilt="ne">
                     <episema place="above" />
-                  </nc>
-                  <nc intm="d">
                     <liquescent curve="c" looped="true" />
                   </nc>
                 </neume>
