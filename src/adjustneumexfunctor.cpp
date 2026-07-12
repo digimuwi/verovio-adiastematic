@@ -75,6 +75,18 @@ FunctorCode AdjustNeumeXFunctor::VisitNeume(Neume *neume)
             if (m_firstNeumeInSyllable && (m_minPos != VRV_UNSET)) m_minPos += adjust;
         }
     }
+    else if (m_firstNeumeInSyllable && (neume->GetContentLeft() < 0)) {
+        // This measure (= syllable, in the calligraphic cast-off) is placed immediately after the
+        // previous one ends, with no additional gap - the previous measure's own sizing (above) is
+        // what clears its trailing ink. A neume normally starts at or after its own measure's local
+        // origin (0), but a @place="left" / "above-left" / "below-left" signifLet on the very first
+        // component can draw ink reaching out further left than that origin. Since there is no
+        // previous neume in this measure to compare against (m_neumeMinPos is unset here), that
+        // overhang would otherwise go unchecked and bleed back into the previous syllable's ink. Pull
+        // the shared syl/neume alignment right so this measure's own content never starts before 0.
+        Alignment *alignment = neume->GetAlignment();
+        alignment->SetXRel(alignment->GetXRel() - neume->GetContentLeft());
+    }
     m_firstNeumeInSyllable = false;
 
     // Gap to the next neume. Classic glyph neumes are spaced a full unit apart; the calligraphic
