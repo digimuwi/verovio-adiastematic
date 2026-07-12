@@ -115,9 +115,27 @@ public:
         std::vector<std::vector<PointF>> episemata;
     };
 
+    /**
+     * One recorded pen gesture: the nib centreline the ribbon was swept from, in drawing order -
+     * the neume's ductus. A gesture spans a whole connected run (possibly several <nc>s);
+     * an episema accent is its own short gesture.
+     */
+    struct StrokePath {
+        int ncIndex = 0; ///< the <nc> the gesture starts in (its slice owner for an episema)
+        bool episema = false; ///< an episema accent rather than a note stroke
+        std::vector<PointF> pts;
+        /**
+         * Per-point flag, parallel to @ref pts (empty = all note ink): 1 marks a continuation-FOOT
+         * episema's points — episema ink laid down without lifting the pen (a virga's flag, a clivis
+         * tenuto), fused into the note gesture rather than drawn as a detached accent.
+         */
+        std::vector<unsigned char> foot;
+    };
+
     /** The complete geometry of one neume, one entry per <nc> in document order. */
     struct NeumeGeometry {
         std::vector<NcGeometry> ncs;
+        std::vector<StrokePath> strokes; ///< the pen ductus behind the ribbons (runs, then episemata)
     };
 
     /**
@@ -163,6 +181,8 @@ private:
         int strokeStart = 0; ///< index into pts where the component's own stroke begins - past the
                              ///< prepended ink of a looped connection (@con="l"), which belongs to
                              ///< the joint, not to the note (episema anchors must skip it)
+        int footStart = -1; ///< index into pts where an appended continuation-foot episema begins
+                            ///< (-1 = no foot), so the ductus can tag the foot's points
     };
 
     /** The unit travel vector of a @tilt compass direction (pen space, +y down). */

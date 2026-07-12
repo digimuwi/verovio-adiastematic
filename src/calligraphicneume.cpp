@@ -870,17 +870,25 @@ void CalligraphicNeume::InkRun(const std::vector<Seg> &run, NeumeGeometry &geo, 
         PointF c = run[0].pts[0]; // a dab has no travel direction: it is only carried by the slant
         if (!slant.IsNone()) c = SlantShear(c, { 0.0, 0.0 }, slant);
         geo.ncs[run[0].ncIndex].ribbon = Punctum(c);
+        geo.strokes.push_back({ run[0].ncIndex, false, { c } });
         return;
     }
     if (run.size() == 1) {
         std::vector<PointF> pts = run[0].pts;
         if (!slant.IsNone()) SlantApply(pts, slant);
         geo.ncs[run[0].ncIndex].ribbon = NibRibbon(pts);
+        std::vector<unsigned char> foot;
+        if (run[0].footStart >= 0) {
+            foot.assign(pts.size(), 0);
+            for (size_t k = (size_t)run[0].footStart; k < foot.size(); ++k) foot[k] = 1;
+        }
+        geo.strokes.push_back({ run[0].ncIndex, false, pts, foot });
         return;
     }
 
     // Concatenate the centrelines into one spine, dropping the duplicated joint points and tracking
-    // which component (run position) each spine point belongs to.
+    // which component (run position) each spine point belongs to. The continuation-foot flag rides
+    // packed into the label (owner*2 + foot): Densify only copies labels, never computes with them.
     std::vector<PointF> spine;
     std::vector<int> spineOwners;
     for (size_t si = 0; si < run.size(); ++si) {
@@ -892,7 +900,8 @@ void CalligraphicNeume::InkRun(const std::vector<Seg> &run, NeumeGeometry &geo, 
         }
         for (size_t k = startIdx; k < s.pts.size(); ++k) {
             spine.push_back(s.pts[k]);
-            spineOwners.push_back((int)si);
+            const int isFoot = (s.footStart >= 0 && (int)k >= s.footStart) ? 1 : 0;
+            spineOwners.push_back((int)si * 2 + isFoot);
         }
     }
 
@@ -900,6 +909,14 @@ void CalligraphicNeume::InkRun(const std::vector<Seg> &run, NeumeGeometry &geo, 
     // the taper and tangents stay continuous across component boundaries.
     std::vector<int> owners;
     std::vector<PointF> dense = Densify(spine, 3.0, &spineOwners, &owners);
+    std::vector<unsigned char> denseFoot(owners.size(), 0);
+    bool anyFoot = false;
+    for (size_t i = 0; i < owners.size(); ++i) {
+        denseFoot[i] = (unsigned char)(owners[i] & 1);
+        anyFoot = anyFoot || denseFoot[i];
+        owners[i] >>= 1;
+    }
+    if (!anyFoot) denseFoot.clear();
     // Lean the smooth spine toward the upper-right BEFORE sweeping the nib, so the fixed nib meets the
     // leaned strokes at new angles. The per-point tangent makes the lean continuous across the joints.
     if (!slant.IsNone()) SlantApply(dense, slant);
@@ -941,6 +958,7 @@ void CalligraphicNeume::InkRun(const std::vector<Seg> &run, NeumeGeometry &geo, 
         const int b = std::min(lastIdx, coreEnd + kMargin);
         geo.ncs[run[contrib[p].first].ncIndex].ribbon = SliceRibbon(leftCurve, rightCurve, a, std::max(a + 1, b));
     }
+    geo.strokes.push_back({ run[0].ncIndex, false, dense, denseFoot });
 }
 
 // Episemata: each is a separate short accent stroke, swept with the same broad nib as the ribbon
@@ -1184,6 +1202,7 @@ void CalligraphicNeume::BuildEpisemata(
                 // which also carries its anchor across to meet the leaned stroke end it marks.
                 if (!slant.IsNone()) SlantApply(centre, slant);
                 geo.ncs[s.ncIndex].episemata.push_back(NibRibbon(centre, EPISEMA_NIB));
+                geo.strokes.push_back({ s.ncIndex, true, centre });
                 // The next link crosses this accent's far end: the endpoint reaching farthest into open
                 // space - the rightmost (+x), or for an upright accent (equal x) its top. Recorded
                 // pre-slant so the shear that follows leaves the chain joined.
@@ -1665,6 +1684,7 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(const std::vector<NcIn
         // The foot side is the first episema's @place (left, else right). prevExitDir is read above
         // (pre-foot) so a later detached component still gaps from the stroke, not the foot tip.
         bool footEpisema = false;
+        int footStart = -1;
         if (!dot && episemaFoot(i)) {
             const EpisemaInfo &ep = nc.episemata[0];
             const int side = (ep.place == EVENTREL_left) ? -1 : 1; // left -> -1; right / default -> +1
@@ -1677,6 +1697,7 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(const std::vector<NcIn
             PointF runDir = base.Perp();
             if (runDir.x * side < 0.0) runDir = runDir * -1.0;
             const std::vector<PointF> foot = EpisemaFoot(pen, exitDir, runDir);
+            footStart = (int)pts.size();
             pts.insert(pts.end(), foot.begin(), foot.end());
             pen = pts.back();
             footEpisema = true;
@@ -1686,7 +1707,7 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(const std::vector<NcIn
         // folded into a neighbouring continuous gesture.
         const bool prevWasDot = !runs.empty() && !runs.back().empty() && runs.back().back().isDot;
         if (runs.empty() || brk || dot || prevWasDot) runs.push_back({});
-        runs.back().push_back({ std::move(pts), tilt, (int)i, dot, footEpisema, strokeStart });
+        runs.back().push_back({ std::move(pts), tilt, (int)i, dot, footEpisema, strokeStart, footStart });
     }
 
     // 2) Ink each run as one continuous gesture, cut into per-nc slices.
@@ -1715,6 +1736,8 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(const std::vector<NcIn
             for (std::vector<PointF> &epi : nc.episemata)
                 for (PointF &p : epi) p.x -= inkLeft;
         }
+        for (StrokePath &s : geo.strokes)
+            for (PointF &p : s.pts) p.x -= inkLeft;
     }
 
     // 5) Scale from prototype pixels into verovio drawing units.
@@ -1723,6 +1746,8 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(const std::vector<NcIn
         for (std::vector<PointF> &epi : nc.episemata)
             for (PointF &p : epi) p = { p.x * scale, p.y * scale };
     }
+    for (StrokePath &s : geo.strokes)
+        for (PointF &p : s.pts) p = { p.x * scale, p.y * scale };
 
     return geo;
 }
