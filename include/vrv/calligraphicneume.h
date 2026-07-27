@@ -231,9 +231,12 @@ private:
     static Stroke WaveFrom(PointF s, const std::string &orient, int tilt);
     /**
      * Ride a wavy wiggle on an arbitrary spine: @p spine is the axis the wave follows (a straight
-     * chord, a bow, an angled chevron), resampled evenly by arc length and displaced perpendicular to
-     * its local travel by a cosine, so the toothed line tracks whatever path the spine traces. @p waves
-     * sets the crest count (spread evenly along the spine's length), @p amp the perpendicular swing.
+     * chord, a bow, an angled chevron), resampled by arc length and displaced perpendicular to its
+     * local travel, so the toothed line tracks whatever path the spine traces. The tooth is the
+     * manuscript scribe's, not a sine: a prolate trochoid whose pen rushes through each round belly
+     * and flicks BACK at each crest (a small crossing loop), the whole tooth leaning italic so its
+     * flanks run near the nib edge - hairline flanks, ink pooled in the bellies. @p waves sets the
+     * crest count (spread evenly along the spine's length), @p amp the perpendicular swing.
      * Phased crest -> trough: it opens on a crest and lifts at a trough, its tangent momentarily along
      * the axis at the end so a following ascent springs cleanly out of the low point.
      */

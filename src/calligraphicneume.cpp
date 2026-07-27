@@ -534,15 +534,16 @@ CalligraphicNeume::Stroke CalligraphicNeume::WaveFrom(PointF s, const std::strin
     return { Cubic(s, c1, c2, e), e };
 }
 
-// Ride a quilisma's wiggle on an arbitrary spine (see the header): @p spine is the axis the wave
-// follows, resampled evenly by arc length so the @p waves crests spread evenly along its length
+// Ride a quilisma's tooth-wave on an arbitrary spine (see the header): @p spine is the axis the
+// wave follows, resampled by arc length so the @p waves crests spread evenly along its length
 // however it bends, each sample displaced perpendicular to the LOCAL travel so the toothed line
-// tracks the spine's own shape (a straight chord, a bow, an angled chevron alike).
+// tracks the spine's own shape (a straight chord, a bow, an angled chevron alike). The tooth form
+// itself - round bellies, leaning flanks, a back-flick at each crest - lives in the loop below.
 std::vector<CalligraphicNeume::PointF> CalligraphicNeume::Wavify(
     const std::vector<PointF> &spine, int waves, double amp)
 {
     if (waves < 1) waves = 2; // default number of crests
-    constexpr int PER = 10; // samples per crest
+    constexpr int PER = 16; // samples per crest (the crest flicks turn tightly, so sample densely)
     const int n = waves * PER;
     // Phase the swing so it starts at a crest (-amp) and ends at a trough (+amp): an integer count of
     // crests with half a cycle to spare puts the lift exactly at the final trough, its tangent
@@ -559,20 +560,35 @@ std::vector<CalligraphicNeume::PointF> CalligraphicNeume::Wavify(
         return pts;
     }
     pts.reserve(n + 1);
-    int k = 0; // current spine segment [k, k+1], advanced monotonically as t grows
+    // The scribe's tooth is no sine wave: the pen rushes through each round belly and STALLS at the
+    // crest, flicking back over the rise it just made before dropping into the next belly. So on top
+    // of the steady travel, the position along the spine carries a -sin retrograde term (a prolate
+    // trochoid: sized just past the cusp threshold total/omega, each crest winds a small crossing
+    // loop, the tooth tips of the manuscript hand) and an italic lean (a point higher on the tooth
+    // sits further right, so both flanks of a tooth slope NE-SW - near the nib edge, which leaves
+    // them hairline and pools the ink in the round bellies).
+    constexpr double RETRO = 1.4; // crest flick, as a fraction of the cusp threshold (1 = a cusp)
+    constexpr double LEAN = 0.7; // italic shear: forward shift per unit of perpendicular rise
+    const double omega = 2.0 * M_PI * cycles; // total phase the swing sweeps
+    const double lambda = RETRO * total / omega; // retrograde amplitude along the spine
+    int k = 0; // current spine segment [k, k+1], re-searched as sarc swings back and forth
     for (int i = 0; i <= n; ++i) {
         const double t = (double)i / n; // 0..1 along the spine
-        const double sarc = t * total; // target arc length
-        // Skip to the segment containing sarc; <= steps past any zero-length segment (the duplicated
-        // apex knot of an angled chevron) so the tangent comes from a real leg, not the coincident pair.
+        const double th = omega * t;
+        const double off = -amp * std::cos(th); // crest -> ... -> trough (negative = the crest side)
+        const double sarc = t * total - lambda * std::sin(th) - LEAN * off; // target arc length
+        // Find the segment containing sarc - backwards too, since the crest flicks make it
+        // non-monotonic; <= steps past any zero-length segment (the duplicated apex knot of an
+        // angled chevron) so the tangent comes from a real leg, not the coincident pair.
+        while (k > 0 && cum[k] > sarc) --k;
         while (k < m - 2 && cum[k + 1] <= sarc) ++k;
         const PointF a = spine[k], b = spine[k + 1];
         const double segLen = cum[k + 1] - cum[k];
         const double u = (segLen > 1e-9) ? (sarc - cum[k]) / segLen : 0.0;
+        // u runs free of [0, 1]: a flick past either end of the spine extrapolates along its end leg.
         const PointF p = { a.x + (b.x - a.x) * u, a.y + (b.y - a.y) * u };
         const PointF tan = (b - a).Unit(PointF{ 1.0, 0.0 }); // local travel of the spine here
         const PointF perp = { -tan.y, tan.x }; // the wiggle swings to either side of it
-        const double off = -amp * std::cos(2.0 * M_PI * cycles * t); // crest -> ... -> trough
         pts.push_back({ p.x + perp.x * off, p.y + perp.y * off });
     }
     return pts;
@@ -591,8 +607,8 @@ CalligraphicNeume::Stroke CalligraphicNeume::Quilisma(
     if (waves < 1) waves = 2; // default number of crests
     PointF dir = TiltVec(tilt); // the wavy line travels along @tilt...
     if (dir.x == 0.0 && dir.y == 0.0) dir = TiltVec(COMPASSDIRECTION_e); // ...level by default
-    constexpr double WAVE_LEN = 13.0; // travel per crest (along the stroke)
-    constexpr double AMP = 7.5; // perpendicular swing of the wiggle (rounder, taller humps)
+    constexpr double WAVE_LEN = 14.0; // travel per crest (along the stroke)
+    constexpr double AMP = 6.5; // perpendicular swing of the wiggle (open, round bellies)
     const double total = WAVE_LEN * waves; // the quilisma sizes by its crest count, not @rellen
     // A standalone wavy note (@p centred) sits on its anchor, so back the axis off by half its travel;
     // a connected or stepped flourish springs forward from @p s.
