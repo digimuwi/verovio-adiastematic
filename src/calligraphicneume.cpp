@@ -540,11 +540,10 @@ CalligraphicNeume::Stroke CalligraphicNeume::WaveFrom(PointF s, const std::strin
 // tracks the spine's own shape (a straight chord, a bow, an angled chevron alike). The tooth form
 // itself - round bellies, leaning flanks, a back-flick at each crest - lives in the loop below.
 std::vector<CalligraphicNeume::PointF> CalligraphicNeume::Wavify(
-    const std::vector<PointF> &spine, int waves, double amp)
+    const std::vector<PointF> &spine, int waves, double amp, bool runOut)
 {
     if (waves < 1) waves = 2; // default number of crests
     constexpr int PER = 16; // samples per crest (the crest flicks turn tightly, so sample densely)
-    const int n = waves * PER;
     // Phase the swing so it starts at a crest (-amp) and ends at a trough (+amp): an integer count of
     // crests with half a cycle to spare puts the lift exactly at the final trough, its tangent
     // momentarily along the axis, so the next nc's ascent springs cleanly out of that low point.
@@ -559,7 +558,6 @@ std::vector<CalligraphicNeume::PointF> CalligraphicNeume::Wavify(
         pts.assign(std::max(1, m), spine.empty() ? PointF{} : spine[0]);
         return pts;
     }
-    pts.reserve(n + 1);
     // The scribe's tooth is no sine wave: the pen rushes through each round belly and STALLS at the
     // crest, flicking back over the rise it just made before dropping into the next belly. So on top
     // of the steady travel, the position along the spine carries a -sin retrograde term (a prolate
@@ -569,11 +567,24 @@ std::vector<CalligraphicNeume::PointF> CalligraphicNeume::Wavify(
     // them hairline and pools the ink in the round bellies).
     constexpr double RETRO = 1.4; // crest flick, as a fraction of the cusp threshold (1 = a cusp)
     constexpr double LEAN = 0.7; // italic shear: forward shift per unit of perpendicular rise
-    const double omega = 2.0 * M_PI * cycles; // total phase the swing sweeps
+    const double omega = 2.0 * M_PI * cycles; // phase swept by the time the pen reaches the final trough
     const double lambda = RETRO * total / omega; // retrograde amplitude along the spine
+    // The italic lean is what makes the final trough a bad place to stop: it shifts every crest
+    // forward and every trough back by LEAN * amp, which for the half-cycle that ends the wave very
+    // nearly cancels the steady travel - so the last trough comes to rest directly BENEATH the last
+    // crest, and a stroke rising out of it would climb straight back through the tooth it just wrote.
+    // The scribe does not stop the pen at the bottom of a belly he has somewhere to go from: he
+    // carries it on round and out. Running the same trochoid a little past the trough (@p runOut) is
+    // that carry-on - it costs no new geometry, and it leaves the pen about half a crest's spacing
+    // ahead of the last tooth, a touch above the belly floor and already travelling up and forward,
+    // which is exactly where the manuscript's ascent springs from.
+    constexpr double RUNOUT = 0.30 * M_PI; // phase carried on past the final trough
+    const double tEnd = runOut ? 1.0 + RUNOUT / omega : 1.0;
+    const int n = (int)std::lround(waves * PER * tEnd);
+    pts.reserve(n + 1);
     int k = 0; // current spine segment [k, k+1], re-searched as sarc swings back and forth
     for (int i = 0; i <= n; ++i) {
-        const double t = (double)i / n; // 0..1 along the spine
+        const double t = tEnd * (double)i / n; // 0..1 along the spine (a shade past it on a run-out)
         const double th = omega * t;
         const double off = -amp * std::cos(th); // crest -> ... -> trough (negative = the crest side)
         const double sarc = t * total - lambda * std::sin(th) - LEAN * off; // target arc length
@@ -597,12 +608,14 @@ std::vector<CalligraphicNeume::PointF> CalligraphicNeume::Wavify(
 // quilisma: a wavy flourish modelled on the liquescent (see the header). The WHOLE note is this wavy
 // line - the broad nib swept over it draws the characteristic toothed quilisma - starting at the top
 // of the first crest (so the stroke opens on a wave, not a half-swing up to one) and lifting at the
-// bottom of the last trough, whence the next nc's ascent springs. "quilisma" means only "make the line
-// wavy", so the wiggle rides whatever axis the stroke's own shape traces: a straight chord along @tilt
-// by default, or - when the <nc> carries @curve / @angled - the very bow or right-angle chevron those
-// would draw. @p waves (from @waves) sets the crest count and the line's length.
-CalligraphicNeume::Stroke CalligraphicNeume::Quilisma(
-    PointF s, int tilt, int waves, bool centred, int curveHand, bool hasCurve, bool angled, PointF tIn, PointF tOut)
+// bottom of the last trough - or, when a connected component follows (@p runOut), a shade past it, the
+// pen carrying on up and out of the last belly to the spring point clear of the tooth whence that next
+// stroke rises. "quilisma" means only "make the line wavy", so the wiggle rides whatever axis the
+// stroke's own shape traces: a straight chord along @tilt by default, or - when the <nc> carries
+// @curve / @angled - the very bow or right-angle chevron those would draw. @p waves (from @waves) sets
+// the crest count and the line's length.
+CalligraphicNeume::Stroke CalligraphicNeume::Quilisma(PointF s, int tilt, int waves, bool centred, int curveHand,
+    bool hasCurve, bool angled, PointF tIn, PointF tOut, bool runOut)
 {
     if (waves < 1) waves = 2; // default number of crests
     PointF dir = TiltVec(tilt); // the wavy line travels along @tilt...
@@ -624,7 +637,7 @@ CalligraphicNeume::Stroke CalligraphicNeume::Quilisma(
     else {
         spine = { foot, { foot.x + dir.x * total, foot.y + dir.y * total } };
     }
-    std::vector<PointF> pts = Wavify(spine, waves, AMP);
+    std::vector<PointF> pts = Wavify(spine, waves, AMP, runOut);
     return { pts, pts.back() };
 }
 
@@ -1501,11 +1514,14 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
             else if (nc.quilisma) {
                 // A <quilisma>: the whole note is the wavy line, running along @tilt (level by default).
                 // Any @curve / @angled bends the axis the wiggle rides (a wavy bow / chevron), easing
-                // toward the next component if one follows in the same gesture.
+                // toward the next component if one follows in the same gesture - and when one does, the
+                // wave runs on out of its last belly so that stroke springs clear of the last tooth.
                 PointF cd = TiltVec(tilt);
                 if (cd.x == 0.0 && cd.y == 0.0) cd = TiltVec(COMPASSDIRECTION_e);
-                const PointF tOut = (i + 1 < ncs.size() && !breaksBefore(i + 1)) ? chordDirOf(i + 1) : cd;
-                Stroke sh = Quilisma(anchor, tilt, nc.waves, centred, curveHand, hasCurve, nc.angled, cd, tOut);
+                const bool flowsOn = (i + 1 < ncs.size() && !breaksBefore(i + 1));
+                const PointF tOut = flowsOn ? chordDirOf(i + 1) : cd;
+                Stroke sh
+                    = Quilisma(anchor, tilt, nc.waves, centred, curveHand, hasCurve, nc.angled, cd, tOut, flowsOn);
                 pts = sh.pts;
                 pen = sh.exit;
             }
@@ -1605,10 +1621,13 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
             if (nc.quilisma) {
                 // Within a ligature the whole component is the wavy line, springing from the pen and
                 // running along @tilt (level by default). Any @curve / @angled bends the axis it rides,
-                // springing from the previous stroke's exit tangent and easing toward the next.
+                // springing from the previous stroke's exit tangent and easing toward the next - and when
+                // one follows, the wave runs on out of its last belly so that stroke springs clear of the
+                // last tooth.
                 const PointF tIn = (prevExitDir.x != 0.0 || prevExitDir.y != 0.0) ? prevExitDir : chordDirOf(i);
-                const PointF tOut = (i + 1 < ncs.size() && !breaksBefore(i + 1)) ? chordDirOf(i + 1) : chordDirOf(i);
-                Stroke sh = Quilisma(pen, tilt, nc.waves, false, curveHand, hasCurve, nc.angled, tIn, tOut);
+                const bool flowsOn = (i + 1 < ncs.size() && !breaksBefore(i + 1));
+                const PointF tOut = flowsOn ? chordDirOf(i + 1) : chordDirOf(i);
+                Stroke sh = Quilisma(pen, tilt, nc.waves, false, curveHand, hasCurve, nc.angled, tIn, tOut, flowsOn);
                 pts = sh.pts;
                 pen = sh.exit;
             }

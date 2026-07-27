@@ -238,9 +238,13 @@ private:
      * flanks run near the nib edge - hairline flanks, ink pooled in the bellies. @p waves sets the
      * crest count (spread evenly along the spine's length), @p amp the perpendicular swing.
      * Phased crest -> trough: it opens on a crest and lifts at a trough, its tangent momentarily along
-     * the axis at the end so a following ascent springs cleanly out of the low point.
+     * the axis at the end so a following ascent springs cleanly out of the low point. @p runOut carries
+     * the same trochoid a little PAST that final trough, for a wave the pen flows on from: the italic
+     * lean leaves the last trough directly beneath the last crest, so a stroke rising out of the low
+     * point itself would climb straight back through the tooth just written - running on up and out of
+     * the belly first sets the spring point clear of it.
      */
-    static std::vector<PointF> Wavify(const std::vector<PointF> &spine, int waves, double amp);
+    static std::vector<PointF> Wavify(const std::vector<PointF> &spine, int waves, double amp, bool runOut = false);
     /**
      * A quilisma: a wavy flourish, modelled on the liquescent. The WHOLE note is this wavy line - the
      * broad nib swept over it draws the characteristic toothed quilisma - starting on the first crest
@@ -251,10 +255,12 @@ private:
      * @p tIn / @p tOut) it rides the very bow or chevron those would draw. @p waves (from @waves) sets
      * the crest count and the line's length; @p centred backs the axis off by half its travel so a
      * standalone wavy note sits on @p s, otherwise the flourish springs forward from @p s (a connected
-     * or stepped component).
+     * or stepped component). @p runOut (set when a connected component follows) carries the pen on up and
+     * out of the last belly instead of stopping it at the trough floor, so that component springs clear
+     * of the last tooth rather than back through it - see Wavify.
      */
     static Stroke Quilisma(PointF s, int tilt, int waves, bool centred, int curveHand, bool hasCurve, bool angled,
-        PointF tIn, PointF tOut);
+        PointF tIn, PointF tOut, bool runOut = false);
     static Stroke Comma(double x, double y, int tilt);
     /**
      * A liquescent stroke (cephalicus / epiphonus). When @p stem > 0 the note's own melodic stroke of
