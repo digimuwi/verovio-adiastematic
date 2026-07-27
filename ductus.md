@@ -6,7 +6,7 @@ shaped the way it is, so the intent survives the next reading.
 
 ## Starting point
 
-The renderer is an idealised **broad-edge pen**: a nib held at a fixed −45° for the whole
+The renderer is an idealised **broad-edge pen**: a nib held at one fixed angle for the whole
 hand, swept along each component's centreline, with width
 
 ```
@@ -14,7 +14,7 @@ w(i) = base_nib(direction) · scale
        └── |T × n̂| law ──┘
 ```
 
-The width is **uniform along each stroke** — the fixed −45° nib alone gives the thick/thin (thin
+The width is **uniform along each stroke** — the fixed nib alone gives the thick/thin (thin
 where the stroke runs along the nib edge, broad across it). Geometrically honest, and after
 experiment (below) deliberately left that way. "Ductus" is the lived execution a pen machine
 otherwise throws away; two orthogonal, fully-deterministic factors were explored on top:
@@ -69,7 +69,7 @@ points below it drift left.
 Two deliberate choices:
 
 1. **True italic, not oblique.** The shear is applied to the **centrelines before the nib is
-   swept**, so the fixed −45° nib meets the leaned strokes at new angles and the thick/thin
+   swept**, so the fixed nib meets the leaned strokes at new angles and the thick/thin
    redistributes — exactly what a constant-angle pen does on a slant. (Shearing the *finished*
    ink would skew the apparent nib angle and turn puncta into parallelograms — the "fake italic"
    look. We rejected that.)
@@ -116,6 +116,22 @@ randomness**, so output is byte-identical given a fixed `--xml-id-seed`.
 
 Everything is behind the existing `neumeCalligraphic` opt-in, so non-calligraphic neume output
 is unchanged.
+
+## The pen as a parameter (additive, for synthetic-data variation)
+
+`CalligraphicNeume::Pen { angleDeg, width, thin, episema }` parameterizes what used to be the
+`NIB_ANGLE / NIB_W / NIB_MIN / EPISEMA_NIB` constants (the punctum dab footprint scales with
+`width`). A `Build(ncs, scale, slant, pen)` overload takes it; the old three-arg `Build` and
+the verovio render path use `Pen{}`. When first introduced, `Pen{}` reproduced the historical
+constants **byte-identically** (verified against the pre-patch binary); the default nib angle has
+since been re-tuned to match the ductus repo's standard hand — **130°** (== −50°, the historic
+−45° == 135° steepened by 5°), tuned by eye against the manuscript in its Nib Lab (2026-07-22)
+and used as the centre of its synthetic-corpus pen sampling (`sample_pen`: nib ~N(130°, 12)).
+`width/thin/episema` keep the historical 6.0 / 1.8 / 0.55 — the corpus varies them but centres
+on exactly these. Only the nib's axis matters (`|T x n̂|`), so `angleDeg` and `angleDeg ± 180`
+are the same pen. The overload exists so the ductus training-data generator (`ductus_dump2` in
+the ductus repo, via `@` pen-directive lines) can vary the hand — nothing in the rendering path
+reads anything but the default.
 
 ## Deliberately not done (parked)
 

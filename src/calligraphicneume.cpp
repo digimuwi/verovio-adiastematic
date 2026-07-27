@@ -35,7 +35,7 @@ namespace {
     // the foot/head levels stay aligned across the neume. @rellen scales the reach (see RellenFactor): l
     // lengthens it and s shortens it by the same ratio. The horizontal advance follows from the stroke's
     // @tilt aspect, so a diagonal that reaches one level is correspondingly longer than a vertical one but
-    // keeps its 45-degree pen angle (and so its broad-nib thickness).
+    // keeps the fixed nib angle (and so its broad-nib thickness).
     constexpr double LEVEL_STEP = 2.0 * CalligraphicNeume::s_unitPx; // one interline
     constexpr double MED = LEVEL_STEP; // a one-level stroke; also the curl-radius reference below
     // Placement of a detached component (@con == g). A pitch-changing step moves along the melodic contour
@@ -67,13 +67,18 @@ namespace {
     constexpr double PARALLEL_COS = 0.9;
 
     constexpr double DEG = M_PI / 180.0;
-    // The broad nib is held at a fixed 45-degree diagonal for the whole hand, its edge running NE-SW. A
-    // stroke travelling along that edge (a virga: bottom -> NE) comes out thin; one travelling across it
-    // (the start of a pes: -> SE) comes out broad. Pen space has +y down, so NE is (+x, -y).
-    constexpr double NIB_ANGLE = -45.0 * DEG;
-    constexpr double NIB_W = 6.0; // broadest (across the nib)
-    constexpr double NIB_MIN = 1.8; // thinnest (along the nib)
-    constexpr double EPISEMA_NIB = 0.55; // episemata are drawn with a finer nib than the note strokes
+    // The broad nib is held at one fixed angle for the whole hand (default: 130 degrees == -50, the
+    // historic NE-SW diagonal steepened by 5 - the hand tuned by eye against the manuscript in
+    // ductus-experiments' Nib Lab and the centre of its synthetic-corpus pens). A stroke travelling
+    // along that edge (a virga: bottom -> NE) comes out thin; one travelling across it (the start of
+    // a pes: -> SE) comes out broad. Pen space has +y down, so NE is (+x, -y). The pen for the
+    // CURRENT Build call: Build sets it from its Pen argument on entry, so every helper below reads
+    // one consistent hand per neume. The default Pen{} is that same standard hand, so the verovio
+    // render path (which never passes a pen) and the corpus generator agree. A namespace-level
+    // current pen rather than a threaded parameter keeps the diff additive; Build was always a
+    // single-threaded geometry pass.
+    CalligraphicNeume::Pen g_pen;
+    inline double NibAngle() { return g_pen.angleDeg * DEG; }
     // The scribe's episema is not a ruled bar: drawn freehand it bows into a shallow concave-up dish, a
     // low middle with the ends flicking up. Sized as a fraction of the accent's half-length.
     constexpr double EPISEMA_BOW = 0.30;
@@ -291,7 +296,7 @@ std::vector<CalligraphicNeume::PointF> CalligraphicNeume::Densify(
 //----------------------------------------------------------------------------
 
 // The two offset edges of the broad-nib ribbon. The stroke width at each point follows the classic
-// broad-pen law w proportional to |T x n̂|: the fixed -45 degree nib comes out thin where the stroke
+// broad-pen law w proportional to |T x n̂|: the hand's fixed nib comes out thin where the stroke
 // runs along its edge and broad where it runs across it, which is the calligraphic thick / thin. The
 // width is otherwise uniform along the stroke - there is no along-stroke taper.
 void CalligraphicNeume::NibEdges(
@@ -302,7 +307,7 @@ void CalligraphicNeume::NibEdges(
     right.assign(n, {});
     if (n < 2) return;
 
-    const PointF nib = { std::cos(NIB_ANGLE), std::sin(NIB_ANGLE) };
+    const PointF nib = { std::cos(NibAngle()), std::sin(NibAngle()) };
     for (int i = 0; i < n; ++i) {
         const PointF a = pts[std::max(0, i - 1)], b = pts[std::min(n - 1, i + 1)];
         double tx = b.x - a.x, ty = b.y - a.y;
@@ -312,7 +317,7 @@ void CalligraphicNeume::NibEdges(
             ty /= m;
         }
         const double sinA = std::fabs(tx * nib.y - ty * nib.x); // |T x n̂|
-        const double w = ((NIB_MIN + (NIB_W - NIB_MIN) * sinA) * scale) / 2.0;
+        const double w = ((g_pen.thin + (g_pen.width - g_pen.thin) * sinA) * scale) / 2.0;
         left[i] = { pts[i].x - ty * w, pts[i].y + tx * w };
         right[i] = { pts[i].x + ty * w, pts[i].y - tx * w };
     }
@@ -344,10 +349,11 @@ void CalligraphicNeume::SmoothPolyline(std::vector<PointF> &p, int passes)
 // rounded into a smooth blob so it reads as a deliberate point.
 std::vector<CalligraphicNeume::PointF> CalligraphicNeume::Punctum(PointF c)
 {
-    const PointF nib = { std::cos(NIB_ANGLE), std::sin(NIB_ANGLE) }; // the broad edge of the nib
+    const PointF nib = { std::cos(NibAngle()), std::sin(NibAngle()) }; // the broad edge of the nib
     const PointF perp = { -nib.y, nib.x };
-    constexpr double LA = 4.0; // half-length along the nib edge
-    constexpr double SA = 2.6; // half-width across it
+    // The footprint scales with the nib: a broader pen dabs a bigger lozenge (4.0 / 2.6 at width 6).
+    const double LA = 4.0 * (g_pen.width / 6.0); // half-length along the nib edge
+    const double SA = 2.6 * (g_pen.width / 6.0); // half-width across it
     const std::vector<PointF> diamond
         = { { c.x + nib.x * LA, c.y + nib.y * LA }, { c.x + perp.x * SA, c.y + perp.y * SA },
               { c.x - nib.x * LA, c.y - nib.y * LA }, { c.x - perp.x * SA, c.y - perp.y * SA } };
@@ -1096,9 +1102,9 @@ void CalligraphicNeume::BuildEpisemata(
                     // summit's horizontal tangent) to keep the same clean gap the end placement has.
                     double clear = GAP;
                     if (onSummit) {
-                        const PointF nib = { std::cos(NIB_ANGLE), std::sin(NIB_ANGLE) };
+                        const PointF nib = { std::cos(NibAngle()), std::sin(NibAngle()) };
                         const double sinA = std::fabs(ori.x * nib.y - ori.y * nib.x); // |T x n̂|
-                        clear = GAP + (NIB_MIN + (NIB_W - NIB_MIN) * sinA) / 2.0;
+                        clear = GAP + (g_pen.thin + (g_pen.width - g_pen.thin) * sinA) / 2.0;
                     }
                     // Centre the accent on the marked point, then set it clear of the ink in the accent's
                     // own frame so the point always stays at its midpoint instead of sliding to a corner:
@@ -1201,7 +1207,7 @@ void CalligraphicNeume::BuildEpisemata(
                 // The accent is a separate pen stroke, so it rides the same forward slant as the ribbon,
                 // which also carries its anchor across to meet the leaned stroke end it marks.
                 if (!slant.IsNone()) SlantApply(centre, slant);
-                geo.ncs[s.ncIndex].episemata.push_back(NibRibbon(centre, EPISEMA_NIB));
+                geo.ncs[s.ncIndex].episemata.push_back(NibRibbon(centre, g_pen.episema));
                 geo.strokes.push_back({ s.ncIndex, true, centre });
                 // The next link crosses this accent's far end: the endpoint reaching farthest into open
                 // space - the rightmost (+x), or for an upright accent (equal x) its top. Recorded
@@ -1214,6 +1220,14 @@ void CalligraphicNeume::BuildEpisemata(
 
 CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(const std::vector<NcInfo> &ncs, double scale, Slant slant)
 {
+    return Build(ncs, scale, slant, Pen());
+}
+
+CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
+    const std::vector<NcInfo> &ncs, double scale, Slant slant, Pen hand)
+{
+    g_pen = hand; // the pen for this whole gesture — every nib helper reads it
+
     NeumeGeometry geo;
     if (ncs.empty()) return geo;
 

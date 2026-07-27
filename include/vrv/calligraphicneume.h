@@ -153,13 +153,33 @@ public:
     };
 
     /**
+     * The broad-edge pen itself: the hand's nib, held at one fixed angle for the whole gesture.
+     * The default angle is the hand tuned by eye against the manuscript (ductus-experiments' Nib
+     * Lab, 2026-07-22) and the centre of its synthetic-corpus pens: 130 degrees, the historic
+     * -45 (== 135) NE-SW diagonal steepened by 5. Width/thin/episema keep the historical
+     * constants (the corpus varies them, but centred on exactly these). Only the nib's AXIS
+     * matters (the width law is |T x n̂| and the punctum dab is point-symmetric), so angleDeg and
+     * angleDeg ± 180 are the same pen: 130 == -50.
+     */
+    struct Pen {
+        double angleDeg = 130.0; ///< nib edge direction in pen space (+y down), degrees
+        double width = 6.0; ///< broadest stroke width (travelling across the nib)
+        double thin = 1.8; ///< thinnest stroke width (travelling along the nib edge)
+        double episema = 0.55; ///< episema accents' finer-nib fraction of the note nib
+    };
+
+    /**
      * Build the geometry of one neume from its ordered <nc> components. The returned
      * NeumeGeometry::ncs is parallel to @p ncs (same size and order), so each entry can be inked
      * inside its own <nc> graphic.
      * @p scale is verovio drawing units per prototype pixel (typically unit / s_unitPx).
      * @p slant applies the scribe's forward lean (default: none).
+     * @p pen selects the hand's nib (default: the manuscript-tuned 130 degree / 6 px broad edge).
+     * (Two overloads rather than a defaulted Pen argument: a `Pen pen = {}` default inside the
+     * enclosing class cannot see Pen's member initializers yet.)
      */
     static NeumeGeometry Build(const std::vector<NcInfo> &ncs, double scale, Slant slant = {});
+    static NeumeGeometry Build(const std::vector<NcInfo> &ncs, double scale, Slant slant, Pen pen);
 
 private:
     //----------------------------------------------------------------------------
