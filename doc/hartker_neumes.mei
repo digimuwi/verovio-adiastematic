@@ -1037,10 +1037,10 @@
               <syllable>
                 <syl>Pes liquescent 2 (Epiphonus)</syl>
                 <neume>
-                  <nc tilt="s" curve="a">
+                  <nc tilt="s" curve="a" />
+                  <nc tilt="ne" intm="u">
                     <liquescent curve="a" />
                   </nc>
-                  <nc tilt="ne" intm="u" />
                 </neume>
               </syllable>
               <syllable>

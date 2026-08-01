@@ -344,6 +344,14 @@ void View::DrawNeumeAdiastematic(DeviceContext *dc, Neume *neume, Staff *staff)
     assert(neume);
     assert(staff);
 
+    // The liquescence is where the neume's gesture dies away, so the pen can only bend into its curl at
+    // the very end of the gesture: a <liquescent> takes graphical effect on the LAST <nc> alone (see the
+    // grandchild loop below). Find that component up front so each nc knows whether it closes the neume.
+    const Object *lastNc = NULL;
+    for (Object *child : neume->GetChildren()) {
+        if (child->Is(NC)) lastNc = child;
+    }
+
     // Collect the visual attributes of each <nc> child, in document order, keeping the matching Nc
     // objects so each component's ink can be inked inside its own <nc> graphic.
     std::vector<CalligraphicNeume::NcInfo> ncInfos;
@@ -352,6 +360,7 @@ void View::DrawNeumeAdiastematic(DeviceContext *dc, Neume *neume, Staff *staff)
         if (!child->Is(NC)) continue;
         Nc *nc = vrv_cast<Nc *>(child);
         ncObjects.push_back(nc);
+        const bool closesNeume = (child == lastNc);
 
         CalligraphicNeume::NcInfo info;
         info.tilt = nc->GetTilt();
@@ -389,6 +398,14 @@ void View::DrawNeumeAdiastematic(DeviceContext *dc, Neume *neume, Staff *staff)
                 // <oriscus> is a purely semantic ("inhaltliche") marking: the oriscus's visual pen form
                 // is carried by @s-shape, so the element itself has no effect on the rendered gesture -
                 // it leaves the nc shaped by its attributes alone (a bare oriscus stays a punctum).
+            }
+            else if (grandChild->Is(LIQUESCENT) && !closesNeume) {
+                // A liquescence is the fading away of the neume's final sound, and the hand writes it as
+                // the closing curl of the whole gesture - the pen cannot both curl shut and run on into
+                // the next component. So on any <nc> but the last one the element is a semantic marking
+                // alone, like <oriscus> above: the component is drawn exactly as if the child were absent,
+                // by its own @tilt / @curve / @intm. An encoder wanting the curl earlier in the gesture
+                // must split the neume, which is what the closing curl means anyway.
             }
             else {
                 info.hasNonEpisemaChild = true;
