@@ -169,17 +169,47 @@ public:
     };
 
     /**
+     * The hand's GESTURE, as distinct from its nib: how far the pen lifts between detached
+     * components, how tightly a liquescent curls, how much a freehand episema dishes. Where Pen
+     * says what a scribe wrote WITH, this says how they moved.
+     *
+     * These lived as namespace-level constexprs until 2026-08-06, which made the shape of every
+     * neume one unvarying geometry — a synthetic corpus built on this renderer could vary the nib
+     * angle and the size and nothing else, so every clivis it emitted was a single gesture drawn
+     * sixty times. The Pen comment above already recorded the intent ("the corpus varies them");
+     * this finishes the job for the constants that decide shape rather than stroke weight.
+     *
+     * Defaults are exactly the constants they replace, so a caller passing nothing renders
+     * bit-identically to before. Radii are fractions of one level (the interline); gaps and shifts
+     * are prototype pen pixels, the frame in which the standard nib is 6 wide.
+     */
+    struct Gesture {
+        double breakGap = 15.0; ///< pen-lift advance past a detached component's clearance
+        double repeatDx = 14.0; ///< sideways slide of a repeated same-pitch stroke (bivirga)
+        double nestleGap = 7.0; ///< clearance between two @place-stacked parallel strokes
+        double aboutFaceShift = 8.0; ///< nudge when a stroke travels back along its predecessor
+        double liqCurl = 0.30; ///< terminal curl radius of a liquescent's own stroke, in levels
+        double liqHook = 0.50; ///< whole-note liquescent hook radius, in levels
+        double loopJoin = 0.18; ///< cursive loop radius at a @con="l" joint, in levels
+        double episemaBow = 0.30; ///< a freehand episema's dish, as a fraction of its half-length
+        double episemaBowChain = 0.07; ///< ...when stacked on one nc, where they read as ruled
+        double rellenRatio = 1.5; ///< @rellen reach: long and short are reciprocals of this
+    };
+
+    /**
      * Build the geometry of one neume from its ordered <nc> components. The returned
      * NeumeGeometry::ncs is parallel to @p ncs (same size and order), so each entry can be inked
      * inside its own <nc> graphic.
      * @p scale is verovio drawing units per prototype pixel (typically unit / s_unitPx).
      * @p slant applies the scribe's forward lean (default: none).
      * @p pen selects the hand's nib (default: the manuscript-tuned 130 degree / 6 px broad edge).
-     * (Two overloads rather than a defaulted Pen argument: a `Pen pen = {}` default inside the
-     * enclosing class cannot see Pen's member initializers yet.)
+     * @p gesture selects how the hand moves (default: the historical constants).
+     * (Overloads rather than defaulted arguments: a `Pen pen = {}` default inside the enclosing
+     * class cannot see Pen's member initializers yet.)
      */
     static NeumeGeometry Build(const std::vector<NcInfo> &ncs, double scale, Slant slant = {});
     static NeumeGeometry Build(const std::vector<NcInfo> &ncs, double scale, Slant slant, Pen pen);
+    static NeumeGeometry Build(const std::vector<NcInfo> &ncs, double scale, Slant slant, Pen pen, Gesture gesture);
 
 private:
     //----------------------------------------------------------------------------

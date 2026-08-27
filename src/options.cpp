@@ -1938,6 +1938,93 @@ Options::Options()
     m_neumeCalligraphicSlantBias.Init(0.3, 0.0, 1.0);
     this->Register(&m_neumeCalligraphicSlantBias, "neumeCalligraphicSlantBias", &m_neume);
 
+    // ---- the nib: what the hand wrote with ---------------------------------------------------
+    m_neumeCalligraphicNibAngle.SetInfo("Calligraphic neume nib angle",
+        "The broad nib's edge direction in degrees, held fixed for the whole hand. 130 is the "
+        "historic NE-SW diagonal steepened by 5. Only the axis matters, so 130 and -50 are one pen.");
+    m_neumeCalligraphicNibAngle.Init(130.0, -180.0, 180.0);
+    this->Register(&m_neumeCalligraphicNibAngle, "neumeCalligraphicNibAngle", &m_neume);
+
+    m_neumeCalligraphicNibWidth.SetInfo("Calligraphic neume nib width",
+        "Broadest stroke width, met by a stroke travelling across the nib. Raising it thickens the "
+        "hand throughout; the thin edge sets how far the stroke tapers away from it.");
+    m_neumeCalligraphicNibWidth.Init(6.0, 1.0, 20.0);
+    this->Register(&m_neumeCalligraphicNibWidth, "neumeCalligraphicNibWidth", &m_neume);
+
+    m_neumeCalligraphicNibThin.SetInfo("Calligraphic neume nib thin edge",
+        "Thinnest stroke width, met by a stroke travelling along the nib edge. Its ratio to the "
+        "width is the pen's contrast: equal values give a monoline, a small one a sharp quill.");
+    m_neumeCalligraphicNibThin.Init(1.8, 0.1, 20.0);
+    this->Register(&m_neumeCalligraphicNibThin, "neumeCalligraphicNibThin", &m_neume);
+
+    m_neumeCalligraphicEpisemaNib.SetInfo("Calligraphic neume episema nib",
+        "The finer nib an episema is drawn with, as a fraction of the note nib: scribes mark with a "
+        "lighter touch than they write with.");
+    m_neumeCalligraphicEpisemaNib.Init(0.55, 0.1, 2.0);
+    this->Register(&m_neumeCalligraphicEpisemaNib, "neumeCalligraphicEpisemaNib", &m_neume);
+
+    // ---- the gesture: how it moved -----------------------------------------------------------
+    m_neumeCalligraphicBreakGap.SetInfo("Calligraphic neume break gap",
+        "How far the pen lifts past a detached component's clearance before setting down again "
+        "(@con=\"g\"). Larger values loosen a climacus or salicus into separated marks.");
+    m_neumeCalligraphicBreakGap.Init(15.0, 0.0, 80.0);
+    this->Register(&m_neumeCalligraphicBreakGap, "neumeCalligraphicBreakGap", &m_neume);
+
+    m_neumeCalligraphicRepeatSlide.SetInfo("Calligraphic neume repeat slide",
+        "Sideways slide of a repeated same-pitch stroke: how far apart the two verticals of a "
+        "bivirga or distropha stand.");
+    m_neumeCalligraphicRepeatSlide.Init(14.0, 0.0, 80.0);
+    this->Register(&m_neumeCalligraphicRepeatSlide, "neumeCalligraphicRepeatSlide", &m_neume);
+
+    m_neumeCalligraphicNestleGap.SetInfo("Calligraphic neume nestle gap",
+        "Perpendicular clearance between two @place-stacked parallel strokes. Below the nib width "
+        "they merge into a single mass.");
+    m_neumeCalligraphicNestleGap.Init(7.0, 0.0, 40.0);
+    this->Register(&m_neumeCalligraphicNestleGap, "neumeCalligraphicNestleGap", &m_neume);
+
+    m_neumeCalligraphicAboutFaceShift.SetInfo("Calligraphic neume about-face shift",
+        "Sideways nudge given to a stroke that travels back along its predecessor's line. Without "
+        "it the pair retraces itself and reads as one stroke.");
+    m_neumeCalligraphicAboutFaceShift.Init(8.0, 0.0, 40.0);
+    this->Register(&m_neumeCalligraphicAboutFaceShift, "neumeCalligraphicAboutFaceShift", &m_neume);
+
+    m_neumeCalligraphicLiquescentCurl.SetInfo("Calligraphic neume liquescent curl",
+        "Radius of the terminal curl closing a liquescent that carries its own stroke, in "
+        "interlines: how fat a liquescence reads.");
+    m_neumeCalligraphicLiquescentCurl.Init(0.30, 0.0, 1.5);
+    this->Register(&m_neumeCalligraphicLiquescentCurl, "neumeCalligraphicLiquescentCurl", &m_neume);
+
+    m_neumeCalligraphicLiquescentHook.SetInfo("Calligraphic neume liquescent hook",
+        "Radius of a whole-note liquescent hook — one with no @tilt of its own, drawn off the "
+        "previous component — in interlines. Note-sized rather than an ornament.");
+    m_neumeCalligraphicLiquescentHook.Init(0.50, 0.0, 2.0);
+    this->Register(&m_neumeCalligraphicLiquescentHook, "neumeCalligraphicLiquescentHook", &m_neume);
+
+    m_neumeCalligraphicLoopJoin.SetInfo("Calligraphic neume loop join",
+        "Radius of the cursive crossing loop wound at a looped joint (@con=\"l\"), in interlines. "
+        "Kept well under the liquescent curl so it reads as a knot, not a note.");
+    m_neumeCalligraphicLoopJoin.Init(0.18, 0.0, 1.0);
+    this->Register(&m_neumeCalligraphicLoopJoin, "neumeCalligraphicLoopJoin", &m_neume);
+
+    m_neumeCalligraphicEpisemaBow.SetInfo("Calligraphic neume episema bow",
+        "How much a freehand episema dishes, as a fraction of its half-length: a low middle with "
+        "the ends flicking up. 0 is a ruled bar.");
+    m_neumeCalligraphicEpisemaBow.Init(0.30, 0.0, 1.0);
+    this->Register(&m_neumeCalligraphicEpisemaBow, "neumeCalligraphicEpisemaBow", &m_neume);
+
+    m_neumeCalligraphicEpisemaBowChain.SetInfo("Calligraphic neume chained episema bow",
+        "The same, for several accents stacked on one component, which a scribe draws nearly "
+        "straight so the stepped shape reads as ruled strokes meeting squarely.");
+    m_neumeCalligraphicEpisemaBowChain.Init(0.07, 0.0, 1.0);
+    this->Register(&m_neumeCalligraphicEpisemaBowChain, "neumeCalligraphicEpisemaBowChain", &m_neume);
+
+    m_neumeCalligraphicRellenRatio.SetInfo("Calligraphic neume rellen ratio",
+        "How strongly @rellen lengthens and shortens a stroke's reach. Long and short are "
+        "reciprocals of this one ratio, so a normal stroke stays their geometric mean: 1 ignores "
+        "@rellen entirely, 2 makes it a leap.");
+    m_neumeCalligraphicRellenRatio.Init(1.5, 1.0, 3.0);
+    this->Register(&m_neumeCalligraphicRellenRatio, "neumeCalligraphicRellenRatio", &m_neume);
+
     /********* Method JSON options to the command-line *********/
 
     m_jsonCmdLineOptions.SetLabel("Method JSON options for the command-line", "7-methodJson");

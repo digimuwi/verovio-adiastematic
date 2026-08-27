@@ -888,6 +888,24 @@ public:
     OptionBool m_neumeCalligraphic;
     OptionDbl m_neumeCalligraphicSlant;
     OptionDbl m_neumeCalligraphicSlantBias;
+    // The nib: what the hand wrote WITH. CalligraphicNeume::Pen has carried these since it was
+    // written, with a Build overload to take them, and nothing ever called it.
+    OptionDbl m_neumeCalligraphicNibAngle;
+    OptionDbl m_neumeCalligraphicNibWidth;
+    OptionDbl m_neumeCalligraphicNibThin;
+    OptionDbl m_neumeCalligraphicEpisemaNib;
+    // The gesture: how it MOVED. Hard-coded constants until 2026-08-06, which left the shape of
+    // every neume one unvarying geometry — see CalligraphicNeume::Gesture.
+    OptionDbl m_neumeCalligraphicBreakGap;
+    OptionDbl m_neumeCalligraphicRepeatSlide;
+    OptionDbl m_neumeCalligraphicNestleGap;
+    OptionDbl m_neumeCalligraphicAboutFaceShift;
+    OptionDbl m_neumeCalligraphicLiquescentCurl;
+    OptionDbl m_neumeCalligraphicLiquescentHook;
+    OptionDbl m_neumeCalligraphicLoopJoin;
+    OptionDbl m_neumeCalligraphicEpisemaBow;
+    OptionDbl m_neumeCalligraphicEpisemaBowChain;
+    OptionDbl m_neumeCalligraphicRellenRatio;
 
     /**
      * Additional options for passing method JSON options to the command-line

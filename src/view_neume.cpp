@@ -444,7 +444,19 @@ void View::DrawNeumeAdiastematic(DeviceContext *dc, Neume *neume, Staff *staff)
     // The scribe's forward slant: convert the option's degrees to the shear's tangent.
     const CalligraphicNeume::Slant slant{ std::tan(m_options->m_neumeCalligraphicSlant.GetValue() * M_PI / 180.0),
         m_options->m_neumeCalligraphicSlantBias.GetValue() };
-    const CalligraphicNeume::NeumeGeometry geo = CalligraphicNeume::Build(ncInfos, scale, slant);
+    // The hand: its nib, and how it moves. Both default to the constants this renderer was written
+    // with, so an untouched command line draws exactly what it always drew.
+    const CalligraphicNeume::Pen pen{ m_options->m_neumeCalligraphicNibAngle.GetValue(),
+        m_options->m_neumeCalligraphicNibWidth.GetValue(), m_options->m_neumeCalligraphicNibThin.GetValue(),
+        m_options->m_neumeCalligraphicEpisemaNib.GetValue() };
+    const CalligraphicNeume::Gesture gesture{ m_options->m_neumeCalligraphicBreakGap.GetValue(),
+        m_options->m_neumeCalligraphicRepeatSlide.GetValue(), m_options->m_neumeCalligraphicNestleGap.GetValue(),
+        m_options->m_neumeCalligraphicAboutFaceShift.GetValue(),
+        m_options->m_neumeCalligraphicLiquescentCurl.GetValue(),
+        m_options->m_neumeCalligraphicLiquescentHook.GetValue(), m_options->m_neumeCalligraphicLoopJoin.GetValue(),
+        m_options->m_neumeCalligraphicEpisemaBow.GetValue(), m_options->m_neumeCalligraphicEpisemaBowChain.GetValue(),
+        m_options->m_neumeCalligraphicRellenRatio.GetValue() };
+    const CalligraphicNeume::NeumeGeometry geo = CalligraphicNeume::Build(ncInfos, scale, slant, pen, gesture);
     if (geo.ncs.size() != ncObjects.size()) return;
 
     // Anchor the gesture at the first nc. The helper works in pen space (+y down); verovio logical

@@ -42,24 +42,32 @@ namespace {
     // (@intm), advancing past the previous stroke's forward reach so ascending (salicus) / descending
     // (climacus) components stack without colliding; a repeated same-pitch stroke instead slides tight
     // sideways (a bivirga). Adiastematic sources are heightless, so these are conventions, not intervals.
-    constexpr double BREAK_GAP = 15.0; // pen-lift advance past a detached component's clearance
-    constexpr double REPEAT_DX = 14.0; // horizontal slide of a repeated same-pitch stroke (bivirga, distropha)
-    constexpr double NESTLE_GAP = 7.0; // perpendicular clearance between two @place-stacked parallel strokes
-                                       // (a hairline above the broad nib, NIB_W = 6, so they still read apart)
-    // Liquescent curl radii. A liquescent that carries its own melodic stroke ends in a small terminal
-    // flourish; one with no @tilt is the whole note rendered as a hook off the previous nc, so its curl
-    // is note-sized rather than a tiny ornament.
-    constexpr double LIQ_CURL_R = MED * 0.30; // terminal curl at the tip of a liquescent's own stroke
-    constexpr double LIQ_HOOK_R = MED * 0.50; // a whole-note hook (no lead-in stroke): note-sized
-    // The little cursive loop of a looped connection (@con="l"): the pen winds a small crossing loop of
-    // this radius at the joint between two components (Old Hispanic). Sized well under the liquescent's
-    // terminal flourish so the eye stays a small ink-choked knot (the manuscript counter is about one
+    // The gesture for the CURRENT Build call, set from its Gesture argument on entry exactly as
+    // g_pen is set from its Pen. What follows are the accessors the geometry helpers read; each was
+    // a constexpr of the same name until 2026-08-06, and each default is that constant unchanged.
+    // The values that are RATIOS of a level stay ratios here, so a caller varies a proportion and
+    // not a pixel count — a curl is a third of an interline whatever size the neume is drawn at.
+    CalligraphicNeume::Gesture g_gesture;
+    // Placement of a detached component (@con == g).
+    inline double BreakGap() { return g_gesture.breakGap; } // pen-lift past a detached component
+    inline double RepeatDx() { return g_gesture.repeatDx; } // slide of a same-pitch repeat (bivirga)
+    inline double NestleGap() { return g_gesture.nestleGap; } // clearance between @place-stacked strokes
+                                                              // (a hairline above the broad nib, so
+                                                              // they still read apart)
+    // Liquescent curl radii. A liquescent carrying its own melodic stroke ends in a small terminal
+    // flourish; one with no @tilt is the whole note rendered as a hook off the previous nc, so its
+    // curl is note-sized rather than a tiny ornament.
+    inline double LiqCurlR() { return MED * g_gesture.liqCurl; }
+    inline double LiqHookR() { return MED * g_gesture.liqHook; }
+    // The little cursive loop of a looped connection (@con="l"): the pen winds a small crossing loop
+    // at the joint between two components (Old Hispanic). Sized well under the liquescent's terminal
+    // flourish so the eye stays a small ink-choked knot (the manuscript counter is about one
     // nib-width across) and the loop reads as a joint, not a note.
-    constexpr double LOOP_JOIN_R = MED * 0.18;
-    // Sideways nudge for a plain stroke that about-faces (travels back along its predecessor's line, e.g.
-    // an s after an n): without it the two strokes retrace each other and collapse into one. Sized a touch
-    // above the broad nib (NIB_W = 6) so the parallel pair reads as two distinct strokes, not one mass.
-    constexpr double ANTIPARALLEL_SHIFT = 8.0;
+    inline double LoopJoinR() { return MED * g_gesture.loopJoin; }
+    // Sideways nudge for a plain stroke that about-faces (travels back along its predecessor's line,
+    // e.g. an s after an n): without it the two strokes retrace each other and collapse into one.
+    // Sized a touch above the broad nib so the parallel pair reads as two strokes, not one mass.
+    inline double AntiparallelShift() { return g_gesture.aboutFaceShift; }
     // Direction tests on the dot product of two unit travel vectors. A pair pointing nearly opposite
     // (dot <= ANTIPARALLEL_COS) about-faces and needs the sideways nudge above; a pair pointing nearly
     // the same way (dot >= PARALLEL_COS) is a same-pitch repeat (a bivirga) that slides tight sideways.
@@ -81,18 +89,20 @@ namespace {
     inline double NibAngle() { return g_pen.angleDeg * DEG; }
     // The scribe's episema is not a ruled bar: drawn freehand it bows into a shallow concave-up dish, a
     // low middle with the ends flicking up. Sized as a fraction of the accent's half-length.
-    constexpr double EPISEMA_BOW = 0.30;
+    inline double EpisemaBow() { return g_gesture.episemaBow; }
     // Chained accents (several stacked on one nc - a clivis foot's horizontal stroke crossed by an
     // upright) are drawn nearly straight, so the stepped shape reads as ruled strokes meeting squarely.
-    constexpr double EPISEMA_BOW_CHAIN = 0.07;
+    inline double EpisemaBowChain() { return g_gesture.episemaBowChain; }
 
     // How many levels a stroke reaches, from @rellen. The reach scales symmetrically about a normal stroke
-    // (1.0): a long one (l) and a short one (s) are reciprocals of one ratio (3:2), so the normal reach is
-    // their exact geometric mean. 3/2 keeps a long stroke a clear step above normal without the dramatic
-    // doubling a leap (2.0) would give.
+    // (1.0): a long one (l) and a short one (s) are reciprocals of one ratio, so the normal reach is their
+    // exact geometric mean. The default 3/2 keeps a long stroke a clear step above normal without the
+    // dramatic doubling a leap (2.0) would give; a hand that distinguishes @rellen more or less strongly
+    // than this one moves the ratio rather than either arm of it, which keeps the symmetry.
     double RellenFactor(bool longStroke, bool shortStroke)
     {
-        return longStroke ? 3.0 / 2.0 : (shortStroke ? 2.0 / 3.0 : 1.0);
+        const double r = (g_gesture.rellenRatio > 0.0) ? g_gesture.rellenRatio : 1.5;
+        return longStroke ? r : (shortStroke ? 1.0 / r : 1.0);
     }
 
     // @intm is a logical (melodic) attribute, but when @tilt is absent it supplies a sensible default
@@ -1216,7 +1226,7 @@ void CalligraphicNeume::BuildEpisemata(
                 // A lone accent keeps the freehand dish; chained accents are drawn nearly straight, so the
                 // stepped clivis foot reads as ruled strokes meeting at a right angle rather than two
                 // scoops. Their depth at mid-length is a fraction of the half-length.
-                const double bow = HL * (nc.episemata.size() > 1 ? EPISEMA_BOW_CHAIN : EPISEMA_BOW);
+                const double bow = HL * (nc.episemata.size() > 1 ? EpisemaBowChain() : EpisemaBow());
                 // An end-cap accent is hung from its dish TROUGH (the deepest point, dip = bow at mid - the
                 // part that crosses the marked stroke) instead of from its chord. Subtracting the full dip
                 // there translates the whole centreline by -perp*bow, dropping that trough exactly onto the
@@ -1249,13 +1259,20 @@ void CalligraphicNeume::BuildEpisemata(
 
 CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(const std::vector<NcInfo> &ncs, double scale, Slant slant)
 {
-    return Build(ncs, scale, slant, Pen());
+    return Build(ncs, scale, slant, Pen(), Gesture());
 }
 
 CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
     const std::vector<NcInfo> &ncs, double scale, Slant slant, Pen hand)
 {
+    return Build(ncs, scale, slant, hand, Gesture());
+}
+
+CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
+    const std::vector<NcInfo> &ncs, double scale, Slant slant, Pen hand, Gesture gesture)
+{
     g_pen = hand; // the pen for this whole gesture — every nib helper reads it
+    g_gesture = gesture; // ...and how that hand moves — every shape helper reads this
 
     NeumeGeometry geo;
     if (ncs.empty()) return geo;
@@ -1335,7 +1352,7 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
         // Bias the nudge rightward (and downward for a level stroke) so the parallel pair sits side by
         // side in reading order rather than drifting left.
         if (perp.x < -1e-9 || (std::fabs(perp.x) < 1e-9 && perp.y < 0.0)) perp = { -perp.x, -perp.y };
-        return { perp.x * ANTIPARALLEL_SHIFT, perp.y * ANTIPARALLEL_SHIFT };
+        return { perp.x * AntiparallelShift(), perp.y * AntiparallelShift() };
     };
 
     // The vertical reach of component k's stroke, in pen px: one level (an interline) scaled by @rellen.
@@ -1379,7 +1396,7 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
     // The tightest centre-to-centre offset along @p gapDir at which a parallel repeat - the previous run
     // translated (cross-aligned) onto the placed spot - still holds a @p gap perpendicular clearance from
     // its predecessor. Parallel shapes keep a constant perpendicular gap however far one slides along the
-    // axis, so a fixed centre distance (REPEAT_DX) over-spaces a shallow shape (two flat chevrons stacked)
+    // axis, so a fixed centre distance (RepeatDx()) over-spaces a shallow shape (two flat chevrons stacked)
     // while crowding a steep one; solving per point-pair for the offset that yields a nib-sized gap nestles
     // them tight at any angle. For pair (a, b) with difference d, the translated a clears b by @p gap when
     // |d + t*gapDir| >= gap; the binding t is -(d.gapDir) + sqrt(gap^2 - d_perp^2) over pairs that can touch
@@ -1459,7 +1476,7 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
             const bool centred = !brk || levelRepeat || hasPlace;
             PointF anchor = { 0.0, 0.0 };
             if (levelRepeat) {
-                anchor = { lastAnchor.x + REPEAT_DX, lastAnchor.y };
+                anchor = { lastAnchor.x + RepeatDx(), lastAnchor.y };
             }
             else if (brk) {
                 PointF gapDir = TiltVec(gapTilt);
@@ -1480,16 +1497,16 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
                     if (parallelRepeat) {
                         // Offset centre to centre by just enough that the two keep a nib-sized perpendicular
                         // gap (a hairline of white, so they still read as two strokes) - tight at any angle,
-                        // where a fixed REPEAT_DX would over-space this shallow chevron.
-                        par = (f.parMin + f.parMax) / 2.0 + nestleOffset(runs.back(), gapDir, NESTLE_GAP);
+                        // where a fixed RepeatDx() would over-space this shallow chevron.
+                        par = (f.parMin + f.parMax) / 2.0 + nestleOffset(runs.back(), gapDir, NestleGap());
                     }
                     else {
-                        // Clear the previous neume's far edge by BREAK_GAP. Since @place draws the component
+                        // Clear the previous neume's far edge by BreakGap(). Since @place draws the component
                         // CENTRED on the anchor, add half its own reach along the gap, so its near edge still
                         // clears - matters only when the stroke travels along the gap (a virga placed
                         // straight above); a cross-running stroke (tilt="e" placed above) projects to zero.
                         const PointF td = TiltVec(tilt);
-                        par = f.parMax + BREAK_GAP + 0.5 * len * std::fabs(td.x * gapDir.x + td.y * gapDir.y);
+                        par = f.parMax + BreakGap() + 0.5 * len * std::fabs(td.x * gapDir.x + td.y * gapDir.y);
                     }
                     if (f.any) anchor = { gapDir.x * par + f.perp.x * f.perMid, gapDir.y * par + f.perp.y * f.perMid };
                 }
@@ -1497,10 +1514,10 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
                     // Step along the contour, clearing the previous stroke's forward reach (how far its
                     // ink extends along the gap direction) so an ascending salicus / descending climacus
                     // stacks without colliding. A punctum has no reach, so plain subpuncta step by
-                    // BREAK_GAP alone.
+                    // BreakGap() alone.
                     const double reach
                         = std::max(0.0, (pen.x - lastAnchor.x) * gapDir.x + (pen.y - lastAnchor.y) * gapDir.y);
-                    const double advance = reach + BREAK_GAP;
+                    const double advance = reach + BreakGap();
                     anchor = { lastAnchor.x + gapDir.x * advance, lastAnchor.y + gapDir.y * advance };
                 }
             }
@@ -1537,12 +1554,12 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
                     if (cd.x == 0.0 && cd.y == 0.0) cd = TiltVec(COMPASSDIRECTION_e);
                     const PointF tOut = (i + 1 < ncs.size() && !breaksBefore(i + 1)) ? chordDirOf(i + 1) : cd;
                     Stroke sh = CurvedLoop(
-                        anchor, tilt, curveHand, len, cd, tOut, curlHand, nc.liquescentLooped, LIQ_CURL_R, nc.angled);
+                        anchor, tilt, curveHand, len, cd, tOut, curlHand, nc.liquescentLooped, LiqCurlR(), nc.angled);
                     pts = sh.pts;
                     pen = sh.exit;
                 }
                 else {
-                    Stroke sh = Loop(anchor, TiltVec(tilt), nc.liquescentCurve, nc.liquescentLooped, len, LIQ_CURL_R);
+                    Stroke sh = Loop(anchor, TiltVec(tilt), nc.liquescentCurve, nc.liquescentLooped, len, LiqCurlR());
                     pts = sh.pts;
                     pen = sh.exit;
                 }
@@ -1614,7 +1631,7 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
                     depart = PointF{ dir.x - sg * dir.y, dir.y + sg * dir.x }.Unit(dir);
                 }
                 const PointF enter = (prevExitDir.x != 0.0 || prevExitDir.y != 0.0) ? prevExitDir : depart;
-                loopPts = LoopJoint(pen, enter, depart, LOOP_JOIN_R);
+                loopPts = LoopJoint(pen, enter, depart, LoopJoinR());
                 pen = loopPts.back();
                 prevExitDir = depart;
             }
@@ -1637,7 +1654,7 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
                     // it springs straight from the pen, following the previous stroke's exit tangent
                     // into the curl so the hook flows out of the ligature instead of starting askew.
                     const PointF enter = (prevExitDir.x != 0.0 || prevExitDir.y != 0.0) ? prevExitDir : dir;
-                    Stroke sh = Loop(pen, enter, nc.liquescentCurve, nc.liquescentLooped, 0.0, LIQ_HOOK_R);
+                    Stroke sh = Loop(pen, enter, nc.liquescentCurve, nc.liquescentLooped, 0.0, LiqHookR());
                     pts = sh.pts;
                     pen = sh.exit;
                 }
@@ -1656,12 +1673,12 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
                         const PointF tOut
                             = (i + 1 < ncs.size() && !breaksBefore(i + 1)) ? chordDirOf(i + 1) : chordDirOf(i);
                         Stroke sh = CurvedLoop(start, tilt, curveHand, len, tIn, tOut, curlHand, nc.liquescentLooped,
-                            LIQ_CURL_R, nc.angled);
+                            LiqCurlR(), nc.angled);
                         pts = sh.pts;
                         pen = sh.exit;
                     }
                     else {
-                        Stroke sh = Loop(pen, dir, nc.liquescentCurve, nc.liquescentLooped, len, LIQ_CURL_R);
+                        Stroke sh = Loop(pen, dir, nc.liquescentCurve, nc.liquescentLooped, len, LiqCurlR());
                         pts = sh.pts;
                         pen = sh.exit;
                     }
