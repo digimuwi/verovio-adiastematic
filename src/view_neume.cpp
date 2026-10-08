@@ -336,6 +336,16 @@ namespace {
         return COMPASSDIRECTION_NONE;
     }
 
+    // The non-standard attributes the renderer reads (@place on an <nc>, @curve / @looped on a
+    // <liquescent>) are not in verovio's model, so MEIInput keeps them verbatim in m_unsupported. They
+    // are read from there directly: Object::GetAttributes would first serialise every attribute the
+    // model does carry, through every attribute module - for a chant-sized page that was most of the
+    // whole render.
+    template <typename F> void ForEachUnsupportedAttr(const Object *object, F &&visit)
+    {
+        for (const auto &attr : object->m_unsupported) visit(attr.first, attr.second);
+    }
+
 } // namespace
 
 void View::DrawNeumeAdiastematic(DeviceContext *dc, Neume *neume, Staff *staff)
@@ -365,9 +375,8 @@ void View::DrawNeumeAdiastematic(DeviceContext *dc, Neume *neume, Staff *staff)
         CalligraphicNeume::NcInfo info;
         info.tilt = nc->GetTilt();
         info.curve = nc->GetCurve();
-        // @angled is not in verovio's <nc> model, so it arrives as an unsupported attribute (captured by
-        // ReadNc); read it straight off the element. It draws @curve's deviation as a sharp right angle.
-        info.angled = nc->HasAttribute("angled", "true");
+        // @angled (att.ncForm) draws @curve's deviation as a sharp right angle.
+        info.angled = (nc->GetAngled() == BOOLEAN_true);
         info.sShape = nc->GetSShape();
         info.longStroke = (nc->GetRellen() == ncForm_RELLEN_l);
         info.shortStroke = (nc->GetRellen() == ncForm_RELLEN_s);
@@ -378,14 +387,12 @@ void View::DrawNeumeAdiastematic(DeviceContext *dc, Neume *neume, Staff *staff)
         // @place is a non-standard placement override for a detached / gapped component, so it is not in
         // verovio's Nc model and arrives as an unsupported attribute - read it straight off the element,
         // like the <liquescent> attributes below. NcPlaceDirection maps it to the gap-step direction.
-        ArrayOfStrAttr ncAttributes;
-        nc->GetAttributes(&ncAttributes);
-        for (const auto &attr : ncAttributes) {
-            if (attr.first == "place") {
-                info.place = NcPlaceDirection(attr.second);
-                break;
-            }
-        }
+        bool placeSeen = false;
+        ForEachUnsupportedAttr(nc, [&](const std::string &name, const std::string &value) {
+            if (placeSeen || name != "place") return;
+            info.place = NcPlaceDirection(value);
+            placeSeen = true;
+        });
 
         for (Object *grandChild : nc->GetChildren()) {
             if (grandChild->Is(EPISEMA)) {
@@ -420,18 +427,16 @@ void View::DrawNeumeAdiastematic(DeviceContext *dc, Neume *neume, Staff *staff)
                     info.liquescent = true;
                     // @curve (a / c, the curl hand) and @looped are not in verovio's Liquescent model,
                     // so they arrive as unsupported attributes; read them straight off the element.
-                    ArrayOfStrAttr attributes;
-                    grandChild->GetAttributes(&attributes);
-                    for (const auto &attr : attributes) {
+                    ForEachUnsupportedAttr(grandChild, [&](const std::string &name, const std::string &value) {
                         // Store the curatureDirection_CURVE enum value, not the raw character, so it
                         // matches the enum comparison in CalligraphicNeume::Loop (a = anticlockwise).
-                        if (attr.first == "curve" && attr.second == "a")
+                        if (name == "curve" && value == "a")
                             info.liquescentCurve = curvatureDirection_CURVE_a;
-                        else if (attr.first == "curve" && attr.second == "c")
+                        else if (name == "curve" && value == "c")
                             info.liquescentCurve = curvatureDirection_CURVE_c;
-                        else if (attr.first == "looped")
-                            info.liquescentLooped = (attr.second == "true");
-                    }
+                        else if (name == "looped")
+                            info.liquescentLooped = (value == "true");
+                    });
                 }
             }
         }

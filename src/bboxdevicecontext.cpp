@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <climits>
 
 //----------------------------------------------------------------------------
 
@@ -175,11 +176,34 @@ void BBoxDeviceContext::DrawClosedBezierPath(const std::vector<Point> &cp)
 
     Point pos;
     int width, height, minYPos, maxYPos;
+    if (!ApproximatelyEqual(m_rotationAngle, 0.0)) {
+        for (size_t i = 1; i + 2 < cp.size(); i += 3) {
+            const Point segment[4] = { cp[i - 1], cp[i], cp[i + 1], cp[i + 2] };
+            BoundingBox::ApproximateBezierBoundingBox(segment, pos, width, height, minYPos, maxYPos);
+            this->UpdateBB(pos.x, pos.y, pos.x + width, pos.y + height);
+        }
+        return;
+    }
+
+    // Unrotated, the bounding boxes only ever grow to the union of what they are given, so the union of
+    // the segments' boxes is taken here and handed over once. And a segment whose four control points
+    // all lie inside that union so far cannot grow it - the curve stays within the hull of its control
+    // points, and so do its samples, integer coordinates truncated - so it is not sampled at all. A
+    // calligraphic ribbon is dozens of short segments, most within reach of the others; sampling every
+    // one of them, in every layout pass, was a tenth of the whole render of a neume-heavy page.
+    int x1 = INT_MAX, y1 = INT_MAX, x2 = INT_MIN, y2 = INT_MIN;
     for (size_t i = 1; i + 2 < cp.size(); i += 3) {
         const Point segment[4] = { cp[i - 1], cp[i], cp[i + 1], cp[i + 2] };
+        const bool inside = std::all_of(std::begin(segment), std::end(segment),
+            [&](const Point &p) { return (p.x >= x1) && (p.x <= x2) && (p.y >= y1) && (p.y <= y2); });
+        if (inside) continue;
         BoundingBox::ApproximateBezierBoundingBox(segment, pos, width, height, minYPos, maxYPos);
-        this->UpdateBB(pos.x, pos.y, pos.x + width, pos.y + height);
+        x1 = std::min(x1, pos.x);
+        y1 = std::min(y1, pos.y);
+        x2 = std::max(x2, pos.x + width);
+        y2 = std::max(y2, pos.y + height);
     }
+    this->UpdateBB(x1, y1, x2, y2);
 }
 
 void BBoxDeviceContext::DrawBentParallelogramFilled(Point side[4], int height)

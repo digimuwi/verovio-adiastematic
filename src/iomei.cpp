@@ -7407,7 +7407,7 @@ bool MEIInput::ReadNc(Object *parent, pugi::xml_node nc)
     vrvNc->ReadNcForm(nc);
 
     parent->AddChild(vrvNc);
-    // Capture any remaining attributes (e.g. @angled, @place - not in verovio's <nc> model) as
+    // Capture any remaining attributes (e.g. @place - not in verovio's <nc> model) as
     // unsupported so they are preserved on output and readable in the adiastematic renderer, as
     // <liquescent> does.
     this->ReadUnsupportedAttr(nc, vrvNc);
