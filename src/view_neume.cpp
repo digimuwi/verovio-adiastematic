@@ -446,6 +446,30 @@ void View::DrawNeumeAdiastematic(DeviceContext *dc, Neume *neume, Staff *staff)
 
     const int unit = m_doc->GetDrawingUnit(staff->m_drawingStaffSize);
     const double scale = (double)unit / CalligraphicNeume::s_unitPx;
+
+    // Neumes on lines: on a staff with lines (or any staff, under --neume-heighted) a neume whose every
+    // <nc> has a pitch is placed by it. Each nc's staff height, relative to the first, goes to the
+    // geometry, and its melodic direction is read off the pitches rather than @intm, so the contour
+    // conventions (gap steps, a bivirga's level repeat) agree with the staff. A staffless page keeps the
+    // contour: the editor's adiastematic export gives its ncs display pitches only to position them.
+    const bool onStaff = (staff->m_drawingLines > 0) || m_options->m_neumeHeighted.GetValue();
+    const bool pitched = onStaff
+        && std::all_of(ncObjects.begin(), ncObjects.end(), [](Nc *nc) { return nc->HasPname() && nc->HasOct(); });
+    if (pitched) {
+        const int firstY = ncObjects.front()->GetDrawingY();
+        for (size_t i = 0; i < ncObjects.size(); ++i) {
+            const int y = ncObjects[i]->GetDrawingY();
+            ncInfos[i].pitched = true;
+            ncInfos[i].pitchY = (double)(firstY - y) / scale; // pen space is +y down
+            if (i == 0) {
+                ncInfos[i].intm = 0;
+                continue;
+            }
+            const int prevY = ncObjects[i - 1]->GetDrawingY();
+            ncInfos[i].intm = (y > prevY) ? 'u' : ((y < prevY) ? 'd' : 's');
+        }
+    }
+
     // The scribe's forward slant: convert the option's degrees to the shear's tangent.
     const CalligraphicNeume::Slant slant{ std::tan(m_options->m_neumeCalligraphicSlant.GetValue() * M_PI / 180.0),
         m_options->m_neumeCalligraphicSlantBias.GetValue() };

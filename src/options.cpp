@@ -1926,6 +1926,12 @@ Options::Options()
     m_neumeCalligraphic.Init(false);
     this->Register(&m_neumeCalligraphic, "neumeCalligraphic", &m_neume);
 
+    m_neumeHeighted.SetInfo("Heighted calligraphic neumes",
+        "Place calligraphic neumes by their pitch on a staff without lines, as on a staff with lines: for "
+        "heighted hands such as Aquitanian. On a staff with lines pitched neumes are always placed by pitch.");
+    m_neumeHeighted.Init(false);
+    this->Register(&m_neumeHeighted, "neumeHeighted", &m_neume);
+
     m_neumeCalligraphicSlant.SetInfo("Calligraphic neume slant",
         "The forward slant (italicisation) of calligraphic neumes, in degrees: a right hand's habit of "
         "pulling the gesture toward the upper-right. 0 is upright.");
