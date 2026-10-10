@@ -30,6 +30,10 @@ namespace vrv {
  * prototype pixel). The caller (View::DrawNeumeAdiastematic) is solely responsible for the y-flip
  * into verovio's bottom-up logical space and for anchoring the gesture at the neume position.
  *
+ * On a staff the same gesture is placed by pitch (neumes on lines): each <nc> carries its staff height
+ * (NcInfo::pitched / pitchY) and its pitch point - where its stroke ends, or its dot - lands on that
+ * height. The visual attributes still choose every shape; the pitch only decides where it goes.
+ *
  * The renderer is calligraphic: stroke width follows the broad-nib law w proportional to |T x n̂|
  * (the sine of the angle between the travel direction T and a fixed nib direction n̂), so strokes
  * drawn across the nib are broad and strokes along it taper to a hairline.
@@ -91,6 +95,9 @@ public:
         bool liquescentLooped = false; ///< <liquescent> @looped: the curl closes into a loop
         bool hasNonEpisemaChild = false; ///< any child that is not an <episema> (ornament marker)
         std::vector<EpisemaInfo> episemata;
+        bool pitched = false; ///< written on a staff: placed by @ref pitchY (Build honours it only when
+                              ///< every nc of the neume is pitched)
+        double pitchY = 0.0; ///< the nc's staff height relative to the neume's first nc, in pen px (+y down)
     };
 
     /**
@@ -243,6 +250,14 @@ private:
      * applies (u->ne, d->se).
      */
     static int EffectiveTilt(const NcInfo &nc);
+    /**
+     * The tilt a connected stroke takes on a staff, where it must travel @p dy pen px (+y down) to reach
+     * its pitch. The interval decides the vertical sense and @p tilt keeps the stroke family and its
+     * lean: a tilt that already rises (falls) with the interval is kept, one pointing the other way is
+     * mirrored top to bottom (ne <-> se, n <-> s), a level one is turned up or down (e -> ne / se), and a
+     * unison drawn with a rising or falling tilt runs level instead.
+     */
+    static int PitchedTilt(int tilt, double dy);
 
     static std::vector<PointF> Cubic(PointF p0, PointF p1, PointF p2, PointF p3, int n = 18);
     /**
