@@ -485,70 +485,8 @@ void View::DrawNeumeAdiastematic(DeviceContext *dc, Neume *neume, Staff *staff)
         m_options->m_neumeCalligraphicLiquescentHook.GetValue(), m_options->m_neumeCalligraphicLoopJoin.GetValue(),
         m_options->m_neumeCalligraphicEpisemaBow.GetValue(), m_options->m_neumeCalligraphicEpisemaBowChain.GetValue(),
         m_options->m_neumeCalligraphicRellenRatio.GetValue() };
-    CalligraphicNeume::NeumeGeometry geo = CalligraphicNeume::Build(ncInfos, scale, slant, pen, gesture);
+    const CalligraphicNeume::NeumeGeometry geo = CalligraphicNeume::Build(ncInfos, scale, slant, pen, gesture);
     if (geo.ncs.size() != ncObjects.size()) return;
-
-    // Strokes reaching the staff lines (--neume-calligraphic-staff-reach). The nib is thinner than a staff
-    // space, so a pitch point in the middle of a space would leave its stroke floating there. Instead a
-    // stroke that arrives at a note in a space runs on until its ink meets the line on the side it came
-    // from: a rising stroke the line above, a falling one the line below (the option scales how far; 0
-    // stops at the pitch). The side is read off the nc's own slice of ink - a pitch point at the top of
-    // its slice was reached from below, one at the bottom from above - while a dot (ink on both sides), a
-    // stropha comma (set down at its head, like a dot), a liquescent (its curl overshoots by design) and
-    // every note on a line stay put, as does a note beyond the staff, which has no drawn line to reach.
-    // The correction goes into the nc's pitch height and the gesture is built again, so connected strokes
-    // stretch to it as they would to any pitch; a second round absorbs the change in the slices' shape.
-    const double reach = m_options->m_neumeCalligraphicStaffReach.GetValue();
-    if (pitched && reach > 0.0) {
-        const int staffTop = staff->GetDrawingY();
-        const long lastLine = 2L * (staff->m_drawingLines - 1); // steps down from the top line to the bottom one
-        const double step = CalligraphicNeume::s_unitPx; // one staff step (half a space) in pen px
-        // The top and bottom of an nc's ink: the on-curve points of its outline (every third entry; the
-        // control points can stray), brought from drawing units back into pen px, where the pitches are.
-        auto inkSpan = [&](size_t i, double &top, double &bottom) {
-            const std::vector<CalligraphicNeume::PointF> &ribbon = geo.ncs[i].ribbon;
-            if (ribbon.empty()) return false;
-            top = bottom = ribbon.front().y / scale;
-            for (size_t k = 0; k < ribbon.size(); k += 3) {
-                top = std::min(top, ribbon[k].y / scale);
-                bottom = std::max(bottom, ribbon[k].y / scale);
-            }
-            return true;
-        };
-        // Which edge of each nc's ink moves (-1 its top, up to the line above; +1 its bottom, down to the
-        // line below; 0 neither) and where that edge ends up, decided once on the first build.
-        std::vector<int> side(ncObjects.size(), 0);
-        std::vector<double> target(ncObjects.size(), 0.0);
-        for (size_t i = 0; i < ncObjects.size(); ++i) {
-            const long steps = std::lround((double)(staffTop - ncObjects[i]->GetDrawingY()) / unit);
-            double top, bottom;
-            if (steps % 2 == 0 || ncInfos[i].liquescent || ncInfos[i].strophicus || !inkSpan(i, top, bottom)) continue;
-            const double above = ncInfos[i].pitchY - top, below = bottom - ncInfos[i].pitchY;
-            if (below > above + step / 2 && steps - 1 >= 0 && steps - 1 <= lastLine) {
-                side[i] = -1; // reached from below
-                target[i] = top + reach * ((ncInfos[i].pitchY - step) - top);
-            }
-            else if (above > below + step / 2 && steps + 1 >= 0 && steps + 1 <= lastLine) {
-                side[i] = 1; // reached from above
-                target[i] = bottom + reach * ((ncInfos[i].pitchY + step) - bottom);
-            }
-        }
-        for (int round = 0; round < 2; ++round) {
-            bool moved = false;
-            for (size_t i = 0; i < ncObjects.size(); ++i) {
-                double top, bottom;
-                if (side[i] == 0 || !inkSpan(i, top, bottom)) continue;
-                const double dy = target[i] - ((side[i] < 0) ? top : bottom);
-                if (std::fabs(dy) > 0.05) {
-                    ncInfos[i].pitchY += dy;
-                    moved = true;
-                }
-            }
-            if (!moved) break;
-            geo = CalligraphicNeume::Build(ncInfos, scale, slant, pen, gesture);
-            if (geo.ncs.size() != ncObjects.size()) return;
-        }
-    }
 
     // Anchor the gesture at the first nc. The helper works in pen space (+y down); verovio logical
     // space is +y up, so the y component is flipped here, once, at the conversion boundary.

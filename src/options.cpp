@@ -1932,14 +1932,6 @@ Options::Options()
     m_neumeHeighted.Init(false);
     this->Register(&m_neumeHeighted, "neumeHeighted", &m_neume);
 
-    m_neumeCalligraphicStaffReach.SetInfo("Calligraphic neume staff reach",
-        "How far a stroke ending at a note in a space runs on toward the staff line it arrives from (a rising "
-        "stroke the line above, a falling one the line below): 1 until its ink touches the line, 0 stops at the "
-        "pitch in the middle of the space. Dots, stropha commas, liquescent curls and notes on a line are never "
-        "moved.");
-    m_neumeCalligraphicStaffReach.Init(1.0, 0.0, 1.0);
-    this->Register(&m_neumeCalligraphicStaffReach, "neumeCalligraphicStaffReach", &m_neume);
-
     m_neumeCalligraphicSlant.SetInfo("Calligraphic neume slant",
         "The forward slant (italicisation) of calligraphic neumes, in degrees: a right hand's habit of "
         "pulling the gesture toward the upper-right. 0 is upright.");

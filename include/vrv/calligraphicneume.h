@@ -34,9 +34,7 @@ namespace vrv {
  * (NcInfo::pitched / pitchY) and its pitch point lands on that height. The pitch point is where the
  * stroke ends, or its dot - except a liquescent, whose pitch is where its stroke reaches the curl (the
  * curl overshoots it), and a stropha comma, whose pitch is its head, where the pen sets it down. The
- * visual attributes still choose every shape; the pitch only decides where it goes. The caller may
- * then shift an nc's pitchY so that a stroke ending in a staff space runs on until its ink touches the
- * line it arrives from (--neume-calligraphic-staff-reach); this helper just honours the height it gets.
+ * visual attributes still choose every shape; the pitch only decides where it goes.
  *
  * The renderer is calligraphic: stroke width follows the broad-nib law w proportional to |T x n̂|
  * (the sine of the angle between the travel direction T and a fixed nib direction n̂), so strokes
