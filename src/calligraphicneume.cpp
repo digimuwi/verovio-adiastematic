@@ -707,11 +707,12 @@ CalligraphicNeume::Stroke CalligraphicNeume::Loop(PointF s, PointF dir, int curv
         pts.push_back(tip);
     }
     const PointF tip = pts.back();
+    const int tipAt = (int)pts.size() - 1; // on a staff the pitch is here, where the stroke meets the curl
 
     // 2) The terminal curl spirals off the tip, tangent to the stroke (no kink); see Curl.
     const std::vector<PointF> curl = Curl(tip, d, curve, looped, r0);
     pts.insert(pts.end(), curl.begin(), curl.end());
-    return { pts, pts.back() };
+    return { pts, pts.back(), tipAt };
 }
 
 // The terminal liquescent curl: a spiral of starting radius @p r0 springing off @p tip, leaving it
@@ -896,9 +897,10 @@ CalligraphicNeume::Stroke CalligraphicNeume::CurvedLoop(PointF s, int tilt, int 
     // curl join without a kink; fall back to the chord direction for a degenerate one-point lead-in.
     PointF d = TiltVec(tilt);
     if (pts.size() >= 2) d = (pts.back() - pts[pts.size() - 2]).Unit(d);
+    const int tipAt = (int)pts.size() - 1; // the bow's tip: the pitch point on a staff
     const std::vector<PointF> curl = Curl(pts.back(), d, curlHand, looped, r0);
     pts.insert(pts.end(), curl.begin(), curl.end());
-    return { pts, pts.back() };
+    return { pts, pts.back(), tipAt };
 }
 
 // The run a stroke flows on into when its episema is drawn as a continuation rather than a separate accent
@@ -1300,10 +1302,11 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
     if (ncs.empty()) return geo;
 
     // Neumes on lines: when every component has a staff height, each one's pitch point - where its
-    // stroke ends, or its dot - lands on that height. A connected stroke is aimed there (see effTilt and
-    // `len` below); a fresh gesture is moved there whole, and any shape built to a fixed size is sheared
-    // along its length to arrive there (see the landing step after each component). Off a staff nothing
-    // here changes: the gesture follows the @intm contour exactly as before.
+    // stroke ends, or its dot; for a liquescent where its stroke meets the curl; for a stropha comma its
+    // head - lands on that height. A connected stroke is aimed there (see effTilt and `len` below); a
+    // fresh gesture is moved there whole, and any shape built to a fixed size is sheared along its length
+    // to arrive there (see the landing step after each component). Off a staff nothing here changes: the
+    // gesture follows the @intm contour exactly as before.
     const bool pitched = std::all_of(ncs.begin(), ncs.end(), [](const NcInfo &n) { return n.pitched; });
 
     // 1) Walk the components, collecting each nc's centreline contribution and grouping them into
@@ -1475,6 +1478,10 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
         // Only a connected liquescent can be a whole-note hook - a first or detached one has nothing
         // to hook onto, so it falls back to drawing its own stroke (handled at the call sites below).
         const bool wholeHook = nc.liquescent && !hasExplicitTilt;
+        // On a staff a whole-note hook only stays a hook on a unison. Across an interval the pitch needs a
+        // stroke to travel, so the liquescent draws its own stroke there (along its derived direction) and
+        // curls at the tip, which is its pitch, instead of the hook being stretched over the interval.
+        const bool hook = wholeHook && !(pitched && i > 0 && std::fabs(nc.pitchY - pen.y) > 1e-6);
         // A bare component carries no shape-determining attribute: no @tilt (an @intm default does not
         // count - it only places the dab), no @curve/@s-shape, no ornament child. With neither @tilt nor
         // @con it is simply a point, so it is rendered as a detached punctum stepping along the melodic
@@ -1497,6 +1504,7 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
         std::vector<PointF> pts = { pen };
         bool dot = false;
         int strokeStart = 0; // index into pts where the nc's own stroke begins (past a connection loop)
+        int pitchAt = -1; // index into pts of the pitch point on a staff (-1 = the last point, the exit)
 
         if (i == 0 || brk) {
             // A fresh pen gesture. The first component sits at the origin; a detached one (@con="g") is
@@ -1603,11 +1611,13 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
                         anchor, tilt, curveHand, len, cd, tOut, curlHand, nc.liquescentLooped, LiqCurlR(), nc.angled);
                     pts = sh.pts;
                     pen = sh.exit;
+                    pitchAt = sh.pitchAt;
                 }
                 else {
                     Stroke sh = Loop(anchor, TiltVec(tilt), nc.liquescentCurve, nc.liquescentLooped, len, LiqCurlR());
                     pts = sh.pts;
                     pen = sh.exit;
+                    pitchAt = sh.pitchAt;
                 }
             }
             else if (hasSShape) {
@@ -1621,6 +1631,7 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
                 Stroke sh = Comma(anchor.x, anchor.y, tilt); // stropha hook (a strophicus is always a comma)
                 pts = sh.pts;
                 pen = sh.exit;
+                pitchAt = 0; // a stropha's pitch is its head
             }
             else if (hasCurve) {
                 // Standalone curved stroke: chord centred on the anchor, easing toward the next
@@ -1667,7 +1678,7 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
             // below). A whole-note-hook liquescent is exempt: its curl already coils at this very
             // joint, so the curl IS the loop - a second ring would only knot the two into a blot.
             std::vector<PointF> loopPts;
-            if (nc.looped && !wholeHook) {
+            if (nc.looped && !hook) {
                 // Every stroke builder departs along the chord except an @angled chevron, whose first
                 // leg leaves 45 degrees toward the bend side (see CurvedStroke's angled branch); the
                 // loop must stop where THAT tangent is reached or the ring meets the leg in a kink.
@@ -1695,7 +1706,7 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
                 pen = sh.exit;
             }
             else if (nc.liquescent) {
-                if (wholeHook) {
+                if (hook) {
                     // No @tilt: the whole note is a curl hooking off the previous nc. With no lead-in
                     // it springs straight from the pen, following the previous stroke's exit tangent
                     // into the curl so the hook flows out of the ligature instead of starting askew.
@@ -1703,6 +1714,7 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
                     Stroke sh = Loop(pen, enter, nc.liquescentCurve, nc.liquescentLooped, 0.0, LiqHookR());
                     pts = sh.pts;
                     pen = sh.exit;
+                    pitchAt = sh.pitchAt;
                 }
                 else {
                     // A liquescent with its own melodic stroke (explicit @tilt). The <nc>'s @curve bows
@@ -1722,11 +1734,13 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
                             LiqCurlR(), nc.angled);
                         pts = sh.pts;
                         pen = sh.exit;
+                        pitchAt = sh.pitchAt;
                     }
                     else {
                         Stroke sh = Loop(pen, dir, nc.liquescentCurve, nc.liquescentLooped, len, LiqCurlR());
                         pts = sh.pts;
                         pen = sh.exit;
+                        pitchAt = sh.pitchAt;
                     }
                 }
             }
@@ -1739,6 +1753,7 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
                 Stroke sh = Comma(pen.x, pen.y, tilt); // stropha hook within a ligature
                 pts = sh.pts;
                 pen = sh.exit;
+                pitchAt = 0; // a stropha's pitch is its head
             }
             else if (hasCurve) {
                 // Curved follow-up: spring from the previous stroke's exit tangent and ease toward
@@ -1775,22 +1790,26 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
                     && std::hypot(pts.front().x - loopPts.back().x, pts.front().y - loopPts.back().y) < 1e-6;
                 pts.insert(pts.begin(), loopPts.begin(), dup ? loopPts.end() - 1 : loopPts.end());
                 strokeStart = (int)loopPts.size() - (dup ? 1 : 0);
+                if (pitchAt >= 0) pitchAt += strokeStart;
             }
             lastAnchor = pen; // a later detached component gaps from the ligature's end
         }
 
-        // On a staff, land the component's pitch point on its height. A fresh gesture (the first, or a
-        // detached one) moves there whole, keeping the stroke it was built with: its pitch point is
-        // where the pen leaves it - a virga's head, a pes foot's lowest point, a dot - except a stropha,
-        // whose pitch is the hook's head, where it was set down. A connected component was aimed at its
-        // pitch above, but a shape built to a fixed size (a wave, a quilisma, a stropha hook, a
-        // liquescent curl) or nudged aside by an about-face does not arrive exactly: it is sheared along
-        // its length, from nothing at its start to the full correction at its exit, so its own form
-        // survives. The ink of a looped connection belongs to the joint and stays put.
+        // On a staff, land the component's pitch point on its height. The pitch point is where the pen
+        // leaves the shape - a virga's head, a pes foot's lowest point, a dot - with two exceptions, as
+        // the hands on lines write them: a liquescent's pitch is where its stroke meets the curl (the
+        // curl overshoots, like the hairline flick it stands for), and a stropha comma's is its head,
+        // where the pen sets it down. A fresh gesture (the first, or a detached one) moves there whole,
+        // keeping the stroke it was built with. A connected component was aimed at its pitch above, but
+        // a shape built to a fixed size (a wave, a quilisma) or nudged aside by an about-face does not
+        // arrive exactly: it is sheared along its length, from nothing at its start to the full
+        // correction at its pitch point, and whatever follows that point (a liquescent curl) moves with
+        // it whole, so its own form survives. A comma joined to its predecessor moves whole, since its
+        // pitch point is its start. The ink of a looped connection belongs to the joint and stays put.
         if (pitched) {
             const bool fresh = (i == 0 || brk);
-            const double from = (fresh && nc.strophicus && !dot) ? lastAnchor.y : pen.y;
-            const double dy = nc.pitchY - from;
+            const size_t at = (pitchAt >= 0) ? std::min((size_t)pitchAt, pts.size() - 1) : pts.size() - 1;
+            const double dy = nc.pitchY - pts[at].y;
             if (std::fabs(dy) > 1e-9) {
                 if (fresh) {
                     for (PointF &p : pts) p.y += dy;
@@ -1801,9 +1820,9 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
                     for (size_t k = strokeStart + 1; k < pts.size(); ++k) {
                         along[k] = along[k - 1] + (pts[k] - pts[k - 1]).Len();
                     }
-                    const double total = along.back();
+                    const double reach = along[at];
                     for (size_t k = strokeStart; k < pts.size(); ++k) {
-                        pts[k].y += (total > 1e-9) ? dy * along[k] / total : dy;
+                        pts[k].y += (reach > 1e-9) ? dy * std::min(1.0, along[k] / reach) : dy;
                     }
                 }
                 pen.y += dy;

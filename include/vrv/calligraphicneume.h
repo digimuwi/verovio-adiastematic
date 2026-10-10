@@ -31,8 +31,10 @@ namespace vrv {
  * into verovio's bottom-up logical space and for anchoring the gesture at the neume position.
  *
  * On a staff the same gesture is placed by pitch (neumes on lines): each <nc> carries its staff height
- * (NcInfo::pitched / pitchY) and its pitch point - where its stroke ends, or its dot - lands on that
- * height. The visual attributes still choose every shape; the pitch only decides where it goes.
+ * (NcInfo::pitched / pitchY) and its pitch point lands on that height. The pitch point is where the
+ * stroke ends, or its dot - except a liquescent, whose pitch is where its stroke reaches the curl (the
+ * curl overshoots it), and a stropha comma, whose pitch is its head, where the pen sets it down. The
+ * visual attributes still choose every shape; the pitch only decides where it goes.
  *
  * The renderer is calligraphic: stroke width follows the broad-nib law w proportional to |T x n̂|
  * (the sine of the angle between the travel direction T and a fixed nib direction n̂), so strokes
@@ -226,6 +228,7 @@ private:
     struct Stroke {
         std::vector<PointF> pts;
         PointF exit;
+        int pitchAt = -1; ///< index into @ref pts of the shape's pitch point on a staff (-1 = its exit)
     };
 
     /** One component's centreline contribution to a pen gesture, tagged with its <nc> index. */

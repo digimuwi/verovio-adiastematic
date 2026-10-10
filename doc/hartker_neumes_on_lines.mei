@@ -5,9 +5,9 @@
     Every calligraphic attribute is kept; @intm became @pname/@oct (u = +1 step,
     d = -1, s/su/n = 0), each neume centred on the staff. Liquescent ncs that stood
     for two pitches are split, one nc per pitch. The "Pitched:", "Conflict:" and
-    "Staff:" syllables at the end are hand-written: leaps, unisons, tilt/pitch
-    conflicts and a mid-line clef. Encoding contract and anchor rules:
-    eChant docs/plans/2026-10-10-neumes-on-lines.md.
+    "Staff:" syllables at the end are hand-written: leaps, unisons, a pes with a
+    repeated first note (three ncs), tilt/pitch conflicts and a mid-line clef.
+    Encoding contract and anchor rules: eChant docs/plans/2026-10-10-neumes-on-lines.md.
   -->
   <meiHead>
     <fileDesc>
@@ -1488,6 +1488,14 @@
                     <nc pname="a" oct="3" tilt="ne" />
                     <nc pname="a" oct="3" s-shape="n" rellen="s" />
                     <nc pname="g" oct="3" con="g" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pitched: pes with a repeated first note</syl>
+                  <neume>
+                    <nc pname="f" oct="3" />
+                    <nc pname="f" oct="3" />
+                    <nc pname="g" oct="3" tilt="ne" />
                   </neume>
                 </syllable>
                 <syllable>
