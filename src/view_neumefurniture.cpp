@@ -154,6 +154,112 @@ namespace {
 
 } // namespace
 
+bool View::DrawNeumeClefLetter(DeviceContext *dc, Clef *clef, Staff *staff, int x, int y)
+{
+    assert(dc);
+    assert(clef);
+    assert(staff);
+
+    if (!m_options->m_neumeCalligraphic.GetValue() || staff->m_drawingNotationType != NOTATIONTYPE_neume) return false;
+    const CalligraphicNeume::Hand &hand = CalligraphicNeume::HandFor(this->GetNeumeScript(staff));
+    if (hand.clef != CalligraphicNeume::Hand::ClefForm::Letter) return false;
+    const char32_t letter = CalligraphicNeume::ClefLetter(hand, clef->GetShape());
+    if (!letter) return false;
+
+    // The scribes of the stroke-neume books on lines wrote the clef as a letter in their text hand, set on its
+    // line (Stams 40 c, F and g, hufnagel-06; the Hildegard c and f, hildegard-04, -07, -13): the letter
+    // straddles the line, a small c about 1.5 steps tall and the taller F, f or g about two. It is drawn in the
+    // text font, upright, at the size that makes the font's x-height 1.5 steps, so the letters keep their
+    // own proportions, and its ink is centred on its line. It keeps the clef's place at the start of the
+    // system or of a clef change; its own ink is its bounding box, so the layout leaves it room.
+    const int unit = m_doc->GetDrawingUnit(staff->m_drawingStaffSize);
+    FontInfo font;
+    font.SetFaceName(m_doc->GetResources().GetTextFont());
+    font.SetStyle(FONTSTYLE_normal);
+    font.SetWeight(FONTWEIGHT_normal);
+    const int probe = 1000;
+    font.SetPointSize(probe);
+    const int probeHeight = m_doc->GetTextXHeight(&font, false);
+    if (probeHeight <= 0) return false;
+    font.SetPointSize(std::max(1, (int)std::lround((double)probe * (unit * 1.5) / probeHeight)));
+    const int height = m_doc->GetTextGlyphHeight(letter, &font, false);
+    const int bottom = m_doc->GetTextGlyphDescender(letter, &font, false);
+    const int baseline = y - bottom - height / 2;
+
+    dc->StartGraphic(clef, "", clef->GetID());
+    dc->SetFont(&font);
+    const std::u32string str(1, letter);
+    dc->StartText(this->ToDeviceContextX(x), this->ToDeviceContextY(baseline), HORIZONTALALIGNMENT_left);
+    dc->DrawText(UTF32to8(str), str);
+    dc->EndText();
+    dc->ResetFont();
+    dc->EndGraphic(clef, this);
+    return true;
+}
+
+bool View::DrawNeumeCustos(DeviceContext *dc, Custos *custos, Layer *layer, Staff *staff, Measure *measure)
+{
+    assert(dc);
+    assert(custos);
+    assert(staff);
+
+    if (!m_options->m_neumeCalligraphic.GetValue() || staff->m_drawingNotationType != NOTATIONTYPE_neume) return false;
+    const CalligraphicNeume::Hand &hand = CalligraphicNeume::HandFor(this->GetNeumeScript(staff));
+    if (hand.custos == CalligraphicNeume::Hand::CustosForm::Glyph) return false;
+
+    // The hand's own nib, with any nib option set on the command line winning, as for its neumes.
+    auto pick = [](const auto &option, double own) -> double { return option.IsSet() ? option.GetValue() : own; };
+    const CalligraphicNeume::Pen pen{ pick(m_options->m_neumeCalligraphicNibAngle, hand.pen.angleDeg),
+        pick(m_options->m_neumeCalligraphicNibWidth, hand.pen.width),
+        pick(m_options->m_neumeCalligraphicNibThin, hand.pen.thin),
+        pick(m_options->m_neumeCalligraphicEpisemaNib, hand.pen.episema) };
+    const std::vector<std::vector<CalligraphicNeume::PointF>> outlines
+        = CalligraphicNeume::CustosOutlines(hand.custos, pen);
+    if (outlines.empty()) return false;
+
+    dc->StartGraphic(custos, "", custos->GetID());
+
+    // The custos's pitch is at the shape's origin; its ink starts at the custos's x, like the glyph it stands
+    // in for, so it keeps the place the layout gave it.
+    int x = custos->GetDrawingX();
+    int y = custos->GetDrawingY();
+    this->CalcOffset(dc, x, y);
+    if (staff->HasDrawingRotation()) {
+        y -= staff->GetDrawingRotationOffsetFor(x);
+    }
+    const double scale = (double)m_doc->GetDrawingUnit(staff->m_drawingStaffSize) / CalligraphicNeume::s_unitPx;
+    double minX = 0.0;
+    bool first = true;
+    for (const auto &outline : outlines) {
+        for (const CalligraphicNeume::PointF &p : outline) {
+            minX = first ? p.x : std::min(minX, p.x);
+            first = false;
+        }
+    }
+
+    // Pen space is +y down, verovio logical space +y up: the flip happens here, once.
+    for (const auto &outline : outlines) {
+        if (outline.empty()) continue;
+        std::vector<Point> points;
+        points.reserve(outline.size());
+        for (const CalligraphicNeume::PointF &p : outline) {
+            points.push_back(Point(this->ToDeviceContextX(x + (int)std::lround((p.x - minX) * scale)),
+                this->ToDeviceContextY(y - (int)std::lround(p.y * scale))));
+        }
+        dc->SetPen(0, PEN_SOLID);
+        dc->SetBrush(1.0);
+        dc->DrawClosedBezierPath(points);
+        dc->ResetBrush();
+        dc->ResetPen();
+    }
+
+    // Children (an accidental) as for the glyph custos.
+    this->DrawLayerChildren(dc, custos, layer, staff, measure);
+
+    dc->EndGraphic(custos, this);
+    return true;
+}
+
 bool View::DrawNeumeStaffLinesColored(DeviceContext *dc, Staff *staff, StaffDef *staffDef, Measure *measure)
 {
     assert(dc);

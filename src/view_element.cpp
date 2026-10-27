@@ -728,6 +728,9 @@ void View::DrawClef(DeviceContext *dc, LayerElement *element, Layer *layer, Staf
         return;
     }
 
+    // A calligraphic neume staff whose hand writes letter clefs (view_neumefurniture.cpp)
+    if (this->DrawNeumeClefLetter(dc, clef, staff, x, y)) return;
+
     dc->StartGraphic(element, "", element->GetID());
 
     std::string previousFont = "";
@@ -783,6 +786,9 @@ void View::DrawCustos(DeviceContext *dc, LayerElement *element, Layer *layer, St
 
     Custos *custos = vrv_cast<Custos *>(element);
     assert(custos);
+
+    // A calligraphic neume staff whose hand has its own custos (view_neumefurniture.cpp)
+    if (this->DrawNeumeCustos(dc, custos, layer, staff, measure)) return;
 
     dc->StartGraphic(element, "", element->GetID());
 
