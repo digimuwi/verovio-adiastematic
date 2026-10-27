@@ -261,9 +261,29 @@ public:
          * Drawn by BuildPoint.
          */
         bool pointScript = false;
-        /** How a bare <nc> (a dot) is written. */
-        enum class Dot { Dab, Square, Lozenge, Point };
+        /**
+         * How a bare <nc> (a dot) is written: a dab of the nib (the stroke builder's punctum), a broad-nib
+         * square, a lozenge, a small round point, or a short level dash. A point script draws it at each
+         * note's pitch; an nc with a level @tilt is always a dash, whatever the hand's dot.
+         */
+        enum class Dot { Dab, Square, Lozenge, Point, Dash };
         Dot dot = Dot::Dab;
+        /**
+         * Point scripts only. The hand writes upright: its stems and connectors run plumb whatever the lean
+         * of @tilt (square notation's ruled verticals).
+         */
+        bool upright = false;
+        /**
+         * Point scripts only. Stems and connectors run along a side of the mark rather than through its
+         * centre - the right side of a virga or a pes, the left of a clivis's first note - and a note
+         * joined to a lower one is set beside it, abutting, instead of straight below (square notation).
+         */
+        bool edgeStems = false;
+        /**
+         * Point scripts only. The width in pen px of the hand's mark: a square's or a dash's (whose height is the
+         * nib's), a point's diameter, a lozenge's breadth. 0 = as wide as the nib is broad (a dash: one step).
+         */
+        double markWidth = 0.0;
         /** Staff furniture in the hand's own forms (drawn by the view, not by Build). */
         enum class ClefForm { Glyph, Letter };
         ClefForm clef = ClefForm::Glyph;
