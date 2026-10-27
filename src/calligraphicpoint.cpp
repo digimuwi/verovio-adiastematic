@@ -16,8 +16,10 @@ namespace vrv {
 //----------------------------------------------------------------------------
 
 CalligraphicNeume::NeumeGeometry CalligraphicNeume::BuildPoint(
-    const std::vector<NcInfo> &ncs, Slant slant, const Hand &hand)
+    const std::vector<NcInfo> &ncs, Slant slant, const Pen &pen, const Gesture &gesture, const Hand &hand)
 {
+    (void)pen;
+    (void)gesture;
     // Not drawn separately yet: a point script falls back to the stroke builder.
     return BuildStroke(ncs, slant, hand);
 }

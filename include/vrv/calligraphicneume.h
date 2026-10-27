@@ -81,6 +81,8 @@ public:
         bool shortStroke = false; ///< @rellen == s
         char intm = 0; ///< first char of @intm (u / d / s), 0 if absent
         bool gapped = false; ///< @con == g: detached from the previous component (a fresh gesture)
+        bool ligated = false; ///< @ligated: written as one oblique with its neighbour (a point script draws two
+                              ///< consecutive ligated ncs as one broad-nib diagonal; the stroke builder ignores it)
         bool looped = false; ///< @con == l: joined to the previous component through a small cursive
                              ///< loop - the pen winds a crossing loop at the joint before this
                              ///< component's stroke (the Old Hispanic looped connection)
@@ -122,6 +124,12 @@ public:
          * of that component's calligraphic shape rather than a detached line.
          */
         std::vector<std::vector<PointF>> episemata;
+        /**
+         * Further closed outlines of this nc's note ink, each a separate pen stroke beside the @ref ribbon
+         * (same format). A point script writes a note as its mark (the ribbon) and, apart from it, the
+         * stem, connector or plica tail that belongs to the same note. Empty for the stroke builder.
+         */
+        std::vector<std::vector<PointF>> pieces;
     };
 
     /**
@@ -303,9 +311,11 @@ private:
      * A point script's neume on a staff (Hand::pointScript): each <nc> its own mark at its own pitch. Only
      * called by Build, for a neume whose every nc is pitched, after Build has set the pen and gesture.
      * Returns the geometry unscaled and unanchored (pen px, origin at the first nc's pitch); Build applies
-     * its usual left-edge anchoring and scale.
+     * its usual left-edge anchoring and scale. @p pen and @p gesture are the ones Build was given (the
+     * hand's own, merged with any command-line override). See src/calligraphicpoint.cpp.
      */
-    static NeumeGeometry BuildPoint(const std::vector<NcInfo> &ncs, Slant slant, const Hand &hand);
+    static NeumeGeometry BuildPoint(
+        const std::vector<NcInfo> &ncs, Slant slant, const Pen &pen, const Gesture &gesture, const Hand &hand);
     /**
      * A stroke script's neume (every hand but a point script on a staff): the pen gestures of Build's
      * steps 1-3, unscaled and unanchored.

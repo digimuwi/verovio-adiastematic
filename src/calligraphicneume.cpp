@@ -1309,7 +1309,7 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
 
     // A point script on a staff writes every component as its own mark; everything else is pen gestures.
     const bool pitched = std::all_of(ncs.begin(), ncs.end(), [](const NcInfo &n) { return n.pitched; });
-    geo = (pitched && hand.pointScript) ? BuildPoint(ncs, slant, hand) : BuildStroke(ncs, slant, hand);
+    geo = (pitched && hand.pointScript) ? BuildPoint(ncs, slant, pen, gesture, hand) : BuildStroke(ncs, slant, hand);
     AnchorAndScale(geo, scale);
     return geo;
 }
@@ -1915,12 +1915,16 @@ void CalligraphicNeume::AnchorAndScale(NeumeGeometry &geo, double scale)
         for (const PointF &p : nc.ribbon) inkLeft = std::min(inkLeft, p.x);
         for (const std::vector<PointF> &epi : nc.episemata)
             for (const PointF &p : epi) inkLeft = std::min(inkLeft, p.x);
+        for (const std::vector<PointF> &piece : nc.pieces)
+            for (const PointF &p : piece) inkLeft = std::min(inkLeft, p.x);
     }
     if (inkLeft != std::numeric_limits<double>::max()) {
         for (NcGeometry &nc : geo.ncs) {
             for (PointF &p : nc.ribbon) p.x -= inkLeft;
             for (std::vector<PointF> &epi : nc.episemata)
                 for (PointF &p : epi) p.x -= inkLeft;
+            for (std::vector<PointF> &piece : nc.pieces)
+                for (PointF &p : piece) p.x -= inkLeft;
         }
         for (StrokePath &s : geo.strokes)
             for (PointF &p : s.pts) p.x -= inkLeft;
@@ -1931,6 +1935,8 @@ void CalligraphicNeume::AnchorAndScale(NeumeGeometry &geo, double scale)
         for (PointF &p : nc.ribbon) p = { p.x * scale, p.y * scale };
         for (std::vector<PointF> &epi : nc.episemata)
             for (PointF &p : epi) p = { p.x * scale, p.y * scale };
+        for (std::vector<PointF> &piece : nc.pieces)
+            for (PointF &p : piece) p = { p.x * scale, p.y * scale };
     }
     for (StrokePath &s : geo.strokes)
         for (PointF &p : s.pts) p = { p.x * scale, p.y * scale };

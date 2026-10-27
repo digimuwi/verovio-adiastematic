@@ -383,6 +383,7 @@ void View::DrawNeumeAdiastematic(DeviceContext *dc, Neume *neume, Staff *staff)
         info.shortStroke = (nc->GetRellen() == ncForm_RELLEN_s);
         info.gapped = (nc->GetCon() == ncForm_CON_g);
         info.looped = (nc->GetCon() == ncForm_CON_l);
+        info.ligated = (nc->GetLigated() == BOOLEAN_true);
         const std::string intm = nc->GetIntm();
         info.intm = intm.empty() ? 0 : intm.front();
         // @place is a non-standard placement override for a detached / gapped component, so it is not in
@@ -529,9 +530,11 @@ void View::DrawNeumeAdiastematic(DeviceContext *dc, Neume *neume, Staff *staff)
 
     for (size_t i = 0; i < ncObjects.size(); ++i) {
         const CalligraphicNeume::NcGeometry &ncGeo = geo.ncs[i];
-        if (ncGeo.ribbon.empty() && ncGeo.episemata.empty()) continue;
+        if (ncGeo.ribbon.empty() && ncGeo.pieces.empty() && ncGeo.episemata.empty()) continue;
 
         for (const CalligraphicNeume::PointF &p : ncGeo.ribbon) extendBBox(p);
+        for (const std::vector<CalligraphicNeume::PointF> &piece : ncGeo.pieces)
+            for (const CalligraphicNeume::PointF &p : piece) extendBBox(p);
         for (const std::vector<CalligraphicNeume::PointF> &epi : ncGeo.episemata)
             for (const CalligraphicNeume::PointF &p : epi) extendBBox(p);
 
@@ -543,6 +546,21 @@ void View::DrawNeumeAdiastematic(DeviceContext *dc, Neume *neume, Staff *staff)
             std::vector<Point> outline;
             outline.reserve(ncGeo.ribbon.size());
             for (const CalligraphicNeume::PointF &p : ncGeo.ribbon) outline.push_back(toDeviceContext(p));
+
+            dc->SetPen(0, PEN_SOLID);
+            dc->SetBrush(1.0);
+            dc->DrawClosedBezierPath(outline);
+            dc->ResetBrush();
+            dc->ResetPen();
+        }
+
+        // The note's further pen strokes (a point script's stem, connector or plica tail), inked like the
+        // ribbon. Empty for every stroke script.
+        for (const std::vector<CalligraphicNeume::PointF> &piece : ncGeo.pieces) {
+            if (piece.empty()) continue;
+            std::vector<Point> outline;
+            outline.reserve(piece.size());
+            for (const CalligraphicNeume::PointF &p : piece) outline.push_back(toDeviceContext(p));
 
             dc->SetPen(0, PEN_SOLID);
             dc->SetBrush(1.0);
