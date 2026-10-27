@@ -97,7 +97,6 @@ namespace {
         h.token = "hufnagel";
         h.solo = { 2.2, 1.0 };
         h.lead = { 2.3, 1.0 };
-        h.dot = Hand::Dot::Lozenge;
         h.clef = Hand::ClefForm::Letter;
         h.pitchMarkers = { { 'f', "#b0302a" }, { 'c', "#c9a227" } };
         return h;
@@ -248,7 +247,10 @@ namespace {
         h.upright = true;
         h.edgeStems = true;
         h.gesture.breakGap = 5.0;
+        // The ascending plica is not in the measured set: its tails are taken to run on as far as the
+        // descending one's.
         h.liqOvershootDown = 0.9;
+        h.liqOvershootUp = 0.9;
         h.custos = Hand::CustosForm::Square;
         return h;
     }

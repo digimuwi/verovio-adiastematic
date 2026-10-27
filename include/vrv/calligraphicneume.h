@@ -244,9 +244,9 @@ public:
          * stroke), a lead (a connected stroke follows and turns back vertically - a clivis lead-in, the
          * bar of a Messine 7) or a foot (a connected stroke follows in the same vertical sense - a pes).
          * A lead that bows (@curve or @angled: a clivis arch, a cephalicus crest, the swing down into an
-         * epiphonus loop) is an arch, which a hand may place apart from its straight lead - the Messine
-         * pen sets the pitch of a 7 where it starts but of a crest where it turns. A negative arch reach
-         * means the arch is placed as the lead.
+         * epiphonus loop) is an arch, which a hand may place apart from its straight lead - the
+         * Messine-German pen sets the pitch of a 7 where it starts but of a crest where it turns. A
+         * negative arch reach means the arch is placed as the lead.
          */
         Opening solo;
         Opening lead;

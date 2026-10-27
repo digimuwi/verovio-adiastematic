@@ -1531,7 +1531,8 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::BuildStroke(
         // open curl is drawn as the half turn the pen makes there: it leaves the pen tangent to the stroke
         // before, swings out to the curl side and turns back under itself, ending heading back the way it
         // came, about one curl-radius behind where it set off - the blob at the foot of the curl. Its end
-        // is then exactly one diameter across from the pen, and the radius is what makes that the pitch.
+        // is then one diameter across from the pen and one radius back, and the radius is what makes that
+        // the pitch.
         // Where the curl side does not run the way the pitch goes, or the radius would be under a fifth or
         // over twice the hook's own, the stroke-and-curl above stands in; so does a closed (looped) curl,
         // which returns to where it started and so cannot be the move.
@@ -1544,8 +1545,10 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::BuildStroke(
             const PointF d = enter.Unit({ 1.0, 0.0 });
             const double sign = (nc.liquescentCurve == curvatureDirection_CURVE_a) ? 1.0 : -1.0; // as in Curl
             const PointF perp = { sign * d.y, -sign * d.x };
+            // The end lies 2r across and r back: 2r perp.y - r d.y below the pen.
             const double wanted = nc.pitchY - pen.y;
-            const double r = (std::fabs(perp.y) > 0.5) ? wanted / (2.0 * perp.y) : 0.0;
+            const double drop = 2.0 * perp.y - d.y;
+            const double r = (std::fabs(perp.y) > 0.5 && std::fabs(drop) > 0.5) ? wanted / drop : 0.0;
             if (r >= 0.2 * LiqHookR() && r <= 2.0 * LiqHookR()) {
                 // In the frame of the entry direction d and the curl side perp: across, r(1 - cos t); along,
                 // r sin t forward less r(1 - cos t)/2 drifting back. Tangent to d at t = 0; at t = pi the
@@ -1583,14 +1586,25 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::BuildStroke(
         // a step below its head, the Koeln one nearly two, the bar of a Messine 7 rises less than half a
         // step to its corner (Hand::Opening). A level stroke keeps its length, and so does every shape that
         // is not a plain or curved stroke.
+        //
+        // A foot whose pitch sits part way along it must still leave below (or above) the note it joins:
+        // the part past its pitch takes at most half the interval to that note, so the next stroke always
+        // has some way to travel (a Messine pes of a second with a straight foot).
         const Opening *opening = NULL;
         if (pitched && (i == 0 || brk) && !bare && !nc.quilisma && !nc.liquescent && !hasSShape && !nc.strophicus
             && (hasCurve || hasTilt)) {
             opening = &openingOf(i);
             const double dirY = std::fabs(TiltVec(tilt).y);
-            if (opening->reach != Opening().reach && dirY > 1e-6) {
-                len = opening->reach * s_unitPx * RellenFactor(nc.longStroke, nc.shortStroke) / dirY;
+            double reach = opening->reach * s_unitPx * RellenFactor(nc.longStroke, nc.shortStroke);
+            bool capped = false;
+            if (opening == &hand.foot && opening->at < 1.0 && i + 1 < ncs.size() && !breaksBefore(i + 1)) {
+                const double room = 0.5 * std::fabs(ncs[i + 1].pitchY - nc.pitchY);
+                if (reach * (1.0 - opening->at) > room) {
+                    reach = room / (1.0 - opening->at);
+                    capped = true;
+                }
             }
+            if ((capped || opening->reach != Opening().reach) && dirY > 1e-6) len = reach / dirY;
         }
 
         // An S-shaped oriscus on a staff at the hand's size (Hand::sReach), measured along its spine.
@@ -1718,7 +1732,9 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::BuildStroke(
                     pen = sh.exit;
                     pitchAt = sh.pitchAt;
                 }
-                liquescentStroke = true;
+                // The hand's overshoot is for a liquescent written with its own stroke (@tilt); one that only
+                // stands in for a hook keeps PR #1's pitch at the tip.
+                liquescentStroke = hasExplicitTilt;
             }
             else if (hasSShape) {
                 // Centred on the anchor when first or a level repeat; a stepped detached wave springs
@@ -1851,7 +1867,7 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::BuildStroke(
                         pen = sh.exit;
                         pitchAt = sh.pitchAt;
                     }
-                    liquescentStroke = true;
+                    liquescentStroke = hasExplicitTilt; // as for a fresh one above
                 }
             }
             else if (hasSShape) {

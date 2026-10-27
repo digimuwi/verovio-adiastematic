@@ -393,6 +393,39 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::BuildPoint(
         return { p - d * (len * at), p + d * (len * (1.0 - at)) };
     };
 
+    // Episemata of nc @p k: short hairline accents set just clear of its mark (centred at cx, cy within the box
+    // left..right, top..bottom) - above it by default, below, or upright to its left / right by @place - stacked
+    // outward when there are several.
+    auto drawEpisemata = [&](size_t k, double cx, double cy, double left, double right, double top, double bottom) {
+        double stackAbove = 0.0, stackBelow = 0.0, stackLeft = 0.0, stackRight = 0.0;
+        const double epiScale = pen.episema * 6.0 / std::max(pen.width, 6.0);
+        for (const EpisemaInfo &ep : ncs[k].episemata) {
+            const double half = std::max(4.0, (right - left) / 2.0 + 1.0);
+            PointF a, b;
+            if (ep.place == EVENTREL_left || ep.place == EVENTREL_right) {
+                const bool l = (ep.place == EVENTREL_left);
+                double &stack = l ? stackLeft : stackRight;
+                const double x = l ? left - EPISEMA_GAP - stack : right + EPISEMA_GAP + stack;
+                stack += EPISEMA_GAP;
+                a = { x, cy - half };
+                b = { x, cy + half };
+            }
+            else {
+                const bool below = (ep.place == EVENTREL_below || ep.place == EVENTREL_below_left
+                    || ep.place == EVENTREL_below_right);
+                double &stack = below ? stackBelow : stackAbove;
+                const double yy = below ? bottom + EPISEMA_GAP + stack : top - EPISEMA_GAP - stack;
+                stack += EPISEMA_GAP;
+                a = { cx - half, yy };
+                b = { cx + half, yy };
+            }
+            std::vector<PointF> centre;
+            for (int j = 0; j <= 4; ++j) centre.push_back(a + (b - a) * (j / 4.0));
+            geo.ncs[k].episemata.push_back(NibRibbon(centre, epiScale));
+            geo.strokes.push_back({ (int)k, true, centre });
+        }
+    };
+
     for (size_t i = 0; i < n; ++i) {
         const NcInfo &nc = ncs[i];
         NcGeometry &out = geo.ncs[i];
@@ -408,10 +441,12 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::BuildPoint(
             std::vector<std::vector<PointF>> tails;
             PointF tip;
             if (edge) {
-                // The square plica: a tail down (or up) each side of the square, to the pitch and beyond.
+                // The square plica: a tail down (or up) each side of the square, from its edge to the pitch and
+                // beyond.
                 const double endY = y + sgn * over;
+                const double startY = (sgn < 0.0) ? prev.top : prev.bottom;
                 const double xs[2] = { prev.right - nibHalfX, prev.left + nibHalfX };
-                for (double x : xs) tails.push_back({ { x, prev.cy }, { x, endY } });
+                for (double x : xs) tails.push_back({ { x, startY }, { x, endY } });
                 tip = { xs[0], y };
             }
             else {
@@ -423,8 +458,11 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::BuildPoint(
                 tip = a + d * (toPitch / std::max(std::fabs(d.y), 0.2));
             }
             for (size_t k = 0; k < tails.size(); ++k) {
-                // The first tail, the one that carries the pitch, is the note's ink; a second is a piece of it.
+                // The first tail, the one that carries the pitch, is the note's ink; a second is a piece of it. A
+                // tail too short to draw in from both ends (a plica on a unison) is swept as it stands, so the
+                // note never goes without ink.
                 std::vector<PointF> ink = stroke(tails[k][0], tails[k][1]);
+                if (ink.empty()) ink = sweep(tails[k][0], tails[k][1]);
                 if (k == 0)
                     out.ribbon = std::move(ink);
                 else
@@ -510,6 +548,9 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::BuildPoint(
                 std::max(y, nx.pitchY) + e.bottom, true });
             prev = { right - width / 2.0, nx.pitchY, right - width, right, nx.pitchY + e.top, nx.pitchY + e.bottom,
                 true };
+            // Each nc's episemata sit over (or under) its own end of the oblique.
+            drawEpisemata(i, left + width / 2.0, y, left, left + width, y + e.top, y + e.bottom);
+            drawEpisemata(i + 1, prev.cx, nx.pitchY, prev.left, prev.right, prev.top, prev.bottom);
             ++i;
             continue;
         }
@@ -534,35 +575,7 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::BuildPoint(
             record(i, path);
         }
 
-        // Episemata: short hairline accents set just clear of the mark - above it by default, below, or upright
-        // to its left / right by @place - stacked outward when there are several.
-        double stackAbove = 0.0, stackBelow = 0.0, stackLeft = 0.0, stackRight = 0.0;
-        const double epiScale = pen.episema * 6.0 / std::max(pen.width, 6.0);
-        for (const EpisemaInfo &ep : nc.episemata) {
-            const double half = std::max(4.0, (prev.right - prev.left) / 2.0 + 1.0);
-            PointF a, b;
-            if (ep.place == EVENTREL_left || ep.place == EVENTREL_right) {
-                const bool l = (ep.place == EVENTREL_left);
-                double &stack = l ? stackLeft : stackRight;
-                const double x = l ? prev.left - EPISEMA_GAP - stack : prev.right + EPISEMA_GAP + stack;
-                stack += EPISEMA_GAP;
-                a = { x, y - half };
-                b = { x, y + half };
-            }
-            else {
-                const bool below = (ep.place == EVENTREL_below || ep.place == EVENTREL_below_left
-                    || ep.place == EVENTREL_below_right);
-                double &stack = below ? stackBelow : stackAbove;
-                const double yy = below ? prev.bottom + EPISEMA_GAP + stack : prev.top - EPISEMA_GAP - stack;
-                stack += EPISEMA_GAP;
-                a = { cx - half, yy };
-                b = { cx + half, yy };
-            }
-            std::vector<PointF> centre;
-            for (int k = 0; k <= 4; ++k) centre.push_back(a + (b - a) * (k / 4.0));
-            out.episemata.push_back(NibRibbon(centre, epiScale));
-            geo.strokes.push_back({ (int)i, true, centre });
-        }
+        drawEpisemata(i, cx, y, prev.left, prev.right, prev.top, prev.bottom);
     }
     return geo;
 }
