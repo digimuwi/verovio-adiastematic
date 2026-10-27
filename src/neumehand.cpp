@@ -155,6 +155,9 @@ namespace {
         h.token = "beneventan";
         h.liqOvershootUp = 0.1;
         h.liqOvershootDown = 0.1;
+        // Not a point script: its pes and clivis are joined pen strokes with the pitch at their ends (the pes
+        // foot at the lower pitch, its upper end at the upper, beneventan-01; the clivis tail ending on its
+        // pitch, -03), so it is drawn by the stroke builder like the St. Gall hand.
         h.custos = Hand::CustosForm::Check;
         return h;
     }
@@ -167,7 +170,15 @@ namespace {
         Hand h;
         h.token = "aquitanian";
         h.pointScript = true;
+        // Each dot one pitch, stepping evenly, a clivis two dots stacked straight above each other at the same
+        // x (aquitanian-01, -02: 305,32 over 305,57; 10,65 over 10,85). The dots are round blobs 10 to 11 px
+        // across at 13 px a step (aquitanian-03), while the virga strokes are fine, about 3 px (a narrow nib);
+        // detached dots stand close (aquitanian-01 'te': dashes 16 px apart at 24 px a step).
         h.dot = Hand::Dot::Point;
+        h.pen.width = 4.0;
+        h.pen.thin = 1.2;
+        h.markWidth = 10.5;
+        h.gesture.breakGap = 4.0;
         h.custos = Hand::CustosForm::Slant;
         return h;
     }
@@ -179,6 +190,9 @@ namespace {
         Hand h;
         h.token = "central-italian";
         h.pointScript = true;
+        // A bare note is a short level dash, a step long (an nc with a level @tilt is one in any point script).
+        h.dot = Hand::Dot::Dash;
+        h.gesture.breakGap = 6.0;
         h.clef = Hand::ClefForm::Letter;
         h.pitchMarkers = { { 'f', "#b0302a" }, { 'c', "#c9a227" } };
         return h;
@@ -192,6 +206,7 @@ namespace {
         h.token = "nonantolan";
         h.pointScript = true;
         h.solo = { 3.0, 1.0 };
+        h.gesture.breakGap = 6.0;
         h.clef = Hand::ClefForm::Letter;
         return h;
     }
@@ -205,6 +220,18 @@ namespace {
         h.token = "square";
         h.pointScript = true;
         h.dot = Hand::Dot::Square;
+        // The nib held upright (90 degrees): a level sweep comes out a square as tall as the nib is wide, a
+        // vertical connector or stem a hairline, an oblique a parallelogram with upright ends. A square is about
+        // 14 px tall and 10 wide at 13 px a step (square-02, the crop's own scale), a touch more than a step;
+        // the oblique beside it spans 18-19 px. Stems and connectors run plumb along the square's side (the
+        // right of a virga and a pes, the left of a clivis), and a joined lower note abuts the square before it.
+        h.pen.angleDeg = 90.0;
+        h.pen.width = 14.0;
+        h.pen.thin = 1.4;
+        h.markWidth = 10.0;
+        h.upright = true;
+        h.edgeStems = true;
+        h.gesture.breakGap = 5.0;
         h.liqOvershootDown = 0.9;
         h.custos = Hand::CustosForm::Square;
         return h;
