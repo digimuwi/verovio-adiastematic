@@ -138,6 +138,20 @@ namespace {
         return false;
     }
 
+    data_PITCHNAME PitchNameOf(char letter)
+    {
+        switch (std::tolower((unsigned char)letter)) {
+            case 'c': return PITCHNAME_c;
+            case 'd': return PITCHNAME_d;
+            case 'e': return PITCHNAME_e;
+            case 'f': return PITCHNAME_f;
+            case 'g': return PITCHNAME_g;
+            case 'a': return PITCHNAME_a;
+            case 'b': return PITCHNAME_b;
+            default: return PITCHNAME_NONE;
+        }
+    }
+
 } // namespace
 
 bool View::DrawNeumeStaffLinesColored(DeviceContext *dc, Staff *staff, StaffDef *staffDef, Measure *measure)
@@ -192,6 +206,89 @@ bool View::DrawNeumeStaffLinesColored(DeviceContext *dc, Staff *staff, StaffDef 
         y2 -= interline;
     }
     return true;
+}
+
+void View::DrawNeumePitchMarkers(DeviceContext *dc, Staff *staff, StaffDef *staffDef, Measure *measure)
+{
+    assert(dc);
+    assert(staff);
+    assert(measure);
+
+    if (!m_options->m_neumeCalligraphic.GetValue() || !m_options->m_neumePitchMarkers.GetValue()) return;
+    if (staff->m_drawingNotationType != NOTATIONTYPE_neume || !staffDef) return;
+    // Encoded line colours are the source's own: they win over the hand's markers.
+    if (staffDef->HasLinesColor()) return;
+    if (staff->HasDrawingRotation() || (staff->m_drawingLines < 1)) return;
+    const CalligraphicNeume::Hand &hand = CalligraphicNeume::HandFor(this->GetNeumeScript(staff));
+    if (hand.pitchMarkers.empty()) return;
+    const Layer *layer = vrv_cast<const Layer *>(staff->FindDescendantByType(LAYER, 1));
+    if (!layer) return;
+
+    // A coloured marker names a pitch, not a line: the red f of the Hildegard books runs through the f space
+    // when the clef puts f there and moves with the clef (hildegard-07, -11), and starts together with a new
+    // clef letter mid-system (hildegard-04); on a Guidonian staff the same red F and yellow c fall on lines
+    // (cistercian-03, hufnagel-06). So the staff is cut into segments at each clef, and each segment draws
+    // every marker of the hand at the height its clef gives the marker's pitch: on the line that carries it,
+    // or through the middle of its space. A pitch class the staff holds twice (an octave apart on five lines)
+    // is marked once, on its line, as the Guidonian F and c are; one outside the staff is not marked.
+    struct Segment {
+        int x;
+        const Clef *clef;
+    };
+    std::vector<Segment> segments;
+    const int x1 = measure->GetDrawingX();
+    const int x2 = x1 + measure->GetWidth();
+    // The clef in effect where the lines start keys the staff up to the first clef of the layer: the clef drawn
+    // at the start of the system, or the one carried over from an earlier measure of it (a page of neumes is
+    // cast into several measures per system). When a clef of the layer opens the lines, before any neume, it
+    // reaches back to the start of the lines itself (the first system, whose clef is in the layer).
+    ListOfConstObjects clefs;
+    for (const Object *object : layer->FindAllDescendantsByType(CLEF)) {
+        if (!vrv_cast<const Clef *>(object)->m_crossStaff) clefs.push_back(object);
+    }
+    const Object *firstNeume = layer->FindDescendantByType(NEUME);
+    const bool clefOpens = !clefs.empty()
+        && (!firstNeume || (clefs.front()->GetDrawingX() <= vrv_cast<const LayerElement *>(firstNeume)->GetDrawingX()));
+    const Clef *leading = layer->GetStaffDefClef() ? layer->GetStaffDefClef() : layer->GetCurrentClef();
+    if (leading && !(clefOpens && !layer->GetStaffDefClef())) segments.push_back({ x1, leading });
+    for (const Object *object : clefs) {
+        segments.push_back({ segments.empty() ? x1 : object->GetDrawingX(), vrv_cast<const Clef *>(object) });
+    }
+    if (segments.empty()) return;
+
+    const int top = (staff->m_drawingLines - 1) * 2; // the loc of the top line (the bottom line is 0)
+    const int width = std::max(1, this->ToDeviceContextX(m_doc->GetDrawingStaffLineWidth(staff->m_drawingStaffSize)));
+    for (size_t i = 0; i < segments.size(); ++i) {
+        const int start = std::max(x1, segments[i].x);
+        const int end = (i + 1 < segments.size()) ? std::min(x2, segments[i + 1].x) : x2;
+        if (end <= start) continue;
+        const int clefLocOffset = segments[i].clef->GetClefLocOffset();
+        for (const auto &marker : hand.pitchMarkers) {
+            const data_PITCHNAME pname = PitchNameOf(marker.first);
+            if (pname == PITCHNAME_NONE) continue;
+            int loc = VRV_UNSET;
+            for (int oct = -1; oct <= 10; ++oct) {
+                const int candidate = PitchInterface::CalcLoc(pname, oct, clefLocOffset);
+                if ((candidate < 0) || (candidate > top)) continue;
+                if ((loc == VRV_UNSET) || ((candidate % 2 == 0) && (loc % 2 != 0))) loc = candidate;
+            }
+            if (loc == VRV_UNSET) continue;
+            InkColor ink;
+            if (!ParseColor(marker.second, ink) || !ink.draw) continue;
+            const int y = staff->GetDrawingY() + staff->CalcPitchPosYRel(m_doc, loc);
+
+            // Its own group carrying the colour (see DrawNeumeStaffLinesColored) and the pitch it marks.
+            dc->StartCustomGraphic("pitchMarker");
+            if (ink.color != COLOR_NONE) dc->SetCustomGraphicColor(StringFormat("#%06X", ink.color));
+            dc->SetCustomGraphicAttributes("pitch", std::string(1, (char)std::tolower((unsigned char)marker.first)));
+            // Half again as broad as a staff line, so a marker on a line covers it in its colour.
+            dc->SetPen(width * 3 / 2, PEN_SOLID, 0, 0, LINECAP_DEFAULT, LINEJOIN_DEFAULT, ink.opacity, ink.color);
+            dc->DrawLine(this->ToDeviceContextX(start), this->ToDeviceContextY(y), this->ToDeviceContextX(end),
+                this->ToDeviceContextY(y));
+            dc->ResetPen();
+            dc->EndCustomGraphic();
+        }
+    }
 }
 
 } // namespace vrv

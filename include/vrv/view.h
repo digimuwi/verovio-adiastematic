@@ -438,6 +438,8 @@ protected:
     ///@{
     /** Draw the staff lines in the colours of staffDef/@lines.color. */
     bool DrawNeumeStaffLinesColored(DeviceContext *dc, Staff *staff, StaffDef *staffDef, Measure *measure);
+    /** Draw the hand's coloured pitch markers (--neume-pitch-markers), following the clefs of the staff. */
+    void DrawNeumePitchMarkers(DeviceContext *dc, Staff *staff, StaffDef *staffDef, Measure *measure);
     ///@}
 
     /**

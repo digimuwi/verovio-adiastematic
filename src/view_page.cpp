@@ -1286,6 +1286,9 @@ void View::DrawStaff(DeviceContext *dc, Staff *staff, Measure *measure, System *
         this->DrawStaffLines(dc, staff, staffDef, measure, system);
     }
 
+    // The coloured pitch markers of a calligraphic neume hand, under the neumes (view_neumefurniture.cpp)
+    this->DrawNeumePitchMarkers(dc, staff, staffDef, measure);
+
     if (staffDef && (m_doc->GetType() != Facs)) {
         this->DrawStaffDef(dc, staff, measure);
     }
