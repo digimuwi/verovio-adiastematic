@@ -478,7 +478,8 @@ void View::DrawNeumeAdiastematic(DeviceContext *dc, Neume *neume, Staff *staff)
     // named by staffDef/@notationsubtype or --neume-hand. A page that names no script gets the default hand,
     // whose nib and gesture are the constants this renderer was written with. Any nib or gesture option set
     // on the command line wins over the hand's own value.
-    const CalligraphicNeume::Hand &hand = CalligraphicNeume::HandFor(this->GetNeumeScript(staff));
+    const std::string script = this->GetNeumeScript(staff);
+    const CalligraphicNeume::Hand &hand = CalligraphicNeume::HandFor(script);
     auto pick = [](const auto &option, double own) -> double { return option.IsSet() ? option.GetValue() : own; };
     const CalligraphicNeume::Pen pen{ pick(m_options->m_neumeCalligraphicNibAngle, hand.pen.angleDeg),
         pick(m_options->m_neumeCalligraphicNibWidth, hand.pen.width),

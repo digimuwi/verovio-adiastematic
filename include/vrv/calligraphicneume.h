@@ -386,9 +386,12 @@ private:
      * the same trochoid a little PAST that final trough, for a wave the pen flows on from: the italic
      * lean leaves the last trough directly beneath the last crest, so a stroke rising out of the low
      * point itself would climb straight back through the tooth just written - running on up and out of
-     * the belly first sets the spring point clear of it.
+     * the belly first sets the spring point clear of it. @p bellies, when given, receives the index of
+     * the sample at the floor of each belly (each trough), where the ink pools: on a staff the teeth stand
+     * there on their pitch.
      */
-    static std::vector<PointF> Wavify(const std::vector<PointF> &spine, int waves, double amp, bool runOut = false);
+    static std::vector<PointF> Wavify(const std::vector<PointF> &spine, int waves, double amp, bool runOut = false,
+        std::vector<int> *bellies = NULL);
     /**
      * A quilisma: a wavy flourish, modelled on the liquescent. The WHOLE note is this wavy line - the
      * broad nib swept over it draws the characteristic toothed quilisma - starting on the first crest
@@ -404,7 +407,7 @@ private:
      * of the last tooth rather than back through it - see Wavify.
      */
     static Stroke Quilisma(PointF s, int tilt, int waves, bool centred, int curveHand, bool hasCurve, bool angled,
-        PointF tIn, PointF tOut, bool runOut = false);
+        PointF tIn, PointF tOut, bool runOut = false, std::vector<int> *bellies = NULL);
     static Stroke Comma(double x, double y, int tilt);
     /**
      * A liquescent stroke (cephalicus / epiphonus). When @p stem > 0 the note's own melodic stroke of
