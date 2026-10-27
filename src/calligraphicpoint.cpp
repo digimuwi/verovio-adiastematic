@@ -34,8 +34,10 @@ namespace vrv {
 //     from the previous mark when it is connected (no @con="g") - the hairline connector of a square pes or
 //     clivis, the rising stroke of an Aquitanian pes - or, on a first or detached nc, an opening stroke of the
 //     hand's Opening reach that ends at the pitch (a square virga's stem, a Nonantolan tall stroke, an
-//     Aquitanian virga whose pitch is its head). A square hand runs these along the side of the square
-//     (Hand::edgeStems), the others through the mark's centre;
+//     Aquitanian virga whose pitch is its head). The mark is the stroke's head whichever way the pen ran, so
+//     Opening::at is measured up the stroke: @tilt="n" rises to the head, @tilt="s" hangs the stem below it.
+//     A square hand runs these along the side of the square (Hand::edgeStems), the others through the mark's
+//     centre, and it hangs every joined note on its hairline, stroke attribute or not;
 //   - two consecutive ncs both carrying @ligated="true" are one oblique: a broad-nib diagonal whose two ends'
 //     vertical centres are the two pitches (the square porrectus and oblique clivis, square-02), each nc owning
 //     its half;
@@ -48,8 +50,9 @@ namespace vrv {
 // Marks step to the right along the neume as a scribe writes them: a note joined to the previous one stands
 // straight above or below it (an Aquitanian clivis is two stacked dots; a square pes two stacked squares with
 // the connector on their right), or beside it when the two would touch, while a detached note (@con="g")
-// starts a Gesture::breakGap clear of the previous mark. A square hand sets a joined lower note beside the
-// previous square, abutting it, as in the square clivis.
+// starts a Gesture::breakGap clear of the previous mark, or goes where its @place sends it (@place="s":
+// straight below, the Aquitanian clivis written as two detached dots). A square hand sets a joined lower note
+// beside the previous square, abutting it, as in the square clivis, and an oblique rising from a square too.
 //
 // The ink is the true broad-nib footprint: the nib, a line of the pen's width held at its angle (plus the
 // hairline thickness across it), swept along each straight stroke - a convex hexagon whose ends lie along the
@@ -300,16 +303,22 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::BuildPoint(
     auto placeX = [&](size_t i, double y, const Extent &e, bool obliqueStart) -> double {
         const NcInfo &nc = ncs[i];
         if (!prev.any) return 0.0;
-        if (i > 0 && nc.gapped) return prev.right + gap - e.left; // a detached note, a pen-lift to the right
         const double dy = y - prev.cy;
-        if (edge) {
+        double cx = prev.cx;
+        if (i > 0 && nc.gapped) {
+            // A detached note: a pen-lift to the right, or the way an explicit @place sends it - straight above or
+            // below (an Aquitanian clivis's second dot, @place="s"), or back to the left.
+            const PointF pd = TiltVec(nc.place);
+            if (nc.place == COMPASSDIRECTION_NONE || pd.x > EPS) return prev.right + gap - e.left;
+            if (pd.x < -EPS) return prev.left - gap - e.right;
+        }
+        else if (edge) {
             // Square: a higher note stands on the previous square, flush with its right side (the connector
             // runs there); a lower or equal one is set beside it, abutting, and so is an oblique rising from it
             // (square-02: the oblique's left end starts just right of the F square below it).
             return (dy < -EPS && !obliqueStart) ? prev.right - e.right : prev.right - e.left;
         }
-        double cx = prev.cx;
-        if (hasStroke(nc) && std::fabs(dy) > EPS) {
+        else if (hasStroke(nc) && std::fabs(dy) > EPS) {
             const PointF d = arrivalDir(nc, dy);
             if (std::fabs(d.y) > EPS) cx += d.x * std::fabs(dy) / std::fabs(d.y);
         }
@@ -348,9 +357,13 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::BuildPoint(
         PointF d = (nc.tilt != COMPASSDIRECTION_NONE) ? TiltVec(nc.tilt) : PointF{ 0.0, -1.0 };
         if (hand.upright) d = { 0.0, (d.y > 0.0) ? 1.0 : -1.0 };
         const double len = op->reach * STEP * rellen(nc) / std::max(std::fabs(d.y), 0.2);
+        // The mark is the stroke's head whichever way the pen ran - rising to it (Nonantolan, @tilt="n") or
+        // setting it down and pulling the stem away (a square virga, @tilt="s") - so Opening::at is measured up
+        // the stroke, from its lower end to its upper end: a falling stroke counts it from its far end.
+        const double at = (d.y > 0.0) ? 1.0 - op->at : op->at;
         PointF p = c;
         if (edge) p.x = leftSide ? c.x + e.left + nibHalfX : c.x + e.right - nibHalfX;
-        return { p - d * (len * op->at), p + d * (len * (1.0 - op->at)) };
+        return { p - d * (len * at), p + d * (len * (1.0 - at)) };
     };
 
     for (size_t i = 0; i < n; ++i) {
@@ -403,10 +416,13 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::BuildPoint(
         const double cx = placeX(i, y, m.ext, oblique);
         const PointF c = { cx, y };
 
-        // The stroke arriving at this pitch: from the previous mark when joined to it, else an opening stroke.
-        if (hasStroke(nc)) {
+        // The stroke arriving at this pitch: from the previous mark when joined to it, else an opening stroke. A
+        // square hand hangs every joined note on its hairline, stroke attribute or not: that is how its notes
+        // join (a pes of two plain ncs is two squares and the connector); @con="g" sets a square apart.
+        const bool joins = connected && (hasStroke(nc) || (edge && !special(nc)));
+        if (joins || (!connected && hasStroke(nc))) {
             std::vector<PointF> path;
-            if (connected) {
+            if (joins) {
                 const double dy = y - prev.cy;
                 if (edge) {
                     // The square connector: a hairline along the shared side, sized by the interval.
