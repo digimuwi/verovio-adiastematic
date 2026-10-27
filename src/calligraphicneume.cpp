@@ -1295,11 +1295,29 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
 CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
     const std::vector<NcInfo> &ncs, double scale, Slant slant, Pen hand, Gesture gesture)
 {
-    g_pen = hand; // the pen for this whole gesture — every nib helper reads it
+    return Build(ncs, scale, slant, hand, gesture, HandFor(""));
+}
+
+CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
+    const std::vector<NcInfo> &ncs, double scale, Slant slant, Pen pen, Gesture gesture, const Hand &hand)
+{
+    g_pen = pen; // the pen for this whole gesture — every nib helper reads it
     g_gesture = gesture; // ...and how that hand moves — every shape helper reads this
 
     NeumeGeometry geo;
     if (ncs.empty()) return geo;
+
+    // A point script on a staff writes every component as its own mark; everything else is pen gestures.
+    const bool pitched = std::all_of(ncs.begin(), ncs.end(), [](const NcInfo &n) { return n.pitched; });
+    geo = (pitched && hand.pointScript) ? BuildPoint(ncs, slant, hand) : BuildStroke(ncs, slant, hand);
+    AnchorAndScale(geo, scale);
+    return geo;
+}
+
+CalligraphicNeume::NeumeGeometry CalligraphicNeume::BuildStroke(
+    const std::vector<NcInfo> &ncs, Slant slant, const Hand &hand)
+{
+    NeumeGeometry geo;
 
     // Neumes on lines: when every component has a staff height, each one's pitch point - where its
     // stroke ends, or its dot; for a liquescent where its stroke meets the curl; for a stropha comma its
@@ -1882,6 +1900,11 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
     // 3) Episemata: short accent strokes set just clear of the ink they mark (see BuildEpisemata).
     BuildEpisemata(runs, ncs, geo, slant);
 
+    return geo;
+}
+
+void CalligraphicNeume::AnchorAndScale(NeumeGeometry &geo, double scale)
+{
     // 4) Anchor the gesture at its ink's left edge. Strokes are centred on their cells while
     //    building, so the raw gesture reaches left of the origin; the caller aligns the origin with
     //    the syllable's alignment point (where the syl text also starts), and ink left of it would
@@ -1911,8 +1934,6 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
     }
     for (StrokePath &s : geo.strokes)
         for (PointF &p : s.pts) p = { p.x * scale, p.y * scale };
-
-    return geo;
 }
 
 } // namespace vrv

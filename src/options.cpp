@@ -1932,6 +1932,20 @@ Options::Options()
     m_neumeHeighted.Init(false);
     this->Register(&m_neumeHeighted, "neumeHeighted", &m_neume);
 
+    m_neumeHand.SetInfo("Calligraphic neume hand",
+        "The script whose hand draws calligraphic neumes on a staff, overriding staffDef/@notationsubtype: where "
+        "it puts a pitch on each shape and how far its strokes reach around it (stgall, hildegard, german, "
+        "hufnagel, messine, messine-german, cistercian, beneventan, aquitanian, central-italian, nonantolan, "
+        "square). Unknown names fall back to stgall.");
+    m_neumeHand.Init("");
+    this->Register(&m_neumeHand, "neumeHand", &m_neume);
+
+    m_neumePitchMarkers.SetInfo("Neume pitch markers",
+        "Draw the hand's coloured pitch markers on calligraphic neume staves: the red f and yellow c that "
+        "follow the clef, through a space where the clef puts them there.");
+    m_neumePitchMarkers.Init(false);
+    this->Register(&m_neumePitchMarkers, "neumePitchMarkers", &m_neume);
+
     m_neumeCalligraphicSlant.SetInfo("Calligraphic neume slant",
         "The forward slant (italicisation) of calligraphic neumes, in degrees: a right hand's habit of "
         "pulling the gesture toward the upper-right. 0 is upright.");

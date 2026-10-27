@@ -887,6 +887,8 @@ public:
     OptionBool m_liquescentWithoutTails;
     OptionBool m_neumeCalligraphic;
     OptionBool m_neumeHeighted;
+    OptionString m_neumeHand;
+    OptionBool m_neumePitchMarkers;
     OptionDbl m_neumeCalligraphicSlant;
     OptionDbl m_neumeCalligraphicSlantBias;
     // The nib: what the hand wrote WITH. CalligraphicNeume::Pen has carried these since it was

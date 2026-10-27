@@ -206,6 +206,77 @@ public:
     };
 
     /**
+     * Where a pitch sits on an opening stroke and how far the stroke reaches around it, for one role of
+     * that stroke (see Hand). @p reach is the stroke's vertical span in staff steps (line to the next
+     * space), still scaled by @rellen; a level stroke keeps its length. @p at is the pitch point as a
+     * fraction of the stroke from where the pen sets down (0) to where it leaves (1).
+     */
+    struct Opening {
+        double reach = 2.0;
+        double at = 1.0;
+    };
+
+    /**
+     * A script's hand on a staff: what it writes WITH (Pen), how it moves (Gesture), and where it puts a
+     * pitch on its shapes - the rules a scribe followed when neumes went onto lines, which differ by
+     * family and even by book. Keyed by staffDef/@notationsubtype (see HandFor); the default hand is the
+     * St. Gall one PR #1 was built on. The pitch rules apply only to a neume placed by pitch (on a staff
+     * with lines, or under --neume-heighted): staffless rendering reads nothing here but the pen and
+     * gesture, which default to the constants this renderer was written with. The hand never chooses a
+     * shape - the <nc> visual attributes do - only where a shape sits on its pitch and how long its strokes
+     * run around that point. The values and the evidence for them are in src/neumehand.cpp.
+     */
+    struct Hand {
+        std::string token = "stgall"; ///< the staffDef/@notationsubtype it answers to
+        Pen pen;
+        Gesture gesture;
+        /**
+         * The first component of a pen gesture (the first nc, or a detached one) drawn as a plain or
+         * curved stroke, by its role: alone (nothing connected follows - a virga, a single Messine
+         * stroke), a lead (a connected stroke follows and turns back vertically - a clivis lead-in, the
+         * bar of a Messine 7) or a foot (a connected stroke follows in the same vertical sense - a pes).
+         */
+        Opening solo;
+        Opening lead;
+        Opening foot;
+        /**
+         * How far the curl or hairline of a liquescent drawn with its own stroke (an explicit @tilt) runs
+         * on past its pitch, in steps, for an ascending and a descending one. The pitch then sits that far
+         * short of the liquescence's furthest reach. Negative keeps the curl at its natural size with the
+         * pitch where the stroke meets it.
+         */
+        double liqOvershootUp = -1.0;
+        double liqOvershootDown = -1.0;
+        /**
+         * A point script (Aquitanian, square, Nonantolan ...): every <nc> is its own mark at its own pitch,
+         * joined at most by a hairline connector, rather than one pen gesture spanning several pitches.
+         * Drawn by BuildPoint.
+         */
+        bool pointScript = false;
+        /** How a bare <nc> (a dot) is written. */
+        enum class Dot { Dab, Square, Lozenge, Point };
+        Dot dot = Dot::Dab;
+        /** Staff furniture in the hand's own forms (drawn by the view, not by Build). */
+        enum class ClefForm { Glyph, Letter };
+        ClefForm clef = ClefForm::Glyph;
+        enum class CustosForm { Glyph, Square, HeadTail, Slant, Check };
+        CustosForm custos = CustosForm::Glyph;
+        /**
+         * Coloured pitch markers the hand draws through the staff at a pitch class, following the clef:
+         * each entry is a pitch-name letter ('f', 'c') and a colour. Empty for most hands.
+         */
+        std::vector<std::pair<char, std::string>> pitchMarkers;
+    };
+
+    /**
+     * The hand for a script token (staffDef/@notationsubtype, case-insensitive). An empty or unknown
+     * token gets the default hand (St. Gall), so a page that names no script renders as before.
+     */
+    static const Hand &HandFor(const std::string &token);
+    /** The tokens HandFor knows, in table order. */
+    static std::vector<std::string> HandTokens();
+
+    /**
      * Build the geometry of one neume from its ordered <nc> components. The returned
      * NeumeGeometry::ncs is parallel to @p ncs (same size and order), so each entry can be inked
      * inside its own <nc> graphic.
@@ -219,8 +290,33 @@ public:
     static NeumeGeometry Build(const std::vector<NcInfo> &ncs, double scale, Slant slant = {});
     static NeumeGeometry Build(const std::vector<NcInfo> &ncs, double scale, Slant slant, Pen pen);
     static NeumeGeometry Build(const std::vector<NcInfo> &ncs, double scale, Slant slant, Pen pen, Gesture gesture);
+    /**
+     * The same, in a script's @p hand: on a staff its pitch rules place the shapes (Hand), and a point
+     * script is drawn by BuildPoint. @p pen and @p gesture are the hand's own, already merged with any
+     * command-line override by the caller.
+     */
+    static NeumeGeometry Build(
+        const std::vector<NcInfo> &ncs, double scale, Slant slant, Pen pen, Gesture gesture, const Hand &hand);
 
 private:
+    /**
+     * A point script's neume on a staff (Hand::pointScript): each <nc> its own mark at its own pitch. Only
+     * called by Build, for a neume whose every nc is pitched, after Build has set the pen and gesture.
+     * Returns the geometry unscaled and unanchored (pen px, origin at the first nc's pitch); Build applies
+     * its usual left-edge anchoring and scale.
+     */
+    static NeumeGeometry BuildPoint(const std::vector<NcInfo> &ncs, Slant slant, const Hand &hand);
+    /**
+     * A stroke script's neume (every hand but a point script on a staff): the pen gestures of Build's
+     * steps 1-3, unscaled and unanchored.
+     */
+    static NeumeGeometry BuildStroke(const std::vector<NcInfo> &ncs, Slant slant, const Hand &hand);
+    /**
+     * The last two steps of Build, shared by both builders: anchor the gesture at its ink's left edge,
+     * then scale it from pen px into verovio drawing units.
+     */
+    static void AnchorAndScale(NeumeGeometry &geo, double scale);
+
     //----------------------------------------------------------------------------
     // Internal geometry helpers (faithful ports of the prototype, in raw pen pixels)
     //----------------------------------------------------------------------------

@@ -423,6 +423,11 @@ protected:
      * to the inked gesture's logical bounding box according to each letter's @place.
      */
     void DrawNeumeSignifLets(DeviceContext *dc, Neume *neume, Staff *staff, int x1, int y1, int x2, int y2);
+    /**
+     * The script token whose calligraphic hand draws the neumes of @p staff: --neume-hand if given, else
+     * its staffDef/@notationsubtype (empty when it names none).
+     */
+    std::string GetNeumeScript(const Staff *staff) const;
     ///@}
 
     /**
