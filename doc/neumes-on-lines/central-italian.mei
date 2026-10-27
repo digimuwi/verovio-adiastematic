@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mei xmlns="http://www.music-encoding.org/ns/mei" meiversion="5.0">
+  <!--
+    Synthetic test file for calligraphic neumes on a staff (verovio option neume-calligraphic), one of the
+    doc/neumes-on-lines set. Each syllable reproduces a measured facsimile example (id in the comment and
+    in every nc xml:id, "<example>-n<k>" with k the note number of the example's pitch points); syllables
+    whose ids contain "-x" are synthetic extras that show the hand. Pitches come from the facsimile review
+    of 2026-10-27 (examples.csv): 12th-13th century melodies, not an edition of any manuscript. Every
+    nc carries explicit shape attributes: shapes are never inferred from neume/@type.
+    Guidonian letters map to MEI as G = g3, a = a3, c = c4 (middle C), C = c3.
+
+    Hand: Central Italian neumes, Cologny, Fondation Martin Bodmer, Cod. Bodmer 74 (Old Roman gradual).
+    Red F line, faint (yellowish) c line, the a line between them not visible; c letter clef, later an f
+    letter at the red line (here an F clef on line 2, the same staff position).
+    Shapes: dash = short level stroke (tilt e, short). Few measured examples, so the extras show the
+    hand's other common signs (synthetic): virga, pes, clivis, climacus, torculus, cephalicus.
+  -->
+  <meiHead>
+    <fileDesc>
+      <titleStmt>
+        <title>Neumes on lines: Central Italian (Bodmer 74)</title>
+      </titleStmt>
+      <pubStmt />
+    </fileDesc>
+  </meiHead>
+  <music>
+    <body>
+      <mdiv>
+        <score>
+          <scoreDef>
+            <staffGrp>
+              <staffDef n="1" lines="4" notationtype="neume" notationsubtype="central-italian" />
+            </staffGrp>
+          </scoreDef>
+          <section>
+            <staff n="1">
+              <layer n="1">
+                <clef shape="C" line="4" />
+                <!-- central-italian-01 (Of. Iubilate Deo universa terra, "iubilate"): two dashes a a -->
+                <syllable>
+                  <syl>iu-</syl>
+                  <neume type="punctum">
+                    <nc xml:id="central-italian-01-n1" pname="a" oct="3" tilt="e" rellen="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>bi-</syl>
+                  <neume type="punctum">
+                    <nc xml:id="central-italian-01-n2" pname="a" oct="3" tilt="e" rellen="s" />
+                  </neume>
+                </syllable>
+                <sb />
+                <!-- central-italian-02 ("animae meae"): two dashes F F on the red line; f letter clef -->
+                <clef shape="F" line="2" />
+                <syllable>
+                  <syl>me-</syl>
+                  <neume>
+                    <nc xml:id="central-italian-02-n1" pname="f" oct="3" tilt="e" rellen="s" />
+                  </neume>
+                  <neume>
+                    <nc xml:id="central-italian-02-n2" pname="f" oct="3" tilt="e" rellen="s" />
+                  </neume>
+                </syllable>
+                <sb />
+                <!-- synthetic extras (not measured) -->
+                <clef shape="C" line="4" />
+                <syllable>
+                  <syl>virga</syl>
+                  <neume type="virga">
+                    <nc xml:id="central-italian-x1-n1" pname="a" oct="3" tilt="n" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>pes</syl>
+                  <neume type="pes">
+                    <nc xml:id="central-italian-x2-n1" pname="f" oct="3" />
+                    <nc xml:id="central-italian-x2-n2" pname="a" oct="3" tilt="n" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>clivis</syl>
+                  <neume type="clivis">
+                    <nc xml:id="central-italian-x3-n1" pname="a" oct="3" tilt="ne" curve="c" />
+                    <nc xml:id="central-italian-x3-n2" pname="f" oct="3" tilt="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>climacus</syl>
+                  <neume type="climacus">
+                    <nc xml:id="central-italian-x4-n1" pname="c" oct="4" tilt="n" />
+                    <nc xml:id="central-italian-x4-n2" pname="b" oct="3" con="g" />
+                    <nc xml:id="central-italian-x4-n3" pname="a" oct="3" con="g" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>torculus</syl>
+                  <neume type="torculus">
+                    <nc xml:id="central-italian-x5-n1" pname="f" oct="3" />
+                    <nc xml:id="central-italian-x5-n2" pname="a" oct="3" tilt="ne" curve="c" />
+                    <nc xml:id="central-italian-x5-n3" pname="g" oct="3" tilt="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>cephalicus</syl>
+                  <neume type="cephalicus">
+                    <nc xml:id="central-italian-x6-n1" pname="a" oct="3" tilt="ne" curve="c" />
+                    <nc xml:id="central-italian-x6-n2" pname="g" oct="3" tilt="s">
+                      <liquescent />
+                    </nc>
+                  </neume>
+                </syllable>
+              </layer>
+            </staff>
+          </section>
+        </score>
+      </mdiv>
+    </body>
+  </music>
+</mei>

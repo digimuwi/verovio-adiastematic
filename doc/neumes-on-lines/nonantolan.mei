@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mei xmlns="http://www.music-encoding.org/ns/mei" meiversion="5.0">
+  <!--
+    Synthetic test file for calligraphic neumes on a staff (verovio option neume-calligraphic), one of the
+    doc/neumes-on-lines set. Each syllable reproduces a measured facsimile example (id in the comment and
+    in every nc xml:id, "<example>-n<k>" with k the note number of the example's pitch points); syllables
+    whose ids contain "-x" are synthetic extras that show the hand. Pitches come from the facsimile review
+    of 2026-10-27 (examples.csv): 12th-13th century melodies, not an edition of any manuscript. Every
+    nc carries explicit shape attributes: shapes are never inferred from neume/@type.
+    Guidonian letters map to MEI as G = g3, a = a3, c = c4 (middle C), C = c3.
+
+    Hand: Nonantolan neumes (the Nonantola codex of PM II pl. 15). Four lines, F red, c yellow, others
+    dry-point; c and F letter clefs (here a c clef on line 4).
+    Shapes: tall vertical rising from the syllable to the pitch = long upright stroke (tilt n, long),
+    pitch at its top; short virga centred on its pitch = short rising stroke (tilt ne, short); dot.
+  -->
+  <meiHead>
+    <fileDesc>
+      <titleStmt>
+        <title>Neumes on lines: Nonantolan (Gradual Iustus ut palma, PM II pl. 15)</title>
+      </titleStmt>
+      <pubStmt />
+    </fileDesc>
+  </meiHead>
+  <music>
+    <body>
+      <mdiv>
+        <score>
+          <scoreDef>
+            <staffGrp>
+              <staffDef n="1" lines="4" notationtype="neume" notationsubtype="nonantolan" />
+            </staffGrp>
+          </scoreDef>
+          <section>
+            <staff n="1">
+              <layer n="1">
+                <clef shape="C" line="4" />
+                <!-- nonantolan-01 (Gr. Iustus ut palma, "multiplicabitur"): c c c c c, tall verticals and one dot -->
+                <syllable>
+                  <syl>mul-</syl>
+                  <neume type="virga">
+                    <nc xml:id="nonantolan-01-n1" pname="c" oct="4" tilt="n" rellen="l" />
+                  </neume>
+                  <neume type="punctum">
+                    <nc xml:id="nonantolan-01-n2" pname="c" oct="4" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>ti-</syl>
+                  <neume type="virga">
+                    <nc xml:id="nonantolan-01-n3" pname="c" oct="4" tilt="n" rellen="l" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>pli-</syl>
+                  <neume type="virga">
+                    <nc xml:id="nonantolan-01-n4" pname="c" oct="4" tilt="n" rellen="l" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>ca-</syl>
+                  <neume type="virga">
+                    <nc xml:id="nonantolan-01-n5" pname="c" oct="4" tilt="n" rellen="l" />
+                  </neume>
+                </syllable>
+                <sb />
+                <!-- nonantolan-02 ("in domo"): vertical to F | vertical to F + dot G + short virga a stacked above -->
+                <syllable>
+                  <syl>in</syl>
+                  <neume type="virga">
+                    <nc xml:id="nonantolan-02-n1" pname="f" oct="3" tilt="n" rellen="l" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>do-</syl>
+                  <neume type="scandicus">
+                    <nc xml:id="nonantolan-02-n2" pname="f" oct="3" tilt="n" rellen="l" />
+                    <nc xml:id="nonantolan-02-n3" pname="g" oct="3" con="g" />
+                    <nc xml:id="nonantolan-02-n4" pname="a" oct="3" tilt="ne" rellen="s" con="g" />
+                  </neume>
+                </syllable>
+                <sb />
+                <!-- nonantolan-03 ("in domo Domini"): vertical c + short virga a | vertical c + short virga d above | vertical d -->
+                <syllable>
+                  <syl>Do-</syl>
+                  <neume type="clivis">
+                    <nc xml:id="nonantolan-03-n1" pname="c" oct="4" tilt="n" rellen="l" />
+                    <nc xml:id="nonantolan-03-n2" pname="a" oct="3" tilt="ne" rellen="s" con="g" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>mi-</syl>
+                  <neume type="pes">
+                    <nc xml:id="nonantolan-03-n3" pname="c" oct="4" tilt="n" rellen="l" />
+                    <nc xml:id="nonantolan-03-n4" pname="d" oct="4" tilt="ne" rellen="s" con="g" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>ni</syl>
+                  <neume type="virga">
+                    <nc xml:id="nonantolan-03-n5" pname="d" oct="4" tilt="n" rellen="l" />
+                  </neume>
+                </syllable>
+                <sb />
+                <!-- synthetic extras (not measured) -->
+                <syllable>
+                  <syl>clivis</syl>
+                  <neume type="clivis">
+                    <nc xml:id="nonantolan-x1-n1" pname="a" oct="3" tilt="ne" curve="c" />
+                    <nc xml:id="nonantolan-x1-n2" pname="g" oct="3" tilt="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>torculus</syl>
+                  <neume type="torculus">
+                    <nc xml:id="nonantolan-x2-n1" pname="f" oct="3" />
+                    <nc xml:id="nonantolan-x2-n2" pname="a" oct="3" tilt="ne" curve="c" />
+                    <nc xml:id="nonantolan-x2-n3" pname="g" oct="3" tilt="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>climacus</syl>
+                  <neume type="climacus">
+                    <nc xml:id="nonantolan-x3-n1" pname="c" oct="4" tilt="n" />
+                    <nc xml:id="nonantolan-x3-n2" pname="b" oct="3" con="g" />
+                    <nc xml:id="nonantolan-x3-n3" pname="a" oct="3" con="g" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>cephalicus</syl>
+                  <neume type="cephalicus">
+                    <nc xml:id="nonantolan-x4-n1" pname="a" oct="3" tilt="ne" curve="c" />
+                    <nc xml:id="nonantolan-x4-n2" pname="g" oct="3" tilt="s">
+                      <liquescent />
+                    </nc>
+                  </neume>
+                </syllable>
+              </layer>
+            </staff>
+          </section>
+        </score>
+      </mdiv>
+    </body>
+  </music>
+</mei>

@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mei xmlns="http://www.music-encoding.org/ns/mei" meiversion="5.0">
+  <!--
+    Synthetic test file for calligraphic neumes on a staff (verovio option neume-calligraphic), one of the
+    doc/neumes-on-lines set. Each syllable reproduces a measured facsimile example (id in the comment and
+    in every nc xml:id, "<example>-n<k>" with k the note number of the example's pitch points); syllables
+    whose ids contain "-x" are synthetic extras that show the hand. Pitches come from the facsimile review
+    of 2026-10-27 (examples.csv): 12th-13th century melodies, not an edition of any manuscript. Every
+    nc carries explicit shape attributes: shapes are never inferred from neume/@type.
+    Guidonian letters map to MEI as G = g3, a = a3, c = c4 (middle C), C = c3.
+
+    Hand: Beneventan. beneventan-03: Benevento, Biblioteca capitolare 34 (PM XV), F letter clef, only the
+    F line visible (here a four-line staff with the F clef on line 2). beneventan-01: Barb. lat. 603, no
+    line visible; its pitches D D E D D are relative, placed on the same staff.
+    Shapes: dash = short level stroke (tilt e, short); head = dot; pes = dot + rising stroke (tilt ne);
+    long descending tail = falling stroke (tilt s, long) from the last head; liquescent pes = head + thin
+    rising stroke with a liquescent ("the end of the tail indicates the pitch", Hiley 1993, p. 429).
+    Not represented: beneventan-02 (Vat. lat. 6082: a red line drawn directly above each text line, its
+    pitch not established).
+  -->
+  <meiHead>
+    <fileDesc>
+      <titleStmt>
+        <title>Neumes on lines: Beneventan (Benevento 34, Barb. lat. 603)</title>
+      </titleStmt>
+      <pubStmt />
+    </fileDesc>
+  </meiHead>
+  <music>
+    <body>
+      <mdiv>
+        <score>
+          <scoreDef>
+            <staffGrp>
+              <staffDef n="1" lines="4" notationtype="neume" notationsubtype="beneventan" />
+            </staffGrp>
+          </scoreDef>
+          <section>
+            <staff n="1">
+              <layer n="1">
+                <clef shape="F" line="2" />
+                <!-- beneventan-01 (Alleluia V. Dies sanctificatus, "illuxit"): dash D | pes D E | dash D | custos D -->
+                <syllable>
+                  <syl>il-</syl>
+                  <neume type="punctum">
+                    <nc xml:id="beneventan-01-n1" pname="d" oct="3" tilt="e" rellen="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>lu-</syl>
+                  <neume type="pes">
+                    <nc xml:id="beneventan-01-n2" pname="d" oct="3" />
+                    <nc xml:id="beneventan-01-n3" pname="e" oct="3" tilt="ne" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>xit</syl>
+                  <neume type="punctum">
+                    <nc xml:id="beneventan-01-n4" pname="d" oct="3" tilt="e" rellen="s" />
+                  </neume>
+                </syllable>
+                <custos pname="d" oct="3" />
+                <sb />
+                <!-- beneventan-03 (In. Iudica me Deus, "discerne"): three heads F F F + long descending tail ending on D | liquescent pes F G -->
+                <syllable>
+                  <syl>dis-</syl>
+                  <neume type="climacus">
+                    <nc xml:id="beneventan-03-n1" pname="f" oct="3" />
+                    <nc xml:id="beneventan-03-n2" pname="f" oct="3" con="g" />
+                    <nc xml:id="beneventan-03-n3" pname="f" oct="3" con="g" />
+                    <nc xml:id="beneventan-03-n4" pname="d" oct="3" tilt="s" rellen="l" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>cer-</syl>
+                  <neume type="epiphonus">
+                    <nc xml:id="beneventan-03-n5" pname="f" oct="3" />
+                    <nc xml:id="beneventan-03-n6" pname="g" oct="3" tilt="ne">
+                      <liquescent />
+                    </nc>
+                  </neume>
+                </syllable>
+                <sb />
+                <!-- synthetic extras (not measured) -->
+                <syllable>
+                  <syl>virga</syl>
+                  <neume type="virga">
+                    <nc xml:id="beneventan-x1-n1" pname="a" oct="3" tilt="n" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>clivis</syl>
+                  <neume type="clivis">
+                    <nc xml:id="beneventan-x2-n1" pname="a" oct="3" tilt="ne" curve="c" />
+                    <nc xml:id="beneventan-x2-n2" pname="g" oct="3" tilt="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>torculus</syl>
+                  <neume type="torculus">
+                    <nc xml:id="beneventan-x3-n1" pname="f" oct="3" />
+                    <nc xml:id="beneventan-x3-n2" pname="a" oct="3" tilt="ne" />
+                    <nc xml:id="beneventan-x3-n3" pname="g" oct="3" tilt="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>climacus</syl>
+                  <neume type="climacus">
+                    <nc xml:id="beneventan-x4-n1" pname="c" oct="4" tilt="n" />
+                    <nc xml:id="beneventan-x4-n2" pname="b" oct="3" con="g" />
+                    <nc xml:id="beneventan-x4-n3" pname="a" oct="3" con="g" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>cephalicus</syl>
+                  <neume type="cephalicus">
+                    <nc xml:id="beneventan-x5-n1" pname="a" oct="3" tilt="ne" curve="c" rellen="s" />
+                    <nc xml:id="beneventan-x5-n2" pname="f" oct="3" tilt="s">
+                      <liquescent />
+                    </nc>
+                  </neume>
+                </syllable>
+              </layer>
+            </staff>
+          </section>
+        </score>
+      </mdiv>
+    </body>
+  </music>
+</mei>

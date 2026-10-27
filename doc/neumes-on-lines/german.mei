@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mei xmlns="http://www.music-encoding.org/ns/mei" meiversion="5.0">
+  <!--
+    Synthetic test file for calligraphic neumes on a staff (verovio option neume-calligraphic), one of the
+    doc/neumes-on-lines set. Each syllable reproduces a measured facsimile example (id in the comment and
+    in every nc xml:id, "<example>-n<k>" with k the note number of the example's pitch points); syllables
+    whose ids contain "-x" are synthetic extras that show the hand. Pitches come from the facsimile review
+    of 2026-10-27 (examples.csv): 12th-13th century melodies, not an edition of any manuscript. Every
+    nc carries explicit shape attributes: shapes are never inferred from neume/@type.
+    Guidonian letters map to MEI as G = g3, a = a3, c = c4 (middle C), C = c3.
+
+    Hand: German neumes on a staff, Koeln, Dombibliothek 1161 (12th century). Four lines, F red,
+    c clef on the top (invisible yellow) line.
+    Shapes: virga = one upright stroke (tilt n), head at the pitch, stem 1.6-1.9 steps below it (the
+    hairline flag at the head has no attribute and is not drawn); pes = short rising hairline foot (tilt
+    ne, short) + upright; clivis + cephalicus written as one gesture (german-04: lead-in upstroke rising
+    into an arch, second small hump, tapering descent with a liquescent); epiphonus = J hook (tilt se,
+    curve a, short) + upright with a liquescent turning right (curve c); P-shaped cephalicus = short
+    rising head + falling stem joined through a looped joint (@con="l"), the liquescent on the stem.
+  -->
+  <meiHead>
+    <fileDesc>
+      <titleStmt>
+        <title>Neumes on lines: German neumes (Koeln 1161)</title>
+      </titleStmt>
+      <pubStmt />
+    </fileDesc>
+  </meiHead>
+  <music>
+    <body>
+      <mdiv>
+        <score>
+          <scoreDef>
+            <staffGrp>
+              <staffDef n="1" lines="4" notationtype="neume" notationsubtype="german" />
+            </staffGrp>
+          </scoreDef>
+          <section>
+            <staff n="1">
+              <layer n="1">
+                <clef shape="C" line="4" />
+                <!-- german-01 (Dominus veniet, "Dominus veniet"): three virgas F G F -->
+                <syllable>
+                  <syl>mi-</syl>
+                  <neume type="virga">
+                    <nc xml:id="german-01-n1" pname="f" oct="3" tilt="n" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>nus</syl>
+                  <neume type="virga">
+                    <nc xml:id="german-01-n2" pname="g" oct="3" tilt="n" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>ve-</syl>
+                  <neume type="virga">
+                    <nc xml:id="german-01-n3" pname="f" oct="3" tilt="n" />
+                  </neume>
+                </syllable>
+                <sb />
+                <!-- german-02: pes of a second G a (rising hairline foot, pitch in its middle) -->
+                <syllable>
+                  <syl>ni-</syl>
+                  <neume type="pes">
+                    <nc xml:id="german-02-n1" pname="g" oct="3" tilt="ne" rellen="s" />
+                    <nc xml:id="german-02-n2" pname="a" oct="3" tilt="n" />
+                  </neume>
+                </syllable>
+                <!-- german-03: pes of a third a c (hairline foot lying on the a line) -->
+                <syllable>
+                  <syl>cur-</syl>
+                  <neume type="pes">
+                    <nc xml:id="german-03-n1" pname="a" oct="3" tilt="ne" rellen="s" />
+                    <nc xml:id="german-03-n2" pname="c" oct="4" tilt="n" />
+                  </neume>
+                </syllable>
+                <sb />
+                <!-- german-04 (Dominus veniet, "et"): clivis a G with a lead-in upstroke from F, then a cephalicus G F, one gesture -->
+                <syllable>
+                  <syl>et</syl>
+                  <neume type="clivis">
+                    <nc xml:id="german-04-n1" pname="a" oct="3" tilt="n" curve="c" />
+                    <nc xml:id="german-04-n2" pname="g" oct="3" tilt="s" />
+                    <nc xml:id="german-04-n3" pname="g" oct="3" tilt="ne" curve="c" rellen="s" />
+                    <nc xml:id="german-04-n4" pname="f" oct="3" tilt="s">
+                      <liquescent curve="c" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <sb />
+                <!-- german-05 (Ecce virgo concipiet, "virgo"): epiphonus a c, J hook at the foot, curl turning right at the top -->
+                <syllable>
+                  <syl>vir-</syl>
+                  <neume type="epiphonus">
+                    <nc xml:id="german-05-n1" pname="a" oct="3" tilt="se" curve="a" rellen="s" />
+                    <nc xml:id="german-05-n2" pname="c" oct="4" tilt="n">
+                      <liquescent curve="c" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <sb />
+                <!-- german-06 (Audite verbum domini): P-shaped cephalicus E D | virga G | virga a -->
+                <syllable>
+                  <syl>Au-</syl>
+                  <neume type="cephalicus">
+                    <nc xml:id="german-06-n1" pname="e" oct="3" tilt="ne" rellen="s" />
+                    <nc xml:id="german-06-n2" pname="d" oct="3" tilt="sw" rellen="l" con="l">
+                      <liquescent />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>di-</syl>
+                  <neume type="virga">
+                    <nc xml:id="german-06-n3" pname="g" oct="3" tilt="n" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>te</syl>
+                  <neume type="virga">
+                    <nc xml:id="german-06-n4" pname="a" oct="3" tilt="n" />
+                  </neume>
+                </syllable>
+              </layer>
+            </staff>
+          </section>
+        </score>
+      </mdiv>
+    </body>
+  </music>
+</mei>
