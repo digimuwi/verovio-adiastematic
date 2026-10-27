@@ -529,30 +529,32 @@ CalligraphicNeume::Stroke CalligraphicNeume::ObliqueShape(double x, double y, Po
 // the direction the pen first moves - which orients the S and its mirror / rotated forms: "w" the
 // standard letter S, "e" its mirror, "s" the S turned 90° anti-clockwise, "n" that mirror (see
 // SShapeSwing). Without @tilt the spine runs perpendicular to that swing: upright for w/e, level for s/n.
-CalligraphicNeume::Stroke CalligraphicNeume::Wave(double x, double y, const std::string &orient, int tilt)
+CalligraphicNeume::Stroke CalligraphicNeume::Wave(
+    double x, double y, const std::string &orient, int tilt, double size)
 {
     const bool rotated = SShapeRotated(orient);
     PointF dir = TiltVec(tilt);
     if (dir.x == 0.0 && dir.y == 0.0) dir = rotated ? TiltVec(COMPASSDIRECTION_e) : TiltVec(COMPASSDIRECTION_n);
-    const double len = rotated ? 24.0 : 22.0;
+    const double len = (rotated ? 24.0 : 22.0) * size;
     // centre the wave on (x, y) by backing the start off by half its travel
-    return WaveFrom({ x - dir.x * len / 2, y - dir.y * len / 2 }, orient, tilt);
+    return WaveFrom({ x - dir.x * len / 2, y - dir.y * len / 2 }, orient, tilt, size);
 }
 
 // An S-shaped wave starting at s, travelling along @tilt. Used for a connected oriscus / quassus
 // inside a ligature (e.g. the second component of a virga strata), where the wave must spring from
 // the previous stroke's tip rather than be centred on a cell.
-CalligraphicNeume::Stroke CalligraphicNeume::WaveFrom(PointF s, const std::string &orient, int tilt)
+CalligraphicNeume::Stroke CalligraphicNeume::WaveFrom(PointF s, const std::string &orient, int tilt, double size)
 {
     const bool rotated = SShapeRotated(orient);
     PointF dir = TiltVec(tilt);
     // No @tilt: the spine runs perpendicular to the initial swing - upright for an upright S, level
     // for one turned on its side.
     if (dir.x == 0.0 && dir.y == 0.0) dir = rotated ? TiltVec(COMPASSDIRECTION_e) : TiltVec(COMPASSDIRECTION_n);
-    const double len = rotated ? 26.0 : 24.0;
+    const double len = (rotated ? 26.0 : 24.0) * size;
     // The amplitude must clear the broad nib (NIB_W = 6 px) comfortably, otherwise the sweep absorbs
-    // the wiggle into the ribbon width and the S stops reading as an S.
-    const double amp = rotated ? 9.0 : 12.0;
+    // the wiggle into the ribbon width and the S stops reading as an S - so a smaller S narrows less
+    // than it shortens.
+    const double amp = (rotated ? 9.0 : 12.0) * std::max(size, 0.7);
     const PointF e = { s.x + dir.x * len, s.y + dir.y * len };
     // The wiggle axis is the @s-shape's initial swing, projected perpendicular to the travel so the S
     // still runs along @tilt but opens toward @s-shape. The sign carried by that swing is what
@@ -572,7 +574,7 @@ CalligraphicNeume::Stroke CalligraphicNeume::WaveFrom(PointF s, const std::strin
 // tracks the spine's own shape (a straight chord, a bow, an angled chevron alike). The tooth form
 // itself - round bellies, leaning flanks, a back-flick at each crest - lives in the loop below.
 std::vector<CalligraphicNeume::PointF> CalligraphicNeume::Wavify(
-    const std::vector<PointF> &spine, int waves, double amp, bool runOut)
+    const std::vector<PointF> &spine, int waves, double amp, bool runOut, std::vector<int> *bellies)
 {
     if (waves < 1) waves = 2; // default number of crests
     constexpr int PER = 16; // samples per crest (the crest flicks turn tightly, so sample densely)
@@ -634,6 +636,15 @@ std::vector<CalligraphicNeume::PointF> CalligraphicNeume::Wavify(
         const PointF perp = { -tan.y, tan.x }; // the wiggle swings to either side of it
         pts.push_back({ p.x + perp.x * off, p.y + perp.y * off });
     }
+    // The belly floors: the troughs, where the phase passes an odd multiple of pi - one per crest, the last
+    // where the pen lifts (before any run-out). Taken as the nearest sample, where the swing is flat anyway.
+    if (bellies) {
+        bellies->clear();
+        for (int j = 0; j < waves; ++j) {
+            const double t = (2 * j + 1) * M_PI / omega; // 0..1 along the spine
+            bellies->push_back(std::min(n, (int)std::lround(t / tEnd * n)));
+        }
+    }
     return pts;
 }
 
@@ -647,7 +658,7 @@ std::vector<CalligraphicNeume::PointF> CalligraphicNeume::Wavify(
 // @curve / @angled - the very bow or right-angle chevron those would draw. @p waves (from @waves) sets
 // the crest count and the line's length.
 CalligraphicNeume::Stroke CalligraphicNeume::Quilisma(PointF s, int tilt, int waves, bool centred, int curveHand,
-    bool hasCurve, bool angled, PointF tIn, PointF tOut, bool runOut)
+    bool hasCurve, bool angled, PointF tIn, PointF tOut, bool runOut, std::vector<int> *bellies)
 {
     if (waves < 1) waves = 2; // default number of crests
     PointF dir = TiltVec(tilt); // the wavy line travels along @tilt...
@@ -669,7 +680,7 @@ CalligraphicNeume::Stroke CalligraphicNeume::Quilisma(PointF s, int tilt, int wa
     else {
         spine = { foot, { foot.x + dir.x * total, foot.y + dir.y * total } };
     }
-    std::vector<PointF> pts = Wavify(spine, waves, AMP, runOut);
+    std::vector<PointF> pts = Wavify(spine, waves, AMP, runOut, bellies);
     return { pts, pts.back() };
 }
 
@@ -1295,11 +1306,29 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
 CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
     const std::vector<NcInfo> &ncs, double scale, Slant slant, Pen hand, Gesture gesture)
 {
-    g_pen = hand; // the pen for this whole gesture — every nib helper reads it
+    return Build(ncs, scale, slant, hand, gesture, HandFor(""));
+}
+
+CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
+    const std::vector<NcInfo> &ncs, double scale, Slant slant, Pen pen, Gesture gesture, const Hand &hand)
+{
+    g_pen = pen; // the pen for this whole gesture — every nib helper reads it
     g_gesture = gesture; // ...and how that hand moves — every shape helper reads this
 
     NeumeGeometry geo;
     if (ncs.empty()) return geo;
+
+    // A point script on a staff writes every component as its own mark; everything else is pen gestures.
+    const bool pitched = std::all_of(ncs.begin(), ncs.end(), [](const NcInfo &n) { return n.pitched; });
+    geo = (pitched && hand.pointScript) ? BuildPoint(ncs, slant, pen, gesture, hand) : BuildStroke(ncs, slant, hand);
+    AnchorAndScale(geo, scale);
+    return geo;
+}
+
+CalligraphicNeume::NeumeGeometry CalligraphicNeume::BuildStroke(
+    const std::vector<NcInfo> &ncs, Slant slant, const Hand &hand)
+{
+    NeumeGeometry geo;
 
     // Neumes on lines: when every component has a staff height, each one's pitch point - where its
     // stroke ends, or its dot; for a liquescent where its stroke meets the curl; for a stropha comma its
@@ -1406,6 +1435,19 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
     auto lenFor = [&](size_t k, PointF dir) -> double {
         return (std::fabs(dir.y) > 1e-6) ? reachOf(k) / std::fabs(dir.y) : reachOf(k);
     };
+    // On a staff, the hand's rule for component k as the opening stroke of its gesture (see Hand): alone when
+    // nothing connected follows; a foot when the pen goes on in the same vertical sense (a pes) or the
+    // stroke itself runs level; a lead when the next stroke turns back (a clivis lead-in, a Messine 7), an
+    // arch if that lead bows (a clivis arch, a cephalicus crest) and the hand places arches apart.
+    auto openingOf = [&](size_t k) -> const Opening & {
+        if (k + 1 >= ncs.size() || breaksBefore(k + 1)) return hand.solo;
+        const double own = TiltVec(effTilt[k]).y; // pen space: +y is down
+        const double next = ncs[k + 1].pitchY - ncs[k].pitchY;
+        if (std::fabs(own) < 1e-6 || own * next > 0.0) return hand.foot;
+        const bool bows = (ncs[k].curve != curvatureDirection_CURVE_NONE) || ncs[k].angled;
+        if (bows && hand.arch.reach >= 0.0) return hand.arch;
+        return hand.lead;
+    };
 
     // The previous gesture's ink (the just-completed connected run) resolved in an explicit @place's gap
     // frame - the axis along @p gapDir and the cross axis across it. parMin / parMax bound its reach along
@@ -1481,7 +1523,47 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
         // On a staff a whole-note hook only stays a hook on a unison. Across an interval the pitch needs a
         // stroke to travel, so the liquescent draws its own stroke there (along its derived direction) and
         // curls at the tip, which is its pitch, instead of the hook being stretched over the interval.
-        const bool hook = wholeHook && !(pitched && i > 0 && std::fabs(nc.pitchY - pen.y) > 1e-6);
+        //
+        // Except where the curl itself is the move: a whole-note hook joined to its predecessor whose curl,
+        // drawn off the pen as it would be on a unison, already runs the way the pitch goes. That is the
+        // Hildegard books' curled three-note liquescent (x x y), whose curl ends ON the new pitch, with no
+        // overshoot, its end the lowest (or highest) ink of the curl (hildegard-05, -06, -14, -15). So the
+        // open curl is drawn as the half turn the pen makes there: it leaves the pen tangent to the stroke
+        // before, swings out to the curl side and turns back under itself, ending heading back the way it
+        // came, about one curl-radius behind where it set off - the blob at the foot of the curl. Its end
+        // is then one diameter across from the pen and one radius back, and the radius is what makes that
+        // the pitch.
+        // Where the curl side does not run the way the pitch goes, or the radius would be under a fifth or
+        // over twice the hook's own, the stroke-and-curl above stands in; so does a closed (looped) curl,
+        // which returns to where it started and so cannot be the move.
+        std::vector<PointF> fittedHook;
+        if (pitched && wholeHook && !nc.liquescentLooped && i > 0 && !breaksBefore(i)
+            && std::fabs(nc.pitchY - pen.y) > 1e-6) {
+            PointF enter = prevExitDir;
+            if (enter.x == 0.0 && enter.y == 0.0) enter = TiltVec(tilt);
+            if (enter.x == 0.0 && enter.y == 0.0) enter = TiltVec(COMPASSDIRECTION_e);
+            const PointF d = enter.Unit({ 1.0, 0.0 });
+            const double sign = (nc.liquescentCurve == curvatureDirection_CURVE_a) ? 1.0 : -1.0; // as in Curl
+            const PointF perp = { sign * d.y, -sign * d.x };
+            // The end lies 2r across and r back: 2r perp.y - r d.y below the pen.
+            const double wanted = nc.pitchY - pen.y;
+            const double drop = 2.0 * perp.y - d.y;
+            const double r = (std::fabs(perp.y) > 0.5 && std::fabs(drop) > 0.5) ? wanted / drop : 0.0;
+            if (r >= 0.2 * LiqHookR() && r <= 2.0 * LiqHookR()) {
+                // In the frame of the entry direction d and the curl side perp: across, r(1 - cos t); along,
+                // r sin t forward less r(1 - cos t)/2 drifting back. Tangent to d at t = 0; at t = pi the
+                // pen is 2r across - the farthest it gets - heading back along -d, r behind its start.
+                const int N = 24;
+                for (int j = 0; j <= N; ++j) {
+                    const double t = M_PI * j / N;
+                    const double across = r * (1.0 - std::cos(t));
+                    const double along = r * std::sin(t) - across / 2.0;
+                    fittedHook.push_back(pen + perp * across + d * along);
+                }
+            }
+        }
+        const bool hook
+            = wholeHook && (!(pitched && i > 0 && std::fabs(nc.pitchY - pen.y) > 1e-6) || !fittedHook.empty());
         // A bare component carries no shape-determining attribute: no @tilt (an @intm default does not
         // count - it only places the dab), no @curve/@s-shape, no ornament child. With neither @tilt nor
         // @con it is simply a point, so it is rendered as a detached punctum stepping along the melodic
@@ -1500,11 +1582,42 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
             const double dirY = std::fabs(TiltVec(tilt).y);
             if (std::fabs(dy) > 1e-6 && dirY > 1e-6) len = std::fabs(dy) / dirY;
         }
+        // An opening stroke reaches as far as the hand writes it around its pitch: the Hildegard virga hangs
+        // a step below its head, the Koeln one nearly two, the bar of a Messine 7 rises less than half a
+        // step to its corner (Hand::Opening). A level stroke keeps its length, and so does every shape that
+        // is not a plain or curved stroke.
+        //
+        // A foot whose pitch sits part way along it must still leave below (or above) the note it joins:
+        // the part past its pitch takes at most half the interval to that note, so the next stroke always
+        // has some way to travel (a Messine pes of a second with a straight foot).
+        const Opening *opening = NULL;
+        if (pitched && (i == 0 || brk) && !bare && !nc.quilisma && !nc.liquescent && !hasSShape && !nc.strophicus
+            && (hasCurve || hasTilt)) {
+            opening = &openingOf(i);
+            const double dirY = std::fabs(TiltVec(tilt).y);
+            double reach = opening->reach * s_unitPx * RellenFactor(nc.longStroke, nc.shortStroke);
+            bool capped = false;
+            if (opening == &hand.foot && opening->at < 1.0 && i + 1 < ncs.size() && !breaksBefore(i + 1)) {
+                const double room = 0.5 * std::fabs(ncs[i + 1].pitchY - nc.pitchY);
+                if (reach * (1.0 - opening->at) > room) {
+                    reach = room / (1.0 - opening->at);
+                    capped = true;
+                }
+            }
+            if ((capped || opening->reach != Opening().reach) && dirY > 1e-6) len = reach / dirY;
+        }
+
+        // An S-shaped oriscus on a staff at the hand's size (Hand::sReach), measured along its spine.
+        const double sSize = (pitched && hasSShape && hand.sReach >= 0.0)
+            ? hand.sReach * s_unitPx / (SShapeRotated(nc.sShape) ? 26.0 : 24.0)
+            : 1.0;
 
         std::vector<PointF> pts = { pen };
         bool dot = false;
         int strokeStart = 0; // index into pts where the nc's own stroke begins (past a connection loop)
         int pitchAt = -1; // index into pts of the pitch point on a staff (-1 = the last point, the exit)
+        bool liquescentStroke = false; // a liquescent drawn with its own stroke ending in the curl
+        std::vector<int> bellies; // a quilisma's belly floors, where its teeth stand on a staff
 
         if (i == 0 || brk) {
             // A fresh pen gesture. The first component sits at the origin; a detached one (@con="g") is
@@ -1591,8 +1704,8 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
                 if (cd.x == 0.0 && cd.y == 0.0) cd = TiltVec(COMPASSDIRECTION_e);
                 const bool flowsOn = (i + 1 < ncs.size() && !breaksBefore(i + 1));
                 const PointF tOut = flowsOn ? chordDirOf(i + 1) : cd;
-                Stroke sh
-                    = Quilisma(anchor, tilt, nc.waves, centred, curveHand, hasCurve, nc.angled, cd, tOut, flowsOn);
+                Stroke sh = Quilisma(
+                    anchor, tilt, nc.waves, centred, curveHand, hasCurve, nc.angled, cd, tOut, flowsOn, &bellies);
                 pts = sh.pts;
                 pen = sh.exit;
             }
@@ -1619,13 +1732,18 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
                     pen = sh.exit;
                     pitchAt = sh.pitchAt;
                 }
+                // The hand's overshoot is for a liquescent written with its own stroke (@tilt); one that only
+                // stands in for a hook keeps PR #1's pitch at the tip.
+                liquescentStroke = hasExplicitTilt;
             }
             else if (hasSShape) {
                 // Centred on the anchor when first or a level repeat; a stepped detached wave springs
                 // forward from the gap anchor so it stacks up the contour (the oriscus of a salicus).
-                Stroke sh = centred ? Wave(anchor.x, anchor.y, nc.sShape, tilt) : WaveFrom(anchor, nc.sShape, tilt);
+                Stroke sh = centred ? Wave(anchor.x, anchor.y, nc.sShape, tilt, sSize)
+                                    : WaveFrom(anchor, nc.sShape, tilt, sSize);
                 pts = sh.pts;
                 pen = sh.exit;
+                pitchAt = (int)pts.size() / 2; // an S-shaped oriscus's pitch is its waist
             }
             else if (nc.strophicus) {
                 Stroke sh = Comma(anchor.x, anchor.y, tilt); // stropha hook (a strophicus is always a comma)
@@ -1701,12 +1819,19 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
                 const PointF tIn = (prevExitDir.x != 0.0 || prevExitDir.y != 0.0) ? prevExitDir : chordDirOf(i);
                 const bool flowsOn = (i + 1 < ncs.size() && !breaksBefore(i + 1));
                 const PointF tOut = flowsOn ? chordDirOf(i + 1) : chordDirOf(i);
-                Stroke sh = Quilisma(pen, tilt, nc.waves, false, curveHand, hasCurve, nc.angled, tIn, tOut, flowsOn);
+                Stroke sh = Quilisma(
+                    pen, tilt, nc.waves, false, curveHand, hasCurve, nc.angled, tIn, tOut, flowsOn, &bellies);
                 pts = sh.pts;
                 pen = sh.exit;
             }
             else if (nc.liquescent) {
-                if (hook) {
+                if (hook && !fittedHook.empty()) {
+                    // The curl that is itself the move to the new pitch, fitted above: its end is the pitch.
+                    pts = fittedHook;
+                    pen = pts.back();
+                    pitchAt = (int)pts.size() - 1;
+                }
+                else if (hook) {
                     // No @tilt: the whole note is a curl hooking off the previous nc. With no lead-in
                     // it springs straight from the pen, following the previous stroke's exit tangent
                     // into the curl so the hook flows out of the ligature instead of starting askew.
@@ -1742,12 +1867,14 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
                         pen = sh.exit;
                         pitchAt = sh.pitchAt;
                     }
+                    liquescentStroke = hasExplicitTilt; // as for a fresh one above
                 }
             }
             else if (hasSShape) {
-                Stroke sh = WaveFrom(pen, nc.sShape, tilt); // connected oriscus / quassus (virga strata)
+                Stroke sh = WaveFrom(pen, nc.sShape, tilt, sSize); // connected oriscus / quassus (virga strata)
                 pts = sh.pts;
                 pen = sh.exit;
+                pitchAt = (int)pts.size() / 2; // an S-shaped oriscus's pitch is its waist
             }
             else if (nc.strophicus) {
                 Stroke sh = Comma(pen.x, pen.y, tilt); // stropha hook within a ligature
@@ -1796,23 +1923,76 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
         }
 
         // On a staff, land the component's pitch point on its height. The pitch point is where the pen
-        // leaves the shape - a virga's head, a pes foot's lowest point, a dot - with two exceptions, as
-        // the hands on lines write them: a liquescent's pitch is where its stroke meets the curl (the
-        // curl overshoots, like the hairline flick it stands for), and a stropha comma's is its head,
-        // where the pen sets it down. A fresh gesture (the first, or a detached one) moves there whole,
-        // keeping the stroke it was built with. A connected component was aimed at its pitch above, but
-        // a shape built to a fixed size (a wave, a quilisma) or nudged aside by an about-face does not
-        // arrive exactly: it is sheared along its length, from nothing at its start to the full
-        // correction at its pitch point, and whatever follows that point (a liquescent curl) moves with
-        // it whole, so its own form survives. A comma joined to its predecessor moves whole, since its
-        // pitch point is its start. The ink of a looped connection belongs to the joint and stays put.
+        // leaves the shape - a virga's head, a pes foot's lowest point, a dot - with exceptions, as the hands
+        // on lines write them: an opening stroke's pitch is where its hand puts it (Hand::Opening: a Messine
+        // stroke's middle, the knob of a Messine 7); a liquescent with its own stroke has its pitch near the
+        // end of that stroke, its curl running on past it by the hand's overshoot; a curl that is itself the
+        // move ends on its pitch (fitted above); a stropha comma's pitch is its head, where the pen sets it
+        // down; an S-shaped oriscus's is its waist; and a quilisma's teeth stand on it, its bellies level at
+        // the pitch. A fresh gesture (the first, or a detached one) moves there whole, keeping the stroke it
+        // was built with, and so does a quilisma, whose fixed-size teeth are not stretched up from the note
+        // before: the run simply joins the two. Any other connected component was aimed at its pitch above,
+        // but a shape built to a fixed size (a wave) or nudged aside by an about-face does not arrive
+        // exactly: it is sheared along its length, from nothing at its start to the full correction at its
+        // pitch point, and whatever follows that point (a liquescent curl) moves with it whole, so its own
+        // form survives. A comma joined to its predecessor moves whole, since its pitch point is its start.
+        // The ink of a looped connection belongs to the joint and stays put.
         if (pitched) {
             const bool fresh = (i == 0 || brk);
             const size_t at = (pitchAt >= 0) ? std::min((size_t)pitchAt, pts.size() - 1) : pts.size() - 1;
-            const double dy = nc.pitchY - pts[at].y;
+            double refY = pts[at].y; // the height that must come to stand on the pitch
+            if (opening && opening->at < 1.0) {
+                // The point that fraction of the way along the stroke, by arc length from where the pen sets
+                // down.
+                double total = 0.0;
+                for (size_t k = 1; k < pts.size(); ++k) total += (pts[k] - pts[k - 1]).Len();
+                const double target = std::max(0.0, opening->at) * total;
+                refY = pts.front().y;
+                double walked = 0.0;
+                for (size_t k = 1; k < pts.size(); ++k) {
+                    const double seg = (pts[k] - pts[k - 1]).Len();
+                    if (walked + seg >= target && seg > 1e-9) {
+                        refY = pts[k - 1].y + (pts[k].y - pts[k - 1].y) * (target - walked) / seg;
+                        break;
+                    }
+                    walked += seg;
+                    refY = pts[k].y;
+                }
+            }
+            else if (liquescentStroke) {
+                // How the liquescence runs: down or up the staff, by the interval it closes (or, alone, by
+                // its own stroke). Its pitch then sits the hand's overshoot short of how far the curl reaches
+                // that way; a negative overshoot keeps the pitch where stroke and curl meet.
+                const double sense = fresh ? TiltVec(tilt).y : (nc.pitchY - ncs[i - 1].pitchY);
+                const double ov = (sense < -1e-6) ? hand.liqOvershootUp
+                                                  : ((sense > 1e-6) ? hand.liqOvershootDown : -1.0);
+                if (ov >= 0.0) {
+                    double reach = pts[at].y;
+                    for (size_t k = at; k < pts.size(); ++k) {
+                        reach = (sense > 0.0) ? std::max(reach, pts[k].y) : std::min(reach, pts[k].y);
+                    }
+                    refY = (sense > 0.0) ? reach - ov * s_unitPx : reach + ov * s_unitPx;
+                }
+            }
+            else if (!bellies.empty()) {
+                double sum = 0.0;
+                for (int b : bellies) sum += pts[std::min((size_t)b + strokeStart, pts.size() - 1)].y;
+                refY = sum / bellies.size();
+            }
+            double dy = nc.pitchY - refY;
+            if (liquescentStroke && !fresh) {
+                // Pulling the stroke back so the curl ends nearer the pitch may never cost it more than three
+                // quarters of the interval it travels: it stays a stroke into the curl.
+                const double interval = nc.pitchY - ncs[i - 1].pitchY;
+                const double limit = 0.75 * std::fabs(interval);
+                if (dy * interval < 0.0 && std::fabs(dy) > limit) dy = (interval > 0.0) ? -limit : limit;
+            }
             if (std::fabs(dy) > 1e-9) {
                 if (fresh) {
                     for (PointF &p : pts) p.y += dy;
+                }
+                else if (!bellies.empty()) {
+                    for (size_t k = strokeStart; k < pts.size(); ++k) pts[k].y += dy;
                 }
                 else {
                     // Arc length along the stroke as built, measured before any point moves.
@@ -1882,6 +2062,11 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
     // 3) Episemata: short accent strokes set just clear of the ink they mark (see BuildEpisemata).
     BuildEpisemata(runs, ncs, geo, slant);
 
+    return geo;
+}
+
+void CalligraphicNeume::AnchorAndScale(NeumeGeometry &geo, double scale)
+{
     // 4) Anchor the gesture at its ink's left edge. Strokes are centred on their cells while
     //    building, so the raw gesture reaches left of the origin; the caller aligns the origin with
     //    the syllable's alignment point (where the syl text also starts), and ink left of it would
@@ -1892,12 +2077,16 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
         for (const PointF &p : nc.ribbon) inkLeft = std::min(inkLeft, p.x);
         for (const std::vector<PointF> &epi : nc.episemata)
             for (const PointF &p : epi) inkLeft = std::min(inkLeft, p.x);
+        for (const std::vector<PointF> &piece : nc.pieces)
+            for (const PointF &p : piece) inkLeft = std::min(inkLeft, p.x);
     }
     if (inkLeft != std::numeric_limits<double>::max()) {
         for (NcGeometry &nc : geo.ncs) {
             for (PointF &p : nc.ribbon) p.x -= inkLeft;
             for (std::vector<PointF> &epi : nc.episemata)
                 for (PointF &p : epi) p.x -= inkLeft;
+            for (std::vector<PointF> &piece : nc.pieces)
+                for (PointF &p : piece) p.x -= inkLeft;
         }
         for (StrokePath &s : geo.strokes)
             for (PointF &p : s.pts) p.x -= inkLeft;
@@ -1908,11 +2097,11 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::Build(
         for (PointF &p : nc.ribbon) p = { p.x * scale, p.y * scale };
         for (std::vector<PointF> &epi : nc.episemata)
             for (PointF &p : epi) p = { p.x * scale, p.y * scale };
+        for (std::vector<PointF> &piece : nc.pieces)
+            for (PointF &p : piece) p = { p.x * scale, p.y * scale };
     }
     for (StrokePath &s : geo.strokes)
         for (PointF &p : s.pts) p = { p.x * scale, p.y * scale };
-
-    return geo;
 }
 
 } // namespace vrv

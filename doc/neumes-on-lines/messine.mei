@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mei xmlns="http://www.music-encoding.org/ns/mei" meiversion="5.0">
+  <!--
+    Synthetic test file for calligraphic neumes on a staff (verovio option neume-calligraphic), one of the
+    doc/neumes-on-lines set. Each syllable reproduces a measured facsimile example (id in the comment and
+    in every nc xml:id, "<example>-n<k>" with k the note number of the example's pitch points); syllables
+    whose ids contain "-x" are synthetic extras that show the hand. Pitches come from the facsimile review
+    of 2026-10-27 (examples.csv): 12th-13th century melodies, not an edition of any manuscript. Every
+    nc carries explicit shape attributes: shapes are never inferred from neume/@type.
+    Guidonian letters map to MEI as G = g3, a = a3, c = c4 (middle C), C = c3.
+
+    Hand: Messine (Lorraine) neumes on a dry-point staff, Porrentruy, Bibliotheque cantonale jurassienne,
+    Ms. 18 (Bellelay gradual), p. 20. Four lines, c clef (on line 4 or line 3).
+    Shapes: single-note stroke (uncinus) = short upright stroke (tilt n) centred on its pitch;
+    7-shaped clivis = knob with a short rising hairline (tilt ne, short: the pitch at the knob where the
+    pen starts) + falling stroke (tilt s); hooked pes = bowl (tilt e, curve a, short) + rising stroke
+    (tilt ne); torculus = hooked pes turning over into a falling stroke.
+  -->
+  <meiHead>
+    <fileDesc>
+      <titleStmt>
+        <title>Neumes on lines: Messine (Bellelay, Porrentruy Ms. 18)</title>
+      </titleStmt>
+      <pubStmt />
+    </fileDesc>
+  </meiHead>
+  <music>
+    <body>
+      <mdiv>
+        <score>
+          <scoreDef>
+            <staffGrp>
+              <staffDef n="1" lines="4" notationtype="neume" notationsubtype="messine" />
+            </staffGrp>
+          </scoreDef>
+          <section>
+            <staff n="1">
+              <layer n="1">
+                <clef shape="C" line="4" />
+                <!-- messine-01 (In. Prope esto domine, "Prope"): torculus D F E, hooked pes with descending end -->
+                <syllable>
+                  <syl>Pro-</syl>
+                  <neume type="torculus">
+                    <nc xml:id="messine-01-n1" pname="d" oct="3" tilt="e" curve="a" rellen="s" />
+                    <nc xml:id="messine-01-n2" pname="f" oct="3" tilt="ne" curve="c" />
+                    <nc xml:id="messine-01-n3" pname="e" oct="3" tilt="s" />
+                  </neume>
+                </syllable>
+                <!-- messine-02 (InV. Beati immaculati, "Beati"): 7-shaped clivis a G -->
+                <syllable>
+                  <syl>Be-</syl>
+                  <neume type="clivis">
+                    <nc xml:id="messine-02-n1" pname="a" oct="3" tilt="ne" rellen="s" />
+                    <nc xml:id="messine-02-n2" pname="g" oct="3" tilt="s" />
+                  </neume>
+                </syllable>
+                <sb />
+                <!-- messine-03 (Cm. Ecce dominus veniet, "Ecce"): single upright stroke on c, centred; c clef on line 3 -->
+                <clef shape="C" line="3" />
+                <syllable>
+                  <syl>Ec-</syl>
+                  <neume type="virga">
+                    <nc xml:id="messine-03-n1" pname="c" oct="4" tilt="n" />
+                  </neume>
+                </syllable>
+                <!-- messine-04 (Of. Deus tu convertens, "Deus"): hooked pes G a + upright stroke c -->
+                <syllable>
+                  <syl>De-</syl>
+                  <neume type="scandicus">
+                    <nc xml:id="messine-04-n1" pname="g" oct="3" tilt="e" curve="a" rellen="s" />
+                    <nc xml:id="messine-04-n2" pname="a" oct="3" tilt="ne" />
+                    <nc xml:id="messine-04-n3" pname="c" oct="4" tilt="n" con="g" />
+                  </neume>
+                </syllable>
+                <sb />
+                <!-- synthetic extras in the Bellelay hand (not measured) -->
+                <clef shape="C" line="4" />
+                <syllable>
+                  <syl>punctum</syl>
+                  <neume type="punctum">
+                    <nc xml:id="messine-x1-n1" pname="g" oct="3" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>pes</syl>
+                  <neume type="pes">
+                    <nc xml:id="messine-x2-n1" pname="f" oct="3" tilt="e" curve="a" rellen="s" />
+                    <nc xml:id="messine-x2-n2" pname="a" oct="3" tilt="ne" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>climacus</syl>
+                  <neume type="climacus">
+                    <nc xml:id="messine-x3-n1" pname="c" oct="4" tilt="n" />
+                    <nc xml:id="messine-x3-n2" pname="b" oct="3" con="g" />
+                    <nc xml:id="messine-x3-n3" pname="a" oct="3" con="g" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>porrectus</syl>
+                  <neume type="porrectus">
+                    <nc xml:id="messine-x4-n1" pname="a" oct="3" tilt="ne" rellen="s" />
+                    <nc xml:id="messine-x4-n2" pname="f" oct="3" tilt="s" />
+                    <nc xml:id="messine-x4-n3" pname="g" oct="3" tilt="ne" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>cephalicus</syl>
+                  <neume type="cephalicus">
+                    <nc xml:id="messine-x5-n1" pname="a" oct="3" tilt="ne" rellen="s" />
+                    <nc xml:id="messine-x5-n2" pname="g" oct="3" tilt="s">
+                      <liquescent curve="c" />
+                    </nc>
+                  </neume>
+                </syllable>
+              </layer>
+            </staff>
+          </section>
+        </score>
+      </mdiv>
+    </body>
+  </music>
+</mei>

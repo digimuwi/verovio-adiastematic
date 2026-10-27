@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mei xmlns="http://www.music-encoding.org/ns/mei" meiversion="5.0">
+  <!--
+    Synthetic test file for calligraphic neumes on a staff (verovio option neume-calligraphic), one of the
+    doc/neumes-on-lines set. Each syllable reproduces a measured facsimile example (id in the comment and
+    in every nc xml:id, "<example>-n<k>" with k the note number of the example's pitch points); syllables
+    whose ids contain "-x" are synthetic extras that show the hand. Pitches come from the facsimile review
+    of 2026-10-27 (examples.csv): 12th-13th century melodies, not an edition of any manuscript. Every
+    nc carries explicit shape attributes: shapes are never inferred from neume/@type.
+    Guidonian letters map to MEI as G = g3, a = a3, c = c4 (middle C), C = c3.
+
+    Hand: Dominican square notation, the Humbert codex (Rome, Santa Sabina XIV L 1). Four red lines,
+    c clef on the top line; F clef on line 3 for square-03.
+    Shapes: square = dot (the point-script builder draws it square); plica = square + a liquescent
+    falling stroke (tilt s); oblique = @ligated="true" on both ncs of the pair, each end carrying its
+    pitch.
+  -->
+  <meiHead>
+    <fileDesc>
+      <titleStmt>
+        <title>Neumes on lines: square notation (Humbert codex)</title>
+      </titleStmt>
+      <pubStmt />
+    </fileDesc>
+  </meiHead>
+  <music>
+    <body>
+      <mdiv>
+        <score>
+          <scoreDef>
+            <staffGrp>
+              <staffDef n="1" lines="4" notationtype="neume" notationsubtype="square" />
+            </staffGrp>
+          </scoreDef>
+          <section>
+            <staff n="1">
+              <layer n="1">
+                <clef shape="C" line="4" />
+                <!-- square-01 (Of. Levabo oculos meos, "ut"): plica G F, square head with two descending tails -->
+                <syllable>
+                  <syl>ut</syl>
+                  <neume type="cephalicus">
+                    <nc xml:id="square-01-n1" pname="g" oct="3" />
+                    <nc xml:id="square-01-n2" pname="f" oct="3" tilt="s">
+                      <liquescent />
+                    </nc>
+                  </neume>
+                </syllable>
+                <!-- square-02 ("discam"): square F, oblique G-F (porrectus), square G above the oblique's right end -->
+                <syllable>
+                  <syl>di-</syl>
+                  <neume type="porrectus">
+                    <nc xml:id="square-02-n1" pname="f" oct="3" />
+                    <nc xml:id="square-02-n2" pname="g" oct="3" ligated="true" />
+                    <nc xml:id="square-02-n3" pname="f" oct="3" ligated="true" />
+                    <nc xml:id="square-02-n4" pname="g" oct="3" />
+                  </neume>
+                </syllable>
+                <sb />
+                <!-- square-03 (Tr. Qui habitat, "sperabo"): clivis F E (two squares), then the custos F; F clef on line 3 -->
+                <clef shape="F" line="3" />
+                <syllable>
+                  <syl>spe-</syl>
+                  <neume type="clivis">
+                    <nc xml:id="square-03-n1" pname="f" oct="3" />
+                    <nc xml:id="square-03-n2" pname="e" oct="3" />
+                  </neume>
+                </syllable>
+                <custos pname="f" oct="3" />
+                <sb />
+                <!-- synthetic extras (not measured) -->
+                <clef shape="C" line="4" />
+                <syllable>
+                  <syl>virga</syl>
+                  <neume type="virga">
+                    <nc xml:id="square-x1-n1" pname="a" oct="3" tilt="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>pes</syl>
+                  <neume type="pes">
+                    <nc xml:id="square-x2-n1" pname="f" oct="3" />
+                    <nc xml:id="square-x2-n2" pname="a" oct="3" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>climacus</syl>
+                  <neume type="climacus">
+                    <nc xml:id="square-x3-n1" pname="c" oct="4" tilt="s" />
+                    <nc xml:id="square-x3-n2" pname="b" oct="3" con="g" />
+                    <nc xml:id="square-x3-n3" pname="a" oct="3" con="g" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>torculus</syl>
+                  <neume type="torculus">
+                    <nc xml:id="square-x4-n1" pname="f" oct="3" />
+                    <nc xml:id="square-x4-n2" pname="a" oct="3" />
+                    <nc xml:id="square-x4-n3" pname="g" oct="3" />
+                  </neume>
+                </syllable>
+              </layer>
+            </staff>
+          </section>
+        </score>
+      </mdiv>
+    </body>
+  </music>
+</mei>

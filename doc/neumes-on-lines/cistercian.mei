@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mei xmlns="http://www.music-encoding.org/ns/mei" meiversion="5.0">
+  <!--
+    Synthetic test file for calligraphic neumes on a staff (verovio option neume-calligraphic), one of the
+    doc/neumes-on-lines set. Each syllable reproduces a measured facsimile example (id in the comment and
+    in every nc xml:id, "<example>-n<k>" with k the note number of the example's pitch points); syllables
+    whose ids contain "-x" are synthetic extras that show the hand. Pitches come from the facsimile review
+    of 2026-10-27 (examples.csv): 12th-13th century melodies, not an edition of any manuscript. Every
+    nc carries explicit shape attributes: shapes are never inferred from neume/@type.
+    Guidonian letters map to MEI as G = g3, a = a3, c = c4 (middle C), C = c3.
+
+    Hand: Rein, Wien OeNB Cod. 1799** - mainly central-French accent neumes on a Guidonian staff of
+    five lines (c yellow, F red), filed apart from Hufnagel. The clef moves between systems: c on line 4
+    (cistercian-01), c on line 3 (cistercian-02), F on line 2 (cistercian-03).
+    Shapes: epiphonus = small loop at the foot (looped joint) + thick up-stroke with a liquescent
+    (the hairline that runs on past the pitch); S-shaped cephalicus = rising arch (tilt ne, curve c)
+    + falling sweep to the lower left (tilt sw, curve a) with a liquescent; virga = rising stroke
+    (tilt ne).
+  -->
+  <meiHead>
+    <fileDesc>
+      <titleStmt>
+        <title>Neumes on lines: Cistercian (Rein, OeNB Cod. 1799**)</title>
+      </titleStmt>
+      <pubStmt />
+    </fileDesc>
+  </meiHead>
+  <music>
+    <body>
+      <mdiv>
+        <score>
+          <scoreDef>
+            <staffGrp>
+              <staffDef n="1" lines="5" notationtype="neume" notationsubtype="cistercian" />
+            </staffGrp>
+          </scoreDef>
+          <section>
+            <staff n="1">
+              <layer n="1">
+                <clef shape="C" line="4" />
+                <!-- cistercian-01 (R. Ecce virgo concipiet, "virgo"): epiphonus a c, loop + thick up-stroke + hairline -->
+                <syllable>
+                  <syl>vir-</syl>
+                  <neume type="epiphonus">
+                    <nc xml:id="cistercian-01-n1" pname="a" oct="3" tilt="sw" curve="c" rellen="s" />
+                    <nc xml:id="cistercian-01-n2" pname="c" oct="4" tilt="ne" con="l">
+                      <liquescent curve="a" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <sb />
+                <!-- cistercian-02 (R. Ecce veniet dominus, "sanctus"): S-shaped cephalicus b a; c clef on line 3 -->
+                <clef shape="C" line="3" />
+                <syllable>
+                  <syl>san-</syl>
+                  <neume type="cephalicus">
+                    <nc xml:id="cistercian-02-n1" pname="b" oct="3" tilt="ne" curve="c" />
+                    <nc xml:id="cistercian-02-n2" pname="a" oct="3" tilt="sw" curve="a">
+                      <liquescent curve="c" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <sb />
+                <!-- cistercian-03 (R. Sicut mater consolatur, "gaudebit"): last note of the line, gau- c (head on the c line, from the example notes), then the custos c; F clef on line 2 -->
+                <clef shape="F" line="2" />
+                <syllable>
+                  <syl>gau-</syl>
+                  <neume type="virga">
+                    <nc xml:id="cistercian-03-n1" pname="c" oct="4" tilt="ne" />
+                  </neume>
+                </syllable>
+                <custos pname="c" oct="4" />
+                <sb />
+                <!-- synthetic extras in the Rein hand (not measured) -->
+                <clef shape="C" line="4" />
+                <syllable>
+                  <syl>punctum</syl>
+                  <neume type="punctum">
+                    <nc xml:id="cistercian-x1-n1" pname="a" oct="3" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>pes</syl>
+                  <neume type="pes">
+                    <nc xml:id="cistercian-x2-n1" pname="g" oct="3" tilt="s" curve="a" rellen="s" />
+                    <nc xml:id="cistercian-x2-n2" pname="b" oct="3" tilt="ne" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>clivis</syl>
+                  <neume type="clivis">
+                    <nc xml:id="cistercian-x3-n1" pname="c" oct="4" tilt="ne" curve="c" />
+                    <nc xml:id="cistercian-x3-n2" pname="a" oct="3" tilt="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>torculus</syl>
+                  <neume type="torculus">
+                    <nc xml:id="cistercian-x4-n1" pname="b" oct="3" tilt="s" curve="a" rellen="s" />
+                    <nc xml:id="cistercian-x4-n2" pname="c" oct="4" tilt="ne" curve="c" />
+                    <nc xml:id="cistercian-x4-n3" pname="b" oct="3" tilt="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>climacus</syl>
+                  <neume type="climacus">
+                    <nc xml:id="cistercian-x5-n1" pname="c" oct="4" tilt="ne" />
+                    <nc xml:id="cistercian-x5-n2" pname="b" oct="3" con="g" />
+                    <nc xml:id="cistercian-x5-n3" pname="a" oct="3" con="g" />
+                  </neume>
+                </syllable>
+              </layer>
+            </staff>
+          </section>
+        </score>
+      </mdiv>
+    </body>
+  </music>
+</mei>

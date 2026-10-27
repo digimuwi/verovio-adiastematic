@@ -1,0 +1,405 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mei xmlns="http://www.music-encoding.org/ns/mei" meiversion="5.0">
+  <!--
+    Synthetic test file for calligraphic neumes on a staff (verovio option neume-calligraphic), one of the
+    doc/neumes-on-lines set. Each syllable reproduces a measured facsimile example (id in the comment and
+    in every nc xml:id, "<example>-n<k>" with k the note number of the example's pitch points); syllables
+    whose ids contain "-x" are synthetic extras that show the hand. Pitches come from the facsimile review
+    of 2026-10-27 (examples.csv): 12th-13th century melodies, not an edition of any manuscript. Every
+    nc carries explicit shape attributes: shapes are never inferred from neume/@type.
+    Guidonian letters map to MEI as G = g3, a = a3, c = c4 (middle C), C = c3.
+
+    Hand: German neumes of the two Hildegard codices, Dendermonde (Leuven PM0045/V, "D") and the
+    Riesencodex (Wiesbaden Hs. 2, "R"). Staff of four lines a third apart, F red, c clef.
+    Shapes: virga = one upright stroke (tilt n), head at the pitch; punctum = dot; pes = rising hairline
+    foot (tilt ne, short) + upright (tilt n); clivis = arch (tilt ne, curve c) + descent (tilt s);
+    curled three-note liquescent x x y = rising stroke (tilt n) + second hump (tilt e, curve c) + a
+    liquescent with NO @tilt (the curl itself is the move to the last pitch, so its end lands on it);
+    plain cephalicus = small head (tilt ne, curve c, short) + falling tail (tilt sw) with a liquescent
+    (own stroke: the curl/hairline overshoots the pitch); quilisma teeth = one nc per tooth, each
+    <quilisma waves="1"/> (the teeth are read as two notes on one pitch).
+    Not represented: the red f stroke drawn through a space (hildegard-07, -11, -12, -13): the clef
+    changes are encoded, the red stroke is staff furniture (review row 5).
+  -->
+  <meiHead>
+    <fileDesc>
+      <titleStmt>
+        <title>Neumes on lines: Hildegard (Dendermonde and Riesencodex)</title>
+      </titleStmt>
+      <pubStmt />
+    </fileDesc>
+  </meiHead>
+  <music>
+    <body>
+      <mdiv>
+        <score>
+          <scoreDef>
+            <staffGrp>
+              <staffDef n="1" lines="4" notationtype="neume" notationsubtype="hildegard" />
+            </staffGrp>
+          </scoreDef>
+          <section>
+            <staff n="1">
+              <layer n="1">
+                <clef shape="C" line="4" />
+                <!-- hildegard-01 (D f. 153r, O magne Pater, "sumus"): clivis b a; virga a, punctum G, punctum E, virga G | virga a -->
+                <syllable>
+                  <syl>su-</syl>
+                  <neume type="clivis">
+                    <nc xml:id="hildegard-01-n1" pname="b" oct="3" tilt="ne" curve="c" />
+                    <nc xml:id="hildegard-01-n2" pname="a" oct="3" tilt="s" />
+                  </neume>
+                  <neume type="virga">
+                    <nc xml:id="hildegard-01-n3" pname="a" oct="3" tilt="n" />
+                  </neume>
+                  <neume type="punctum">
+                    <nc xml:id="hildegard-01-n4" pname="g" oct="3" />
+                  </neume>
+                  <neume type="punctum">
+                    <nc xml:id="hildegard-01-n5" pname="e" oct="3" />
+                  </neume>
+                  <neume type="virga">
+                    <nc xml:id="hildegard-01-n6" pname="g" oct="3" tilt="n" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>mus</syl>
+                  <neume type="virga">
+                    <nc xml:id="hildegard-01-n7" pname="a" oct="3" tilt="n" />
+                  </neume>
+                </syllable>
+                <sb />
+                <!-- hildegard-02 (D f. 153r, O eterne Deus): pes of a fifth E b | virga a -->
+                <syllable>
+                  <syl>que</syl>
+                  <neume type="pes">
+                    <nc xml:id="hildegard-02-n1" pname="e" oct="3" tilt="ne" rellen="s" />
+                    <nc xml:id="hildegard-02-n2" pname="b" oct="3" tilt="n" rellen="l" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>fe</syl>
+                  <neume type="virga">
+                    <nc xml:id="hildegard-02-n3" pname="a" oct="3" tilt="n" />
+                  </neume>
+                </syllable>
+                <sb />
+                <!-- hildegard-03 (D, O magne Pater, "indigemus"): two quilisma teeth on b, rising stroke to c | clivis b a; c clef on line 2 -->
+                <clef shape="C" line="2" />
+                <syllable>
+                  <syl>ge</syl>
+                  <neume type="quilisma">
+                    <nc xml:id="hildegard-03-n1" pname="b" oct="3">
+                      <quilisma waves="1" />
+                    </nc>
+                    <nc xml:id="hildegard-03-n2" pname="b" oct="3">
+                      <quilisma waves="1" />
+                    </nc>
+                    <nc xml:id="hildegard-03-n3" pname="c" oct="4" tilt="n" />
+                  </neume>
+                  <neume type="clivis">
+                    <nc xml:id="hildegard-03-n4" pname="b" oct="3" tilt="ne" curve="c" />
+                    <nc xml:id="hildegard-03-n5" pname="a" oct="3" tilt="s" />
+                  </neume>
+                </syllable>
+                <!-- hildegard-04 (D f. 153r): the c clef moves up a third (c on line 3; the F letter on line 1 turns red); clivis G F | pes of a fifth a e -->
+                <clef shape="C" line="3" />
+                <syllable>
+                  <syl>mus</syl>
+                  <neume type="clivis">
+                    <nc xml:id="hildegard-04-n1" pname="g" oct="3" tilt="ne" curve="c" />
+                    <nc xml:id="hildegard-04-n2" pname="f" oct="3" tilt="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>nunc</syl>
+                  <neume type="pes">
+                    <nc xml:id="hildegard-04-n3" pname="a" oct="3" tilt="ne" rellen="s" />
+                    <nc xml:id="hildegard-04-n4" pname="e" oct="4" tilt="n" rellen="l" />
+                  </neume>
+                </syllable>
+                <sb />
+                <!-- hildegard-05 (D, O magne Pater, "magne"): d d c, curled three-note liquescent; the curl ends on c (overshoot 0) -->
+                <clef shape="C" line="4" />
+                <syllable>
+                  <syl>mag-</syl>
+                  <neume type="cephalicus">
+                    <nc xml:id="hildegard-05-n1" pname="d" oct="4" tilt="n" />
+                    <nc xml:id="hildegard-05-n2" pname="d" oct="4" tilt="e" />
+                    <nc xml:id="hildegard-05-n3" pname="c" oct="4">
+                      <liquescent curve="c" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <!-- hildegard-06 (D, O eterne Deus, "ardeas"): D D C, curled three-note liquescent; C below the staff -->
+                <syllable>
+                  <syl>ar-</syl>
+                  <neume type="cephalicus">
+                    <nc xml:id="hildegard-06-n1" pname="d" oct="3" tilt="n" />
+                    <nc xml:id="hildegard-06-n2" pname="d" oct="3" tilt="e" />
+                    <nc xml:id="hildegard-06-n3" pname="c" oct="3">
+                      <liquescent curve="c" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <sb />
+                <!-- hildegard-07 (D f. 154r, O clarissima): virga f (on the red f stroke, c clef on line 1) | clef change to c on line 2: punctum c, punctum e, f f; syllables approximate -->
+                <clef shape="C" line="1" />
+                <syllable>
+                  <syl>-do</syl>
+                  <neume type="virga">
+                    <nc xml:id="hildegard-07-n1" pname="f" oct="4" tilt="n" />
+                  </neume>
+                </syllable>
+                <clef shape="C" line="2" />
+                <syllable>
+                  <syl>O-</syl>
+                  <neume type="punctum">
+                    <nc xml:id="hildegard-07-n2" pname="c" oct="4" />
+                  </neume>
+                  <neume type="punctum">
+                    <nc xml:id="hildegard-07-n3" pname="e" oct="4" />
+                  </neume>
+                  <neume>
+                    <nc xml:id="hildegard-07-n4" pname="f" oct="4" />
+                  </neume>
+                  <neume>
+                    <nc xml:id="hildegard-07-n5" pname="f" oct="4" />
+                  </neume>
+                </syllable>
+                <sb />
+                <!-- hildegard-08 (R f. 466r, O magne Pater, "sumus"; the parallel of hildegard-01): virga a, punctum G, punctum E, virga G | virga a -->
+                <clef shape="C" line="4" />
+                <syllable>
+                  <syl>su-</syl>
+                  <neume type="virga">
+                    <nc xml:id="hildegard-08-n1" pname="a" oct="3" tilt="n" />
+                  </neume>
+                  <neume type="punctum">
+                    <nc xml:id="hildegard-08-n2" pname="g" oct="3" />
+                  </neume>
+                  <neume type="punctum">
+                    <nc xml:id="hildegard-08-n3" pname="e" oct="3" />
+                  </neume>
+                  <neume type="virga">
+                    <nc xml:id="hildegard-08-n4" pname="g" oct="3" tilt="n" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>mus</syl>
+                  <neume type="virga">
+                    <nc xml:id="hildegard-08-n5" pname="a" oct="3" tilt="n" />
+                  </neume>
+                </syllable>
+                <sb />
+                <!-- hildegard-09 (R, O eterne Deus): virga E | pes of a fifth E b | punctum a -->
+                <syllable>
+                  <syl>mus</syl>
+                  <neume type="virga">
+                    <nc xml:id="hildegard-09-n1" pname="e" oct="3" tilt="n" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>que</syl>
+                  <neume type="pes">
+                    <nc xml:id="hildegard-09-n2" pname="e" oct="3" tilt="ne" rellen="s" />
+                    <nc xml:id="hildegard-09-n3" pname="b" oct="3" tilt="n" rellen="l" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>fe</syl>
+                  <neume type="punctum">
+                    <nc xml:id="hildegard-09-n4" pname="a" oct="3" />
+                  </neume>
+                </syllable>
+                <sb />
+                <!-- hildegard-10 (R, O eterne Deus, "ardeas"): cephalicus D C | punctum D, two quilisma teeth on E, rising stroke to F -->
+                <syllable>
+                  <syl>ar-</syl>
+                  <neume type="cephalicus">
+                    <nc xml:id="hildegard-10-n1" pname="d" oct="3" tilt="ne" curve="c" rellen="s" />
+                    <nc xml:id="hildegard-10-n2" pname="c" oct="3" tilt="sw" rellen="l">
+                      <liquescent curve="c" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>de-</syl>
+                  <neume type="punctum">
+                    <nc xml:id="hildegard-10-n3" pname="d" oct="3" />
+                  </neume>
+                  <neume type="quilisma">
+                    <nc xml:id="hildegard-10-n4" pname="e" oct="3">
+                      <quilisma waves="1" />
+                    </nc>
+                    <nc xml:id="hildegard-10-n5" pname="e" oct="3">
+                      <quilisma waves="1" />
+                    </nc>
+                    <nc xml:id="hildegard-10-n6" pname="f" oct="3" tilt="n" />
+                  </neume>
+                </syllable>
+                <sb />
+                <!-- hildegard-11 (R, O magne Pater, "tibi Pater quia"; syllable split approximate): pes e g; clivis f e; pes e f; c clef on line 2 -->
+                <clef shape="C" line="2" />
+                <syllable>
+                  <syl>ti-</syl>
+                  <neume type="pes">
+                    <nc xml:id="hildegard-11-n1" pname="e" oct="4" tilt="ne" rellen="s" />
+                    <nc xml:id="hildegard-11-n2" pname="g" oct="4" tilt="n" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pa-</syl>
+                  <neume type="clivis">
+                    <nc xml:id="hildegard-11-n3" pname="f" oct="4" tilt="ne" curve="c" />
+                    <nc xml:id="hildegard-11-n4" pname="e" oct="4" tilt="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>qui-</syl>
+                  <neume type="pes">
+                    <nc xml:id="hildegard-11-n5" pname="e" oct="4" tilt="ne" rellen="s" />
+                    <nc xml:id="hildegard-11-n6" pname="f" oct="4" tilt="n" />
+                  </neume>
+                </syllable>
+                <sb />
+                <!-- hildegard-12 (R, O magne Pater, "decet ut"): torculus d e d | pes e f + pressus (second f) + punctum e | pes e f -->
+                <syllable>
+                  <syl>de-</syl>
+                  <neume type="torculus">
+                    <nc xml:id="hildegard-12-n1" pname="d" oct="4" tilt="se" curve="a" rellen="s" />
+                    <nc xml:id="hildegard-12-n2" pname="e" oct="4" tilt="ne" curve="c" />
+                    <nc xml:id="hildegard-12-n3" pname="d" oct="4" tilt="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>cet</syl>
+                  <neume type="pressus">
+                    <nc xml:id="hildegard-12-n4" pname="e" oct="4" tilt="ne" rellen="s" />
+                    <nc xml:id="hildegard-12-n5" pname="f" oct="4" tilt="n" />
+                    <nc xml:id="hildegard-12-n6" pname="f" oct="4" con="g" />
+                    <nc xml:id="hildegard-12-n7" pname="e" oct="4" con="g" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>ut</syl>
+                  <neume type="pes">
+                    <nc xml:id="hildegard-12-n8" pname="e" oct="4" tilt="ne" rellen="s" />
+                    <nc xml:id="hildegard-12-n9" pname="f" oct="4" tilt="n" />
+                  </neume>
+                </syllable>
+                <sb />
+                <!-- hildegard-13 (D f. 153v, O clarissima, "ungenta"): pes e f; punctum d; punctum c; punctum c; two quilisma teeth on d, rising stroke to e; virga f -->
+                <syllable>
+                  <syl>un-</syl>
+                  <neume type="pes">
+                    <nc xml:id="hildegard-13-n1" pname="e" oct="4" tilt="ne" rellen="s" />
+                    <nc xml:id="hildegard-13-n2" pname="f" oct="4" tilt="n" />
+                  </neume>
+                  <neume type="punctum">
+                    <nc xml:id="hildegard-13-n3" pname="d" oct="4" />
+                  </neume>
+                  <neume type="punctum">
+                    <nc xml:id="hildegard-13-n4" pname="c" oct="4" />
+                  </neume>
+                  <neume type="punctum">
+                    <nc xml:id="hildegard-13-n5" pname="c" oct="4" />
+                  </neume>
+                  <neume type="quilisma">
+                    <nc xml:id="hildegard-13-n6" pname="d" oct="4">
+                      <quilisma waves="1" />
+                    </nc>
+                    <nc xml:id="hildegard-13-n7" pname="d" oct="4">
+                      <quilisma waves="1" />
+                    </nc>
+                    <nc xml:id="hildegard-13-n8" pname="e" oct="4" tilt="n" />
+                  </neume>
+                  <neume type="virga">
+                    <nc xml:id="hildegard-13-n9" pname="f" oct="4" tilt="n" />
+                  </neume>
+                </syllable>
+                <sb />
+                <!-- hildegard-14 (D, Nunc aperuit nobis, "serpens"): e e d, curled three-note liquescent -->
+                <syllable>
+                  <syl>ser-</syl>
+                  <neume type="cephalicus">
+                    <nc xml:id="hildegard-14-n1" pname="e" oct="4" tilt="n" />
+                    <nc xml:id="hildegard-14-n2" pname="e" oct="4" tilt="e" />
+                    <nc xml:id="hildegard-14-n3" pname="d" oct="4">
+                      <liquescent curve="c" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <!-- hildegard-15 (R, the parallel of hildegard-14): torculus c d c | curled liquescent e e d | virga c -->
+                <syllable>
+                  <syl>quod</syl>
+                  <neume type="torculus">
+                    <nc xml:id="hildegard-15-n1" pname="c" oct="4" tilt="se" curve="a" rellen="s" />
+                    <nc xml:id="hildegard-15-n2" pname="d" oct="4" tilt="ne" curve="c" />
+                    <nc xml:id="hildegard-15-n3" pname="c" oct="4" tilt="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>ser-</syl>
+                  <neume type="cephalicus">
+                    <nc xml:id="hildegard-15-n4" pname="e" oct="4" tilt="n" />
+                    <nc xml:id="hildegard-15-n5" pname="e" oct="4" tilt="e" />
+                    <nc xml:id="hildegard-15-n6" pname="d" oct="4">
+                      <liquescent curve="c" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>pens</syl>
+                  <neume type="virga">
+                    <nc xml:id="hildegard-15-n7" pname="c" oct="4" tilt="n" />
+                  </neume>
+                </syllable>
+                <sb />
+                <!-- hildegard-16 (D, O eterne Deus, "aurora"): plain cephalicus F E (thick tail, hairline 0.7 below E) | punctum D -->
+                <clef shape="C" line="4" />
+                <syllable>
+                  <syl>au-</syl>
+                  <neume type="cephalicus">
+                    <nc xml:id="hildegard-16-n1" pname="f" oct="3" tilt="ne" curve="c" rellen="s" />
+                    <nc xml:id="hildegard-16-n2" pname="e" oct="3" tilt="sw" rellen="l">
+                      <liquescent curve="c" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>ro</syl>
+                  <neume type="punctum">
+                    <nc xml:id="hildegard-16-n3" pname="d" oct="3" />
+                  </neume>
+                </syllable>
+                <!-- hildegard-17 (R, the parallel of hildegard-16): cephalicus F E | punctum D | virga E -->
+                <syllable>
+                  <syl>au-</syl>
+                  <neume type="cephalicus">
+                    <nc xml:id="hildegard-17-n1" pname="f" oct="3" tilt="ne" curve="c" rellen="s" />
+                    <nc xml:id="hildegard-17-n2" pname="e" oct="3" tilt="sw" rellen="l">
+                      <liquescent curve="c" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>ro-</syl>
+                  <neume type="punctum">
+                    <nc xml:id="hildegard-17-n3" pname="d" oct="3" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>ra</syl>
+                  <neume type="virga">
+                    <nc xml:id="hildegard-17-n4" pname="e" oct="3" tilt="n" />
+                  </neume>
+                </syllable>
+              </layer>
+            </staff>
+          </section>
+        </score>
+      </mdiv>
+    </body>
+  </music>
+</mei>

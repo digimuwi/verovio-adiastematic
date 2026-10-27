@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mei xmlns="http://www.music-encoding.org/ns/mei" meiversion="5.0">
+  <!--
+    Synthetic test file for calligraphic neumes on a staff (verovio option neume-calligraphic), one of the
+    doc/neumes-on-lines set. Each syllable reproduces a measured facsimile example (id in the comment and
+    in every nc xml:id, "<example>-n<k>" with k the note number of the example's pitch points); syllables
+    whose ids contain "-x" are synthetic extras that show the hand. Pitches come from the facsimile review
+    of 2026-10-27 (examples.csv): 12th-13th century melodies, not an edition of any manuscript. Every
+    nc carries explicit shape attributes: shapes are never inferred from neume/@type.
+    Guidonian letters map to MEI as G = g3, a = a3, c = c4 (middle C), C = c3.
+
+    Hand: Hufnagel (Gothic nail) notation. Karlsruhe, BLB Aug. perg. 60 (hufnagel-01 to -04, four
+    lines, c clef on line 4) and Stams, Cod. 40 (hufnagel-05, five lines with g, c and F letters; here
+    on the same four-line staff with a c clef on line 2, so e and g stay on lines as in the source).
+    Shapes: virga = upright stroke (tilt n), nail head at the pitch, tail about 2.3 steps below;
+    lozenge = dot; pes = lozenge + detached virga (@con="g"); n-clivis = left stem (tilt n, its tail
+    runs on below the corner) + angled turn into the right stem (tilt s, curve c, @angled);
+    climacus = virga + detached lozenges.
+    Not represented: hufnagel-06 (three letter clefs g, c, F stacked at the start of a system) - MEI has
+    one clef per staff position; the c clef stands for it.
+  -->
+  <meiHead>
+    <fileDesc>
+      <titleStmt>
+        <title>Neumes on lines: Hufnagel (Karlsruhe Aug. perg. 60, Stams 40)</title>
+      </titleStmt>
+      <pubStmt />
+    </fileDesc>
+  </meiHead>
+  <music>
+    <body>
+      <mdiv>
+        <score>
+          <scoreDef>
+            <staffGrp>
+              <staffDef n="1" lines="4" notationtype="neume" notationsubtype="hufnagel" />
+            </staffGrp>
+          </scoreDef>
+          <section>
+            <staff n="1">
+              <layer n="1">
+                <clef shape="C" line="4" />
+                <!-- hufnagel-01 (Karlsruhe, A. Convertere domine, "Convertere"): pes G c, lozenge + virga -->
+                <syllable>
+                  <syl>ver-</syl>
+                  <neume type="pes">
+                    <nc xml:id="hufnagel-01-n1" pname="g" oct="3" />
+                    <nc xml:id="hufnagel-01-n2" pname="c" oct="4" tilt="n" rellen="l" con="g" />
+                  </neume>
+                </syllable>
+                <!-- hufnagel-02: n-shaped clivis G F -->
+                <syllable>
+                  <syl>re-</syl>
+                  <neume type="clivis">
+                    <nc xml:id="hufnagel-02-n1" pname="g" oct="3" tilt="n" />
+                    <nc xml:id="hufnagel-02-n2" pname="f" oct="3" tilt="s" curve="c" angled="true" />
+                  </neume>
+                </syllable>
+                <!-- hufnagel-03 ("et ne tardes"): virga d (nail), tail about 2.3 steps -->
+                <syllable>
+                  <syl>et</syl>
+                  <neume type="virga">
+                    <nc xml:id="hufnagel-03-n1" pname="d" oct="4" tilt="n" />
+                  </neume>
+                </syllable>
+                <!-- hufnagel-04 ("aliquantulum"): climacus d c a, virga + two lozenges -->
+                <syllable>
+                  <syl>li-</syl>
+                  <neume type="climacus">
+                    <nc xml:id="hufnagel-04-n1" pname="d" oct="4" tilt="n" />
+                    <nc xml:id="hufnagel-04-n2" pname="c" oct="4" con="g" />
+                    <nc xml:id="hufnagel-04-n3" pname="a" oct="3" con="g" />
+                  </neume>
+                </syllable>
+                <sb />
+                <!-- hufnagel-05 (Stams 40, Gloria "Agnus Dei Filius Patris"): pes e g, lozenge on the e line + tall virga on the g line -->
+                <clef shape="C" line="2" />
+                <syllable>
+                  <syl>De-</syl>
+                  <neume type="pes">
+                    <nc xml:id="hufnagel-05-n1" pname="e" oct="4" />
+                    <nc xml:id="hufnagel-05-n2" pname="g" oct="4" tilt="n" con="g" />
+                  </neume>
+                </syllable>
+                <sb />
+                <!-- synthetic extras in the Karlsruhe hand (not measured) -->
+                <clef shape="C" line="4" />
+                <syllable>
+                  <syl>punctum</syl>
+                  <neume type="punctum">
+                    <nc xml:id="hufnagel-x1-n1" pname="a" oct="3" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>torculus</syl>
+                  <neume type="torculus">
+                    <nc xml:id="hufnagel-x2-n1" pname="f" oct="3" />
+                    <nc xml:id="hufnagel-x2-n2" pname="a" oct="3" tilt="n" con="g" />
+                    <nc xml:id="hufnagel-x2-n3" pname="g" oct="3" tilt="s" curve="c" angled="true" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>porrectus</syl>
+                  <neume type="porrectus">
+                    <nc xml:id="hufnagel-x3-n1" pname="a" oct="3" tilt="n" />
+                    <nc xml:id="hufnagel-x3-n2" pname="f" oct="3" tilt="s" curve="c" angled="true" />
+                    <nc xml:id="hufnagel-x3-n3" pname="g" oct="3" tilt="n" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>scandicus</syl>
+                  <neume type="scandicus">
+                    <nc xml:id="hufnagel-x4-n1" pname="f" oct="3" />
+                    <nc xml:id="hufnagel-x4-n2" pname="g" oct="3" con="g" />
+                    <nc xml:id="hufnagel-x4-n3" pname="a" oct="3" tilt="n" con="g" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>cephalicus</syl>
+                  <neume type="cephalicus">
+                    <nc xml:id="hufnagel-x5-n1" pname="a" oct="3" tilt="n" />
+                    <nc xml:id="hufnagel-x5-n2" pname="g" oct="3" tilt="s">
+                      <liquescent curve="c" />
+                    </nc>
+                  </neume>
+                </syllable>
+              </layer>
+            </staff>
+          </section>
+        </score>
+      </mdiv>
+    </body>
+  </music>
+</mei>

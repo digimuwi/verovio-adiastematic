@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mei xmlns="http://www.music-encoding.org/ns/mei" meiversion="5.0">
+  <!--
+    Synthetic test file for calligraphic neumes on a staff (verovio option neume-calligraphic), one of the
+    doc/neumes-on-lines set. Each syllable reproduces a measured facsimile example (id in the comment and
+    in every nc xml:id, "<example>-n<k>" with k the note number of the example's pitch points); syllables
+    whose ids contain "-x" are synthetic extras that show the hand. Pitches come from the facsimile review
+    of 2026-10-27 (examples.csv): 12th-13th century melodies, not an edition of any manuscript. Every
+    nc carries explicit shape attributes: shapes are never inferred from neume/@type.
+    Guidonian letters map to MEI as G = g3, a = a3, c = c4 (middle C), C = c3.
+
+    Hand: Aquitanian point notation on one line. aquitanian-03 (Silos antiphoner, PM II pl. 97): one red
+    line that carries G, no clef. aquitanian-01 and -02 (Paris, BnF lat. 903, PM XIII): the dry-point line
+    does not show in the plate, so their pitches are relative (here on the same G line).
+    The line is G: an invisible G clef with an octave below (dis="8") puts g3 on the only line.
+    Shapes: dot (punctum, no attributes); dash = short level stroke (tilt e, short); virga = short rising
+    stroke (tilt ne, short), head at the pitch; clivis = two stacked dots (the second detached straight
+    below, @place="s"); liquescent pes = dot + one rising stroke with a liquescent.
+  -->
+  <meiHead>
+    <fileDesc>
+      <titleStmt>
+        <title>Neumes on lines: Aquitanian (Paris lat. 903, Silos antiphoner)</title>
+      </titleStmt>
+      <pubStmt />
+    </fileDesc>
+  </meiHead>
+  <music>
+    <body>
+      <mdiv>
+        <score>
+          <scoreDef>
+            <staffGrp>
+              <staffDef n="1" lines="1" notationtype="neume" notationsubtype="aquitanian" />
+            </staffGrp>
+          </scoreDef>
+          <section>
+            <staff n="1">
+              <layer n="1">
+                <clef shape="G" line="1" dis="8" dis.place="below" visible="false" />
+                <!-- aquitanian-01 (lat. 903, In. Cantate Domino): D F | F | F F G | G F | F G F | F -->
+                <syllable>
+                  <syl>Can-</syl>
+                  <neume type="epiphonus">
+                    <nc xml:id="aquitanian-01-n1" pname="d" oct="3" />
+                    <nc xml:id="aquitanian-01-n2" pname="f" oct="3" tilt="ne">
+                      <liquescent />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>ta-</syl>
+                  <neume type="punctum">
+                    <nc xml:id="aquitanian-01-n3" pname="f" oct="3" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>te</syl>
+                  <neume>
+                    <nc xml:id="aquitanian-01-n4" pname="f" oct="3" tilt="e" rellen="s" />
+                  </neume>
+                  <neume>
+                    <nc xml:id="aquitanian-01-n5" pname="f" oct="3" tilt="e" rellen="s" />
+                  </neume>
+                  <neume type="virga">
+                    <nc xml:id="aquitanian-01-n6" pname="g" oct="3" tilt="ne" rellen="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Do-</syl>
+                  <neume type="clivis">
+                    <nc xml:id="aquitanian-01-n7" pname="g" oct="3" />
+                    <nc xml:id="aquitanian-01-n8" pname="f" oct="3" con="g" place="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>mi-</syl>
+                  <neume type="punctum">
+                    <nc xml:id="aquitanian-01-n9" pname="f" oct="3" />
+                  </neume>
+                  <neume type="clivis">
+                    <nc xml:id="aquitanian-01-n10" pname="g" oct="3" tilt="ne" rellen="s" />
+                    <nc xml:id="aquitanian-01-n11" pname="f" oct="3" tilt="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>no</syl>
+                  <neume type="punctum">
+                    <nc xml:id="aquitanian-01-n12" pname="f" oct="3" />
+                  </neume>
+                </syllable>
+                <sb />
+                <!-- aquitanian-02 (lat. 903, "mirabilia fecit" at the end of a system): G F | F | F | F F G, then the custos G -->
+                <syllable>
+                  <syl>-li-</syl>
+                  <neume type="clivis">
+                    <nc xml:id="aquitanian-02-n1" pname="g" oct="3" />
+                    <nc xml:id="aquitanian-02-n2" pname="f" oct="3" con="g" place="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>a</syl>
+                  <neume type="punctum">
+                    <nc xml:id="aquitanian-02-n3" pname="f" oct="3" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>fe-</syl>
+                  <neume type="punctum">
+                    <nc xml:id="aquitanian-02-n4" pname="f" oct="3" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>cit</syl>
+                  <neume>
+                    <nc xml:id="aquitanian-02-n5" pname="f" oct="3" tilt="e" rellen="s" />
+                  </neume>
+                  <neume>
+                    <nc xml:id="aquitanian-02-n6" pname="f" oct="3" tilt="e" rellen="s" />
+                  </neume>
+                  <neume type="virga">
+                    <nc xml:id="aquitanian-02-n7" pname="g" oct="3" tilt="ne" rellen="s" />
+                  </neume>
+                </syllable>
+                <custos pname="g" oct="3" />
+                <sb />
+                <!-- aquitanian-03 (Silos, A. In pace in idipsum, mode 8; the red line is G): b G b c a G a G F a c c b G; syllables grouped by position, approximate -->
+                <syllable>
+                  <syl>-ce</syl>
+                  <neume type="clivis">
+                    <nc xml:id="aquitanian-03-n1" pname="b" oct="3" />
+                    <nc xml:id="aquitanian-03-n2" pname="g" oct="3" con="g" place="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>in</syl>
+                  <neume type="punctum">
+                    <nc xml:id="aquitanian-03-n3" pname="b" oct="3" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>i-</syl>
+                  <neume type="climacus">
+                    <nc xml:id="aquitanian-03-n4" pname="c" oct="4" />
+                    <nc xml:id="aquitanian-03-n5" pname="a" oct="3" con="g" />
+                    <nc xml:id="aquitanian-03-n6" pname="g" oct="3" con="g" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>dip-</syl>
+                  <neume type="climacus">
+                    <nc xml:id="aquitanian-03-n7" pname="a" oct="3" />
+                    <nc xml:id="aquitanian-03-n8" pname="g" oct="3" con="g" />
+                    <nc xml:id="aquitanian-03-n9" pname="f" oct="3" con="g" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>sum</syl>
+                  <neume type="virga">
+                    <nc xml:id="aquitanian-03-n10" pname="a" oct="3" tilt="ne" rellen="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>dor-</syl>
+                  <neume type="punctum">
+                    <nc xml:id="aquitanian-03-n11" pname="c" oct="4" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>mi-am</syl>
+                  <neume type="climacus">
+                    <nc xml:id="aquitanian-03-n12" pname="c" oct="4" />
+                    <nc xml:id="aquitanian-03-n13" pname="b" oct="3" con="g" />
+                    <nc xml:id="aquitanian-03-n14" pname="g" oct="3" con="g" />
+                  </neume>
+                </syllable>
+                <sb />
+                <!-- synthetic extras (not measured) -->
+                <syllable>
+                  <syl>pes</syl>
+                  <neume type="pes">
+                    <nc xml:id="aquitanian-x1-n1" pname="f" oct="3" />
+                    <nc xml:id="aquitanian-x1-n2" pname="a" oct="3" con="g" place="n" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>torculus</syl>
+                  <neume type="torculus">
+                    <nc xml:id="aquitanian-x2-n1" pname="g" oct="3" />
+                    <nc xml:id="aquitanian-x2-n2" pname="b" oct="3" con="g" />
+                    <nc xml:id="aquitanian-x2-n3" pname="a" oct="3" con="g" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>cephalicus</syl>
+                  <neume type="cephalicus">
+                    <nc xml:id="aquitanian-x3-n1" pname="a" oct="3" tilt="ne" rellen="s" />
+                    <nc xml:id="aquitanian-x3-n2" pname="g" oct="3" tilt="s">
+                      <liquescent />
+                    </nc>
+                  </neume>
+                </syllable>
+              </layer>
+            </staff>
+          </section>
+        </score>
+      </mdiv>
+    </body>
+  </music>
+</mei>

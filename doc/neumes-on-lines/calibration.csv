@@ -1,0 +1,239 @@
+nc_id,family,example,pitch,pitch_point,check,target_steps,tol_steps,facsimile_offset_steps,source
+hildegard-01-n1,hildegard,hildegard-01,b3,top of the clivis arch,head,0,0.3,0.2,pitch point 1
+hildegard-01-n2,hildegard,hildegard-01,a3,end of the clivis descent,foot,0,0.3,0.12,pitch point 2
+hildegard-01-n3,hildegard,hildegard-01,a3,virga head,head,0,0.3,0.12,pitch point 3
+hildegard-01-n3,hildegard,hildegard-01,a3,virga stem below the head,extent_below,1,0.35,0.12,notes: all three virgas descend about 1 step (55-60 px at 50 px/step) below the head
+hildegard-01-n4,hildegard,hildegard-01,g3,punctum blob centre,centre,0,0.25,0.27,pitch point 4
+hildegard-01-n5,hildegard,hildegard-01,e3,punctum blob centre,centre,0,0.25,0.42,pitch point 5
+hildegard-01-n6,hildegard,hildegard-01,g3,virga head,head,0,0.3,0.19,pitch point 6; the deciding case: read at its foot it would give F
+hildegard-01-n6,hildegard,hildegard-01,g3,virga stem below the head,extent_below,1,0.35,0.19,"notes: thick stroke runs about one step lower, to the F line"
+hildegard-01-n7,hildegard,hildegard-01,a3,virga head,head,0,0.3,0.12,pitch point 7
+hildegard-01-n7,hildegard,hildegard-01,a3,virga stem below the head,extent_below,1,0.35,0.12,notes: about 1 step
+hildegard-02-n1,hildegard,hildegard-02,e3,pes foot blob,foot,0,0.3,0.1,pitch point 1; the hairline lead-in reaches ~0.1 step lower
+hildegard-02-n2,hildegard,hildegard-02,b3,pes head,head,0,0.3,-0.01,pitch point 2
+hildegard-02-n3,hildegard,hildegard-02,a3,virga head,head,0,0.3,0.06,pitch point 3
+hildegard-03-n1,hildegard,hildegard-03,b3,quilisma belly (first tooth),foot,0,0.3,0.0,pitch point 1; PLAN: bellies level at the pitch
+hildegard-03-n2,hildegard,hildegard-03,b3,quilisma belly (second tooth),foot,0,0.3,-0.06,pitch point 2; both teeth at the same height
+hildegard-03-n3,hildegard,hildegard-03,c4,"thick end of the rising stroke, hairline above it",extent_above,0.4,0.3,0.08,pitch point 3; a hairline continues ~0.4 step higher
+hildegard-03-n4,hildegard,hildegard-03,b3,top of the clivis arch,head,0,0.3,0.02,pitch point 4
+hildegard-03-n5,hildegard,hildegard-03,a3,end of the clivis descent,foot,0,0.3,-0.01,pitch point 5
+hildegard-04-n1,hildegard,hildegard-04,g3,top of the clivis arch,head,0,0.3,-0.14,pitch point 1
+hildegard-04-n2,hildegard,hildegard-04,f3,end of the clivis on the red line,foot,0,0.3,-0.09,pitch point 2
+hildegard-04-n3,hildegard,hildegard-04,a3,pes foot blob,foot,0,0.3,0.08,pitch point 3
+hildegard-04-n4,hildegard,hildegard-04,e4,pes head,head,0,0.3,-0.42,pitch point 4
+hildegard-05-n1,hildegard,hildegard-05,d4,top of the first rising stroke,head,0,0.3,0.13,pitch point 1; the lead-in starts ~1.2 steps lower
+hildegard-05-n2,hildegard,hildegard-05,d4,top of the second arc,head,0,0.3,0.3,pitch point 2
+hildegard-05-n3,hildegard,hildegard-05,c4,end of the curl (curl-only liquescent),extent_below,0,0.3,0.13,"pitch point 3; overshoot 0, the curl does not pass below c (at most 0.1)"
+hildegard-06-n1,hildegard,hildegard-06,d3,first peak,head,0,0.3,0.08,pitch point 1
+hildegard-06-n2,hildegard,hildegard-06,d3,top of the arch that opens the curl,head,0,0.3,0.0,pitch point 2
+hildegard-06-n3,hildegard,hildegard-06,c3,end of the curl (curl-only liquescent),extent_below,0,0.3,0.19,"pitch point 3; the curl ends ~0.2 step above C, no overshoot"
+hildegard-07-n1,hildegard,hildegard-07,f4,virga head on the red f stroke,head,0,0.3,,pitch point 1
+hildegard-07-n2,hildegard,hildegard-07,c4,punctum on the c line,centre,0,0.25,-0.05,pitch point 2
+hildegard-07-n3,hildegard,hildegard-07,e4,punctum on the e line,centre,0,0.25,-0.03,pitch point 3
+hildegard-07-n4,hildegard,hildegard-07,f4,f blob,centre,0,0.25,-0.51,pitch point 4
+hildegard-07-n5,hildegard,hildegard-07,f4,f blob,centre,0,0.25,-0.51,pitch point 5
+hildegard-08-n1,hildegard,hildegard-08,a3,virga head,head,0,0.3,-0.12,pitch point 1
+hildegard-08-n1,hildegard,hildegard-08,a3,virga stem below the head,extent_below,1,0.35,-0.12,notes: the thick stroke descends about one step
+hildegard-08-n2,hildegard,hildegard-08,g3,punctum blob,centre,0,0.25,0.03,pitch point 2
+hildegard-08-n3,hildegard,hildegard-08,e3,punctum blob,centre,0,0.25,0.12,pitch point 3
+hildegard-08-n4,hildegard,hildegard-08,g3,virga head,head,0,0.3,-0.18,pitch point 4
+hildegard-08-n4,hildegard,hildegard-08,g3,virga stem below the head,extent_below,1,0.35,-0.18,notes: the G virga ends on the F line
+hildegard-08-n5,hildegard,hildegard-08,a3,virga head,head,0,0.3,-0.07,pitch point 5
+hildegard-09-n1,hildegard,hildegard-09,e3,virga head,head,0,0.3,-0.0,pitch point 1
+hildegard-09-n2,hildegard,hildegard-09,e3,pes foot blob,foot,0,0.3,-0.1,pitch point 2; hairline lead-in ~0.2 step lower
+hildegard-09-n3,hildegard,hildegard-09,b3,pes head below the flag,head,0,0.3,0.08,pitch point 3
+hildegard-09-n4,hildegard,hildegard-09,a3,punctum,centre,0,0.25,-0.05,pitch point 4
+hildegard-10-n1,hildegard,hildegard-10,d3,cephalicus head on the D line,head,0,0.3,0.08,pitch point 1
+hildegard-10-n2,hildegard,hildegard-10,c3,"cephalicus tail: thick part ends on C, hairline below",extent_below,0.3,0.3,0.05,pitch point 2; overshoot 0.3 down (hairline)
+hildegard-10-n3,hildegard,hildegard-10,d3,punctum,centre,0,0.25,0.13,pitch point 3
+hildegard-10-n4,hildegard,hildegard-10,e3,quilisma belly (first tooth),foot,0,0.35,-0.62,pitch point 4; the teeth stand 0.35-0.55 step above D in R
+hildegard-10-n5,hildegard,hildegard-10,e3,quilisma belly (second tooth),foot,0,0.35,-0.43,pitch point 5
+hildegard-10-n6,hildegard,hildegard-10,f3,upper end of the rising stroke,head,0,0.3,0.04,pitch point 6
+hildegard-11-n1,hildegard,hildegard-11,e4,pes foot,foot,0,0.3,-0.07,pitch point 1
+hildegard-11-n2,hildegard,hildegard-11,g4,pes head,head,0,0.3,-0.01,pitch point 2
+hildegard-11-n3,hildegard,hildegard-11,f4,top of the clivis arch (on the red f stroke),head,0,0.3,0.06,pitch point 3
+hildegard-11-n4,hildegard,hildegard-11,e4,end of the clivis on the e line,foot,0,0.3,-0.02,pitch point 4
+hildegard-11-n5,hildegard,hildegard-11,e4,pes foot on the e line,foot,0,0.3,-0.23,pitch point 5
+hildegard-11-n6,hildegard,hildegard-11,f4,pes head on the red f stroke,head,0,0.3,0.01,pitch point 6
+hildegard-12-n1,hildegard,hildegard-12,d4,torculus first blob,foot,0,0.35,0.09,"pitch point 1 (low confidence, ~19 px/step)"
+hildegard-12-n2,hildegard,hildegard-12,e4,torculus top,head,0,0.35,0.28,pitch point 2
+hildegard-12-n3,hildegard,hildegard-12,d4,torculus end,foot,0,0.35,0.25,pitch point 3
+hildegard-12-n4,hildegard,hildegard-12,e4,pes foot,foot,0,0.35,-0.13,pitch point 4
+hildegard-12-n5,hildegard,hildegard-12,f4,first pressus blob (pes head),head,0,0.35,0.21,pitch point 5
+hildegard-12-n6,hildegard,hildegard-12,f4,second pressus blob,centre,0,0.35,0.16,pitch point 6; both blobs at the same height
+hildegard-12-n7,hildegard,hildegard-12,e4,punctum,centre,0,0.35,-0.13,pitch point 7
+hildegard-12-n8,hildegard,hildegard-12,e4,pes foot,foot,0,0.35,-0.03,pitch point 8
+hildegard-12-n9,hildegard,hildegard-12,f4,pes head,head,0,0.35,0.16,pitch point 9
+hildegard-13-n1,hildegard,hildegard-13,e4,pes foot on the e line,foot,0,0.3,0.07,pitch point 1
+hildegard-13-n2,hildegard,hildegard-13,f4,pes head on the red f stroke,head,0,0.3,0.27,pitch point 2
+hildegard-13-n3,hildegard,hildegard-13,d4,punctum,centre,0,0.25,0.2,pitch point 3
+hildegard-13-n4,hildegard,hildegard-13,c4,punctum on the c line,centre,0,0.25,0.07,pitch point 4
+hildegard-13-n5,hildegard,hildegard-13,c4,punctum on the c line,centre,0,0.25,0.09,pitch point 5
+hildegard-13-n6,hildegard,hildegard-13,d4,quilisma belly (first tooth),foot,0,0.3,-0.28,pitch point 6
+hildegard-13-n7,hildegard,hildegard-13,d4,quilisma belly (second tooth),foot,0,0.3,-0.14,pitch point 7
+hildegard-13-n8,hildegard,hildegard-13,e4,upper end of the rising stroke,head,0,0.3,0.01,pitch point 8
+hildegard-13-n9,hildegard,hildegard-13,f4,virga head on the red f stroke,head,0,0.3,0.05,pitch point 9
+hildegard-14-n1,hildegard,hildegard-14,e4,first hump,head,0,0.3,0.13,pitch point 1
+hildegard-14-n2,hildegard,hildegard-14,e4,second hump,head,0,0.3,0.06,pitch point 2
+hildegard-14-n3,hildegard,hildegard-14,d4,end of the curl (curl-only liquescent),extent_below,0,0.3,0.05,pitch point 3; overshoot 0 (lowest ink ~0.15 step below d)
+hildegard-15-n1,hildegard,hildegard-15,c4,torculus start,foot,0,0.35,0.25,pitch point 1
+hildegard-15-n2,hildegard,hildegard-15,d4,torculus top,head,0,0.35,0.23,pitch point 2
+hildegard-15-n3,hildegard,hildegard-15,c4,torculus end,foot,0,0.35,0.4,pitch point 3
+hildegard-15-n4,hildegard,hildegard-15,e4,first hump,head,0,0.35,0.12,pitch point 4
+hildegard-15-n5,hildegard,hildegard-15,e4,second hump,head,0,0.35,0.02,pitch point 5
+hildegard-15-n6,hildegard,hildegard-15,d4,end of the curl (curl-only liquescent),extent_below,0,0.35,0.38,"pitch point 6; the curl ends ~0.35 step above d, no overshoot"
+hildegard-15-n7,hildegard,hildegard-15,c4,virga head on the c line,head,0,0.35,0.1,pitch point 7
+hildegard-16-n1,hildegard,hildegard-16,f3,cephalicus head on the red F line,head,0,0.3,-0.06,pitch point 1
+hildegard-16-n2,hildegard,hildegard-16,e3,cephalicus tail: hairline end below E,extent_below,0.7,0.3,-0.0,"pitch point 2; thick part ends ~0.2 below E, hairline 0.7 below"
+hildegard-16-n3,hildegard,hildegard-16,d3,punctum on the D line,centre,0,0.25,0.04,pitch point 3
+hildegard-17-n1,hildegard,hildegard-17,f3,cephalicus head on the red F line,head,0,0.3,-0.16,pitch point 1
+hildegard-17-n2,hildegard,hildegard-17,e3,cephalicus tail: hairline end below E,extent_below,0.85,0.3,0.04,"pitch point 2; thick part ~0.5, hairline ~0.85 below E"
+hildegard-17-n3,hildegard,hildegard-17,d3,punctum on the D line,centre,0,0.25,0.14,pitch point 3
+hildegard-17-n4,hildegard,hildegard-17,e3,virga head,head,0,0.3,-0.11,pitch point 4
+german-01-n1,german,german-01,f3,virga head (where the flag leaves),head,0,0.3,0.03,pitch point 1
+german-01-n1,german,german-01,f3,virga stem below the head,extent_below,1.5,0.35,0.03,notes: mi 160 vs 133.5 at 17.5 px/step
+german-01-n2,german,german-01,g3,virga head,head,0,0.3,0.01,pitch point 2
+german-01-n2,german,german-01,g3,virga stem below the head,extent_below,1.85,0.35,0.01,notes: nus 147 vs 115
+german-01-n3,german,german-01,f3,virga head,head,0,0.3,-0.03,pitch point 3
+german-01-n3,german,german-01,f3,virga stem below the head,extent_below,1.7,0.35,-0.03,notes: ve 163 vs 133
+german-02-n1,german,german-02,g3,hairline foot: its left end below G,extent_below,0.5,0.3,-0.2,"pitch point 1 is the middle of the foot; its left end 0.5 below G, the joint 0.1 above"
+german-02-n1,german,german-02,g3,hairline foot: the joint above G,extent_above,0.1,0.3,-0.2,notes: the foot hairline spans 0.6 step
+german-02-n2,german,german-02,a3,pes head (where the flag leaves),head,0,0.3,0.06,pitch point 2
+german-02-n2,german,german-02,a3,upright runs down to the F line,extent_below,1.9,0.35,0.06,"notes: lower end y 131, a step below G; not expressible with a foot joining from the left (open issue)"
+german-03-n1,german,german-03,a3,hairline foot lying on the a line,centre,0.1,0.3,0.08,"pitch point 1: left end y 97, joint y 88, a line 94.5"
+german-03-n2,german,german-03,c4,pes head at the c line,head,0,0.3,0.15,pitch point 2
+german-03-n2,german,german-03,c4,upright bottom 0.3 below a,extent_below,2.3,0.35,0.15,notes: bottom of the upright y 100
+german-04-n1,german,german-04,a3,top of the arch,head,0,0.3,-0.03,pitch point 1
+german-04-n1,german,german-04,a3,lead-in rises from the F line,extent_below,2,0.35,-0.03,notes: the left leg starts at the F line
+german-04-n2,german,german-04,g3,"lower end of the right leg, 0.4 below G",extent_below,0.4,0.3,-0.38,pitch point 2
+german-04-n3,german,german-04,g3,crest of the second hump,head,0,0.3,0.14,pitch point 3
+german-04-n4,german,german-04,f3,end of the tapering liquescent stroke,extent_below,0,0.3,0.05,pitch point 4; overshoot 0 (the thick part ends ~0.5 above F)
+german-05-n1,german,german-05,a3,bottom of the J hook,foot,0,0.35,-0.22,pitch point 1; the hook bottom sits 0.3 below the a line
+german-05-n2,german,german-05,c4,"top of the upright, curl above it",extent_above,0.25,0.3,0.32,"pitch point 2; overshoot 0, the curl rises at most 0.25 above c"
+german-06-n1,german,german-06,e3,centre of the loop head,head,0,0.35,-0.07,"pitch point 1; the loop is the @con=l joint, inked with n2, so n1's own ink is checked ending at the loop centre"
+german-06-n2,german,german-06,d3,stem end below D,extent_below,0.5,0.3,-0.03,pitch point 2 where the stem crosses D; overshoot 0.5 down (y 185)
+german-06-n3,german,german-06,g3,virga head,head,0,0.3,-0.04,pitch point 3
+german-06-n4,german,german-06,a3,virga head on the a line,head,0,0.3,-0.03,pitch point 4
+hufnagel-01-n1,hufnagel,hufnagel-01,g3,centre of the lozenge,centre,0,0.25,-0.08,pitch point 1
+hufnagel-01-n2,hufnagel,hufnagel-01,c4,virga nail head on the c line,head,0,0.3,0.14,pitch point 2
+hufnagel-01-n2,hufnagel,hufnagel-01,c4,virga tail below the head,extent_below,3.7,0.4,0.14,"notes: the stroke runs on below the lozenge to y 110 (c 36, ~20 px/step)"
+hufnagel-02-n1,hufnagel,hufnagel-02,g3,top-left corner of the n,head,0,0.3,0.0,pitch point 1
+hufnagel-02-n1,hufnagel,hufnagel-02,g3,left stem tail below the corner,extent_below,2.3,0.35,0.0,"notes: left stem down to y 140, 1.3 below the second note"
+hufnagel-02-n2,hufnagel,hufnagel-02,f3,foot of the right stem,foot,0,0.3,0.0,pitch point 2
+hufnagel-03-n1,hufnagel,hufnagel-03,d4,nail head,head,0,0.3,0.15,pitch point 1
+hufnagel-03-n1,hufnagel,hufnagel-03,d4,tail below the head,extent_below,2.3,0.35,0.15,notes: tail length ~2.3 steps (y 28-83)
+hufnagel-04-n1,hufnagel,hufnagel-04,d4,top of the virga stroke,head,0,0.3,0.29,pitch point 1
+hufnagel-04-n1,hufnagel,hufnagel-04,d4,tail below the head,extent_below,2,0.35,0.29,"notes: the tail ends at y 82, about b"
+hufnagel-04-n2,hufnagel,hufnagel-04,c4,centre of the first lozenge,centre,0,0.25,0.08,pitch point 2
+hufnagel-04-n3,hufnagel,hufnagel-04,a3,centre of the second lozenge,centre,0,0.25,-0.05,pitch point 3
+hufnagel-05-n1,hufnagel,hufnagel-05,e4,centre of the lozenge on the e line,centre,0,0.3,0.16,pitch point 1
+hufnagel-05-n2,hufnagel,hufnagel-05,g4,virga head on the g line,head,0,0.3,0.16,pitch point 2
+hufnagel-05-n2,hufnagel,hufnagel-05,g4,tail below the head,extent_below,2.5,0.4,0.16,"notes: the tail ends ~0.5 below the e line (Stams, uneven ruling)"
+messine-01-n1,messine,messine-01,d3,bowl of the hook; lead-in starts 0.4 lower,extent_below,0.4,0.3,-0.07,"pitch point 1; hairline lead-in from 105,233"
+messine-01-n2,messine,messine-01,f3,top turn of the ascending stroke,head,0,0.3,0.05,pitch point 2
+messine-01-n3,messine,messine-01,e3,end of the descending stroke (terminal blob),foot,0,0.3,0.06,pitch point 3
+messine-02-n1,messine,messine-02,a3,centre of the left knob (where the pen starts),foot,0,0.3,-0.01,pitch point 1
+messine-02-n1,messine,messine-02,a3,top-right corner above the knob,extent_above,0.4,0.25,-0.01,"notes: the corner (62,75) lies ~0.4 step above the first pitch"
+messine-02-n2,messine,messine-02,g3,foot of the descending stroke,foot,0,0.3,-0.09,pitch point 2
+messine-03-n1,messine,messine-03,c4,midpoint of the upright stroke,centre,0,0.25,0.01,pitch point 1
+messine-03-n1,messine,messine-03,c4,stroke reach above the pitch,extent_above,0.55,0.25,0.01,"notes: stroke y 65-97, c at 79, 27 px/step"
+messine-03-n1,messine,messine-03,c4,stroke reach below the pitch,extent_below,0.65,0.25,0.01,notes: stroke y 65-97
+messine-04-n1,messine,messine-04,g3,bowl of the hook,foot,0,0.3,-0.05,pitch point 1
+messine-04-n2,messine,messine-04,a3,top of the ascending stroke,head,0,0.3,0.16,pitch point 2
+messine-04-n3,messine,messine-04,c4,midpoint of the upright stroke,centre,0,0.25,-0.11,pitch point 3
+messine-german-01-n1,messine-german,messine-german-01,c4,centre of the first rhombus,centre,0,0.3,-0.19,"pitch point 1 (low resolution, +-3 px)"
+messine-german-01-n2,messine-german,messine-german-01,b3,centre of the second rhombus,centre,0,0.3,-0.21,pitch point 2
+messine-german-11-n1,messine-german,messine-german-11,c3,bottom of the loop,foot,0,0.3,0.12,pitch point 1 (0.1 step above C)
+messine-german-11-n2,messine-german,messine-german-11,d3,upper end of the rising stroke,extent_above,0.4,0.3,0.4,pitch point 2; overshoot 0.4 up
+messine-german-12-n1,messine-german,messine-german-12,d3,crest of the head,head,0,0.3,0.2,pitch point 1 (0.2 above the D line)
+messine-german-12-n2,messine-german,messine-german-12,c3,lower end of the falling stroke,extent_below,0,0.3,0.02,pitch point 2; overshoot 0
+messine-german-13-n1,messine-german,messine-german-13,g3,right peak of the head,head,0,0.3,0.11,pitch point 1
+messine-german-13-n2,messine-german,messine-german-13,c3,lower end of the long tail,extent_below,0,0.35,-0.03,"pitch point 2; overshoot 0, end uncertain by ~0.25 step"
+messine-german-14-n1,messine-german,messine-german-14,g3,punctum,centre,0,0.3,0.21,pitch point 1 (0.2 above G)
+messine-german-14-n2,messine-german,messine-german-14,g3,waist of the S-oriscus,centre,0,0.25,0.1,pitch point 2; the S spans y 128-148 with G near its middle
+messine-german-14-n2,messine-german,messine-german-14,g3,S-oriscus upper hook above the waist,extent_above,0.4,0.25,0.1,notes: upper hook 0.3-0.5 step above G
+messine-german-14-n2,messine-german,messine-german-14,g3,S-oriscus tail below the waist,extent_below,0.4,0.25,0.1,notes: lower tail 0.4 step below G
+messine-german-14-n3,messine-german,messine-german-14,a3,head at the top of the rising stroke,head,0,0.3,0.29,pitch point 3
+messine-german-15-n1,messine-german,messine-german-15,g3,flag tip above the head,extent_above,0.35,0.25,-0.04,pitch point 1 is the centre of the head; flag tip 0.3-0.4 above
+messine-german-15-n1,messine-german,messine-german-15,g3,stem end below the head,extent_below,1,0.25,-0.04,notes: quem ends on the F line
+messine-german-15-n2,messine-german,messine-german-15,f3,flag tip above the head,extent_above,0.35,0.25,,pitch point 2; flag tip 0.3-0.4 above
+messine-german-15-n2,messine-german,messine-german-15,f3,stem end below the head,extent_below,0.85,0.25,,notes: bat ends 0.85 step under F
+messine-german-16-n1,messine-german,messine-german-16,a3,centre of the left knob (where the pen starts),foot,0,0.3,-0.08,pitch point 1
+messine-german-16-n1,messine-german,messine-german-16,a3,top-right corner above the knob,extent_above,0.5,0.25,-0.08,notes: the corner hairline rises to 0.5 above a
+messine-german-16-n2,messine-german,messine-german-16,g3,descending stroke end below G,extent_below,0.35,0.25,-0.05,"pitch point 2 is 0.35 above the stroke end (182,92)"
+cistercian-01-n1,cistercian,cistercian-01,a3,centre of the small loop,foot,0,0.3,-0.03,"pitch point 1; the loop is the @con=l joint, inked with n2, so n1's own ink is checked ending at the loop centre"
+cistercian-01-n2,cistercian,cistercian-01,c4,hairline end above c,extent_above,0.4,0.3,0.05,"pitch point 2; thick stroke ends 0.5 below c, hairline 0.4 above (overshoot 0.4 up)"
+cistercian-02-n1,cistercian,cistercian-02,b3,top of the S above b,extent_above,0.7,0.3,-0.03,pitch point 1 is the right-hand turn in the b space; the top rises 0.7 above b
+cistercian-02-n2,cistercian,cistercian-02,a3,end of the hairline tail on a,extent_below,0,0.3,-0.04,pitch point 2; overshoot 0
+cistercian-03-n1,cistercian,cistercian-03,c4,head of gau- on the c line,head,0,0.3,,"from the notes (head at 55,72); the custos itself is not an nc"
+aquitanian-01-n1,aquitanian,aquitanian-01,d3,bottom end of the rising liquescent stroke,centre,0,0.35,,pitch point 1; its tail reaches ~0.2 below D
+aquitanian-01-n2,aquitanian,aquitanian-01,f3,top end of the same stroke,extent_above,0,0.3,,pitch point 2; overshoot 0
+aquitanian-01-n3,aquitanian,aquitanian-01,f3,punctum,centre,0,0.3,,pitch point 3
+aquitanian-01-n4,aquitanian,aquitanian-01,f3,dash,centre,0,0.3,,pitch point 4
+aquitanian-01-n5,aquitanian,aquitanian-01,f3,dash,centre,0,0.3,,pitch point 5
+aquitanian-01-n6,aquitanian,aquitanian-01,g3,virga head,head,0,0.3,,pitch point 6
+aquitanian-01-n7,aquitanian,aquitanian-01,g3,upper dot,centre,0,0.3,,pitch point 7
+aquitanian-01-n8,aquitanian,aquitanian-01,f3,lower dot,centre,0,0.3,,pitch point 8
+aquitanian-01-n9,aquitanian,aquitanian-01,f3,dot,centre,0,0.3,,pitch point 9
+aquitanian-01-n10,aquitanian,aquitanian-01,g3,top of the peak,head,0,0.3,,pitch point 10
+aquitanian-01-n11,aquitanian,aquitanian-01,f3,foot of the descending leg,foot,0,0.3,,pitch point 11
+aquitanian-01-n12,aquitanian,aquitanian-01,f3,dot,centre,0,0.3,,pitch point 12
+aquitanian-02-n1,aquitanian,aquitanian-02,g3,upper dot,centre,0,0.3,,pitch point 1
+aquitanian-02-n2,aquitanian,aquitanian-02,f3,lower dot,centre,0,0.3,,pitch point 2
+aquitanian-02-n3,aquitanian,aquitanian-02,f3,dot,centre,0,0.3,,pitch point 3
+aquitanian-02-n4,aquitanian,aquitanian-02,f3,dot,centre,0,0.3,,pitch point 4
+aquitanian-02-n5,aquitanian,aquitanian-02,f3,dash,centre,0,0.3,,pitch point 5
+aquitanian-02-n6,aquitanian,aquitanian-02,f3,dash,centre,0,0.3,,pitch point 6
+aquitanian-02-n7,aquitanian,aquitanian-02,g3,virga head,head,0,0.3,,pitch point 7
+aquitanian-03-n1,aquitanian,aquitanian-03,b3,dot centre (the red line is G),centre,0,0.35,,"pitch point 1; dots step evenly, 13 px/step"
+aquitanian-03-n2,aquitanian,aquitanian-03,g3,dot centre (the red line is G),centre,0,0.35,,"pitch point 2; dots step evenly, 13 px/step"
+aquitanian-03-n3,aquitanian,aquitanian-03,b3,dot centre (the red line is G),centre,0,0.35,,"pitch point 3; dots step evenly, 13 px/step"
+aquitanian-03-n4,aquitanian,aquitanian-03,c4,dot centre (the red line is G),centre,0,0.35,,"pitch point 4; dots step evenly, 13 px/step"
+aquitanian-03-n5,aquitanian,aquitanian-03,a3,dot centre (the red line is G),centre,0,0.35,,"pitch point 5; dots step evenly, 13 px/step"
+aquitanian-03-n6,aquitanian,aquitanian-03,g3,dot centre (the red line is G),centre,0,0.35,,"pitch point 6; dots step evenly, 13 px/step"
+aquitanian-03-n7,aquitanian,aquitanian-03,a3,dot centre (the red line is G),centre,0,0.35,,"pitch point 7; dots step evenly, 13 px/step"
+aquitanian-03-n8,aquitanian,aquitanian-03,g3,dot centre (the red line is G),centre,0,0.35,,"pitch point 8; dots step evenly, 13 px/step"
+aquitanian-03-n9,aquitanian,aquitanian-03,f3,dot centre (the red line is G),centre,0,0.35,,"pitch point 9; dots step evenly, 13 px/step"
+aquitanian-03-n11,aquitanian,aquitanian-03,c4,dot centre (the red line is G),centre,0,0.35,,"pitch point 11; dots step evenly, 13 px/step"
+aquitanian-03-n12,aquitanian,aquitanian-03,c4,dot centre (the red line is G),centre,0,0.35,,"pitch point 12; dots step evenly, 13 px/step"
+aquitanian-03-n13,aquitanian,aquitanian-03,b3,dot centre (the red line is G),centre,0,0.35,,"pitch point 13; dots step evenly, 13 px/step"
+aquitanian-03-n14,aquitanian,aquitanian-03,g3,dot centre (the red line is G),centre,0,0.35,,"pitch point 14; dots step evenly, 13 px/step"
+aquitanian-03-n10,aquitanian,aquitanian-03,a3,head of the hooked virga,head,0,0.35,,pitch point 10
+beneventan-01-n1,beneventan,beneventan-01,d3,centre of the dash,centre,0,0.35,,"pitch point 1 (low confidence, no line)"
+beneventan-01-n2,beneventan,beneventan-01,d3,foot of the pes,foot,0,0.35,,pitch point 2
+beneventan-01-n3,beneventan,beneventan-01,e3,upper end of the pes stroke,head,0,0.35,,pitch point 3
+beneventan-01-n4,beneventan,beneventan-01,d3,centre of the dash,centre,0,0.35,,pitch point 4
+beneventan-03-n1,beneventan,beneventan-03,f3,head on the F line,centre,0,0.3,,pitch point 1
+beneventan-03-n2,beneventan,beneventan-03,f3,head on the F line,centre,0,0.3,,pitch point 2
+beneventan-03-n3,beneventan,beneventan-03,f3,head on the F line where the tail starts,centre,0,0.3,,pitch point 3
+beneventan-03-n4,beneventan,beneventan-03,d3,end of the long descending tail,extent_below,0,0.3,,pitch point 4 (139 vs about 135)
+beneventan-03-n5,beneventan,beneventan-03,f3,head of the liquescent pes on the F line,centre,0,0.3,,pitch point 5
+beneventan-03-n6,beneventan,beneventan-03,g3,end of the thin rising tail,extent_above,0.1,0.25,,pitch point 6; overshoot <=0.15 (41 vs 45)
+central-italian-01-n1,central-italian,central-italian-01,a3,centre of the dash,centre,0,0.25,0.03,pitch point 1
+central-italian-01-n2,central-italian,central-italian-01,a3,centre of the dash,centre,0,0.25,0.03,pitch point 2
+central-italian-02-n1,central-italian,central-italian-02,f3,centre of the dash on the red line,centre,0,0.25,,pitch point 1
+central-italian-02-n2,central-italian,central-italian-02,f3,centre of the dash on the red line,centre,0,0.25,,pitch point 2
+nonantolan-01-n1,nonantolan,nonantolan-01,c4,top of the vertical (flick),head,0,0.3,,pitch point 1
+nonantolan-01-n2,nonantolan,nonantolan-01,c4,dot on the c line,centre,0,0.3,,pitch point 2
+nonantolan-01-n3,nonantolan,nonantolan-01,c4,top of the vertical,head,0,0.3,,pitch point 3
+nonantolan-01-n4,nonantolan,nonantolan-01,c4,top of the vertical,head,0,0.3,,pitch point 4
+nonantolan-01-n5,nonantolan,nonantolan-01,c4,top of the vertical,head,0,0.3,,pitch point 5
+nonantolan-02-n1,nonantolan,nonantolan-02,f3,top of the vertical on the F line,head,0,0.3,0.09,pitch point 1
+nonantolan-02-n2,nonantolan,nonantolan-02,f3,top of the vertical on the F line,head,0,0.3,0.06,pitch point 2
+nonantolan-02-n3,nonantolan,nonantolan-02,g3,dot in the G space,centre,0,0.3,-0.15,pitch point 3
+nonantolan-02-n4,nonantolan,nonantolan-02,a3,"short virga, centred a little below its middle",centre,0,0.35,-0.08,pitch point 4; interpolated a line
+nonantolan-02-n4,nonantolan,nonantolan-02,a3,thick top of the short virga above a,extent_above,0.3,0.25,-0.08,notes: thick top ~0.3 step above the line
+nonantolan-03-n1,nonantolan,nonantolan-03,c4,top of the vertical on the c line,head,0,0.3,0.02,pitch point 1
+nonantolan-03-n2,nonantolan,nonantolan-03,a3,centre of the short virga on a,centre,0,0.35,-0.02,pitch point 2
+nonantolan-03-n2,nonantolan,nonantolan-03,a3,thick top of the short virga above a,extent_above,0.3,0.25,-0.02,notes: thick top 0.3 step above its pitch
+nonantolan-03-n3,nonantolan,nonantolan-03,c4,top of the vertical on the c line,head,0,0.3,0.05,pitch point 3
+nonantolan-03-n4,nonantolan,nonantolan-03,d4,centre of the short virga on d,centre,0,0.35,-0.09,pitch point 4
+nonantolan-03-n5,nonantolan,nonantolan-03,d4,top of the vertical on d,head,0,0.3,0.01,pitch point 5
+square-01-n1,square,square-01,g3,centre of the square head,centre,0,0.3,0.15,pitch point 1
+square-01-n2,square,square-01,f3,plica tails below F,extent_below,0.9,0.4,0.09,pitch point 2 where the right tail crosses F; tails end 0.6 and 1.3 below
+square-02-n1,square,square-02,f3,centre of the first square,centre,0,0.4,-0.42,pitch point 1; Humbert hangs line notes ~0.35 below the line
+square-02-n2,square,square-02,g3,vertical centre of the oblique left end,centre,0,0.4,0.06,pitch point 2
+square-02-n3,square,square-02,f3,vertical centre of the oblique right end,centre,0,0.4,-0.42,pitch point 3 (0.55 below the F line in the source)
+square-02-n4,square,square-02,g3,centre of the last square,centre,0,0.3,0.37,pitch point 4
+square-03-n1,square,square-03,f3,centre of the square on the F line,centre,0,0.3,0.29,pitch point 1
+square-03-n2,square,square-03,e3,centre of the square in the E space,centre,0,0.3,-0.12,pitch point 2

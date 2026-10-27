@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mei xmlns="http://www.music-encoding.org/ns/mei" meiversion="5.1">
+  <!--
+    MEI Guidelines (v5), chapter 6 "Neume Notation", section 6.4.10 "Basic Encoding - Syllable",
+    Listing 283: the opening of Hildegard's "O splendidissima gemma" ("O splendidissima").
+
+    Source: music-encoding/music-encoding, tag v5.1 (commit 9d551da8fba699881cac1c8d209b67b8d44d52e6),
+    source/examples/neumes/neumes-sample169.txt
+    https://github.com/music-encoding/music-encoding/blob/v5.1/source/examples/neumes/neumes-sample169.txt
+    rendered at https://music-encoding.org/guidelines/v5/content/neumes.html#basicencodingsyllable
+
+    Copyright (c) by the Music Encoding Initiative (MEI) Board (formerly known as "MEI Council").
+    Licensed under the Educational Community License, Version 2.0 (the "License"); you may not use
+    this file except in compliance with the License. A copy of the License is in
+    LICENSE-ECL-2.0.txt next to this file and at https://opensource.org/licenses/ECL-2.0.
+    Unless required by applicable law or agreed to in writing, software distributed under the
+    License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+    either express or implied. See the License for the specific language governing permissions
+    and limitations under the License.
+
+    Changes made here (apart from the added scoreDef, <body> is the listing unchanged):
+    1. The listing's root <music meiversion="5.1"> is wrapped in <mei meiversion="5.1"> with a
+       minimal <meiHead>; @meiversion moved to the <mei> root.
+    2. Added a <scoreDef> before <section>: staffDef n="1" lines="5" notationtype="neume"
+       notationsubtype="hildegard" with a C clef on line 5. The Guidelines say the example was
+       "originally encoded on a 5-line staff with two clefs, a C and a F on lines 5 and 3"; MEI has
+       one clef per staff, and the F on line 3 names the same staff positions as the C on line 5.
+    3. Added the clef as a child of that staffDef.
+    No pitch or shape was changed. Note: the second nc of "O" is d in octave 2 (oct="2"), a ninth
+    below its neighbours; the melody suggests d in octave 3, but it is kept as published.
+  -->
+  <meiHead>
+    <fileDesc>
+      <titleStmt>
+        <title>MEI Guidelines v5, Listing 283: O splendidissima gemma (opening)</title>
+      </titleStmt>
+      <pubStmt>
+        <availability>
+          <useRestrict>Educational Community License, Version 2.0</useRestrict>
+        </availability>
+      </pubStmt>
+    </fileDesc>
+  </meiHead>
+  <music>
+   <body>
+      <mdiv>
+         <score>
+            <scoreDef>
+               <staffGrp>
+                  <staffDef n="1" lines="5" notationtype="neume" notationsubtype="hildegard">
+                     <clef shape="C" line="5" />
+                  </staffDef>
+               </staffGrp>
+            </scoreDef>
+            <section>
+               <staff n="1">
+                  <layer>
+                     <syllable>
+                        <syl n="initial">
+                           <rend color="red">O</rend>
+                        </syl>
+                        <neume>
+                           <nc oct="3" pname="e"/>
+                           <nc oct="2" pname="d"/>
+                           <nc oct="3" pname="e"/>
+                        </neume>
+                     </syllable>
+                     <syllable>
+                        <syl>splen_</syl>
+                        <neume>
+                           <nc oct="3" pname="g"/>
+                           <nc oct="3" pname="e"/>
+                        </neume>
+                        <neume>
+                           <nc oct="3" pname="d"/>
+                           <nc oct="3" pname="e"/>
+                        </neume>
+                     </syllable>
+                     <syllable>
+                        <syl>di_</syl>
+                        <neume>
+                           <nc tilt="n" oct="3" pname="f"/>
+                           <nc tilt="se" con="g" oct="3" pname="d"/>
+                           <nc tilt="se" con="g" oct="3" pname="c"/>
+                        </neume>
+                     </syllable>
+                     <syllable>
+                        <syl>dis_</syl>
+                        <neume>
+                           <nc tilt="n" oct="3" pname="e"/>
+                        </neume>
+                     </syllable>
+                     <syllable>
+                        <syl>si_</syl>
+                        <neume>
+                           <nc oct="2" pname="a"/>
+                           <nc con="g" oct="2" pname="b"/>
+                           <nc con="g" tilt="n" oct="3" pname="c"/>
+                        </neume>
+                     </syllable>
+                     <syllable>
+                        <syl>ma </syl>
+                        <neume>
+                           <nc oct="2" pname="b"/>
+                           <nc oct="2" pname="a"/>
+                        </neume>
+                     </syllable>
+                  </layer>
+               </staff>
+            </section>
+         </score>
+      </mdiv>
+   </body>
+</music>
+</mei>

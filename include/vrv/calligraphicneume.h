@@ -81,6 +81,8 @@ public:
         bool shortStroke = false; ///< @rellen == s
         char intm = 0; ///< first char of @intm (u / d / s), 0 if absent
         bool gapped = false; ///< @con == g: detached from the previous component (a fresh gesture)
+        bool ligated = false; ///< @ligated: written as one oblique with its neighbour (a point script draws two
+                              ///< consecutive ligated ncs as one broad-nib diagonal; the stroke builder ignores it)
         bool looped = false; ///< @con == l: joined to the previous component through a small cursive
                              ///< loop - the pen winds a crossing loop at the joint before this
                              ///< component's stroke (the Old Hispanic looped connection)
@@ -122,6 +124,12 @@ public:
          * of that component's calligraphic shape rather than a detached line.
          */
         std::vector<std::vector<PointF>> episemata;
+        /**
+         * Further closed outlines of this nc's note ink, each a separate pen stroke beside the @ref ribbon
+         * (same format). A point script writes a note as its mark (the ribbon) and, apart from it, the
+         * stem, connector or plica tail that belongs to the same note. Empty for the stroke builder.
+         */
+        std::vector<std::vector<PointF>> pieces;
     };
 
     /**
@@ -206,6 +214,137 @@ public:
     };
 
     /**
+     * Where a pitch sits on an opening stroke and how far the stroke reaches around it, for one role of
+     * that stroke (see Hand). @p reach is the stroke's vertical span in staff steps (line to the next
+     * space), still scaled by @rellen; a level stroke keeps its length. @p at is the pitch point as a
+     * fraction of the stroke from where the pen sets down (0) to where it leaves (1).
+     */
+    struct Opening {
+        double reach = 2.0;
+        double at = 1.0;
+    };
+
+    /**
+     * A script's hand on a staff: what it writes WITH (Pen), how it moves (Gesture), and where it puts a
+     * pitch on its shapes - the rules a scribe followed when neumes went onto lines, which differ by
+     * family and even by book. Keyed by staffDef/@notationsubtype (see HandFor); the default hand is the
+     * St. Gall one PR #1 was built on. The pitch rules apply only to a neume placed by pitch (on a staff
+     * with lines, or under --neume-heighted): staffless rendering reads nothing here but the pen and
+     * gesture, which default to the constants this renderer was written with. The hand never chooses a
+     * shape - the <nc> visual attributes do - only where a shape sits on its pitch and how long its strokes
+     * run around that point. The values and the evidence for them are in src/neumehand.cpp.
+     */
+    struct Hand {
+        std::string token = "stgall"; ///< the staffDef/@notationsubtype it answers to
+        Pen pen;
+        Gesture gesture;
+        /**
+         * The first component of a pen gesture (the first nc, or a detached one) drawn as a plain or
+         * curved stroke, by its role: alone (nothing connected follows - a virga, a single Messine
+         * stroke), a lead (a connected stroke follows and turns back vertically - a clivis lead-in, the
+         * bar of a Messine 7) or a foot (a connected stroke follows in the same vertical sense - a pes).
+         * A lead that bows (@curve or @angled: a clivis arch, a cephalicus crest, the swing down into an
+         * epiphonus loop) is an arch, which a hand may place apart from its straight lead - the
+         * Messine-German pen sets the pitch of a 7 where it starts but of a crest where it turns. A
+         * negative arch reach means the arch is placed as the lead.
+         */
+        Opening solo;
+        Opening lead;
+        Opening arch = { -1.0, -1.0 };
+        Opening foot;
+        /**
+         * The length of an S-shaped oriscus along its spine on a staff, in steps; its pitch is its
+         * waist, so it reaches half this either side. Negative keeps the natural S (about 1.8 steps).
+         */
+        double sReach = -1.0;
+        /**
+         * Point scripts only: an opening stroke marked @rellen="s" (a Nonantolan short virga) takes this reach,
+         * unscaled, and pitch point instead of its role's, when its reach is above 0 (the default, unused). The
+         * mark then sits at the stroke's upper end.
+         */
+        Opening shortOpening = { 0.0, 1.0 };
+        /**
+         * How far the curl or hairline of a liquescent drawn with its own stroke (an explicit @tilt) runs
+         * on past its pitch, in steps, for an ascending and a descending one. The pitch then sits that far
+         * short of the liquescence's furthest reach. Negative keeps the curl at its natural size with the
+         * pitch where the stroke meets it.
+         */
+        double liqOvershootUp = -1.0;
+        double liqOvershootDown = -1.0;
+        /**
+         * A point script (Aquitanian, square, Nonantolan ...): every <nc> is its own mark at its own pitch,
+         * joined at most by a hairline connector, rather than one pen gesture spanning several pitches.
+         * Drawn by BuildPoint.
+         */
+        bool pointScript = false;
+        /**
+         * How a bare <nc> (a dot) is written: a dab of the nib (the stroke builder's punctum), a broad-nib
+         * square, a lozenge, a small round point, or a short level dash. A point script draws it at each
+         * note's pitch; an nc with a level @tilt is always a dash, whatever the hand's dot.
+         */
+        enum class Dot { Dab, Square, Lozenge, Point, Dash };
+        Dot dot = Dot::Dab;
+        /**
+         * Point scripts only. The hand writes upright: its stems and connectors run plumb whatever the lean
+         * of @tilt (square notation's ruled verticals).
+         */
+        bool upright = false;
+        /**
+         * Point scripts only. Stems and connectors run along a side of the mark rather than through its
+         * centre - the right side of a virga or a pes, the left of a clivis's first note - and a note
+         * joined to a lower one is set beside it, abutting, instead of straight below (square notation).
+         */
+        bool edgeStems = false;
+        /**
+         * Point scripts only. The width in pen px of the hand's mark: a square's or a dash's (whose height is the
+         * nib's), a point's diameter, a lozenge's breadth. 0 = as wide as the nib is broad (a dash: one step).
+         */
+        double markWidth = 0.0;
+        /** Staff furniture in the hand's own forms (drawn by the view, not by Build). */
+        enum class ClefForm { Glyph, Letter };
+        ClefForm clef = ClefForm::Glyph;
+        enum class CustosForm { Glyph, Square, HeadTail, Slant, Check };
+        CustosForm custos = CustosForm::Glyph;
+        /**
+         * Coloured pitch markers the hand draws through the staff at a pitch class, following the clef:
+         * each entry is a pitch-name letter ('f', 'c') and a colour. Empty for most hands.
+         */
+        std::vector<std::pair<char, std::string>> pitchMarkers;
+    };
+
+    /**
+     * The hand for a script token (staffDef/@notationsubtype, case-insensitive). An empty or unknown
+     * token gets the default hand (St. Gall), so a page that names no script renders as before.
+     */
+    static const Hand &HandFor(const std::string &token);
+    /** The tokens HandFor knows, in table order. */
+    static std::vector<std::string> HandTokens();
+
+    /**
+     * @name Staff furniture in a hand's own forms (src/calligraphicfurniture.cpp), drawn by the view beside
+     * the neumes: the custos and the letter clefs (Hand::custos, Hand::clef). Outlines are in pen space (+y
+     * down, prototype px, unscaled), each a flat closed cubic Bézier list like NcGeometry::ribbon.
+     */
+    ///@{
+    /**
+     * Sweep @p pen's nib along the centreline @p centre and return one closed, fillable outline: the same
+     * broad-nib width law as a neume's ribbon, for a mark that is not a neume.
+     */
+    static std::vector<PointF> NibOutline(const std::vector<PointF> &centre, const Pen &pen);
+    /**
+     * The custos in @p form (any but Glyph), written with @p pen: its pitch at the origin, its ink running
+     * right from about x = 0. Empty for Glyph. The shapes and their evidence are in the .cpp.
+     */
+    static std::vector<std::vector<PointF>> CustosOutlines(Hand::CustosForm form, const Pen &pen);
+    /**
+     * The letter a letter-clef hand (Hand::clef == Letter) writes for a clef of @p clefShape
+     * (data_CLEFSHAPE): c for a C clef, F (f in the Hildegard books) for an F clef, g for a G clef. 0 for a
+     * shape no letter stands for, which keeps the glyph.
+     */
+    static char32_t ClefLetter(const Hand &hand, int clefShape);
+    ///@}
+
+    /**
      * Build the geometry of one neume from its ordered <nc> components. The returned
      * NeumeGeometry::ncs is parallel to @p ncs (same size and order), so each entry can be inked
      * inside its own <nc> graphic.
@@ -219,8 +358,35 @@ public:
     static NeumeGeometry Build(const std::vector<NcInfo> &ncs, double scale, Slant slant = {});
     static NeumeGeometry Build(const std::vector<NcInfo> &ncs, double scale, Slant slant, Pen pen);
     static NeumeGeometry Build(const std::vector<NcInfo> &ncs, double scale, Slant slant, Pen pen, Gesture gesture);
+    /**
+     * The same, in a script's @p hand: on a staff its pitch rules place the shapes (Hand), and a point
+     * script is drawn by BuildPoint. @p pen and @p gesture are the hand's own, already merged with any
+     * command-line override by the caller.
+     */
+    static NeumeGeometry Build(
+        const std::vector<NcInfo> &ncs, double scale, Slant slant, Pen pen, Gesture gesture, const Hand &hand);
 
 private:
+    /**
+     * A point script's neume on a staff (Hand::pointScript): each <nc> its own mark at its own pitch. Only
+     * called by Build, for a neume whose every nc is pitched, after Build has set the pen and gesture.
+     * Returns the geometry unscaled and unanchored (pen px, origin at the first nc's pitch); Build applies
+     * its usual left-edge anchoring and scale. @p pen and @p gesture are the ones Build was given (the
+     * hand's own, merged with any command-line override). See src/calligraphicpoint.cpp.
+     */
+    static NeumeGeometry BuildPoint(
+        const std::vector<NcInfo> &ncs, Slant slant, const Pen &pen, const Gesture &gesture, const Hand &hand);
+    /**
+     * A stroke script's neume (every hand but a point script on a staff): the pen gestures of Build's
+     * steps 1-3, unscaled and unanchored.
+     */
+    static NeumeGeometry BuildStroke(const std::vector<NcInfo> &ncs, Slant slant, const Hand &hand);
+    /**
+     * The last two steps of Build, shared by both builders: anchor the gesture at its ink's left edge,
+     * then scale it from pen px into verovio drawing units.
+     */
+    static void AnchorAndScale(NeumeGeometry &geo, double scale);
+
     //----------------------------------------------------------------------------
     // Internal geometry helpers (faithful ports of the prototype, in raw pen pixels)
     //----------------------------------------------------------------------------
@@ -273,10 +439,11 @@ private:
     static std::vector<PointF> RotateAround(const std::vector<PointF> &pts, double cx, double cy, double ang);
 
     static Stroke ObliqueShape(double x, double y, PointF dir, double len);
-    static Stroke Wave(double x, double y, const std::string &orient, int tilt);
+    static Stroke Wave(double x, double y, const std::string &orient, int tilt, double size = 1.0);
     /** An S-shaped wave that begins at @p s (for a connected oriscus / quassus within a ligature,
-     * e.g. the second component of a virga strata) rather than being centred on a point. */
-    static Stroke WaveFrom(PointF s, const std::string &orient, int tilt);
+     * e.g. the second component of a virga strata) rather than being centred on a point. @p size
+     * scales it (a hand's smaller S on a staff, Hand::sReach); 1 is the natural size. */
+    static Stroke WaveFrom(PointF s, const std::string &orient, int tilt, double size = 1.0);
     /**
      * Ride a wavy wiggle on an arbitrary spine: @p spine is the axis the wave follows (a straight
      * chord, a bow, an angled chevron), resampled by arc length and displaced perpendicular to its
@@ -290,9 +457,12 @@ private:
      * the same trochoid a little PAST that final trough, for a wave the pen flows on from: the italic
      * lean leaves the last trough directly beneath the last crest, so a stroke rising out of the low
      * point itself would climb straight back through the tooth just written - running on up and out of
-     * the belly first sets the spring point clear of it.
+     * the belly first sets the spring point clear of it. @p bellies, when given, receives the index of
+     * the sample at the floor of each belly (each trough), where the ink pools: on a staff the teeth stand
+     * there on their pitch.
      */
-    static std::vector<PointF> Wavify(const std::vector<PointF> &spine, int waves, double amp, bool runOut = false);
+    static std::vector<PointF> Wavify(const std::vector<PointF> &spine, int waves, double amp, bool runOut = false,
+        std::vector<int> *bellies = NULL);
     /**
      * A quilisma: a wavy flourish, modelled on the liquescent. The WHOLE note is this wavy line - the
      * broad nib swept over it draws the characteristic toothed quilisma - starting on the first crest
@@ -308,7 +478,7 @@ private:
      * of the last tooth rather than back through it - see Wavify.
      */
     static Stroke Quilisma(PointF s, int tilt, int waves, bool centred, int curveHand, bool hasCurve, bool angled,
-        PointF tIn, PointF tOut, bool runOut = false);
+        PointF tIn, PointF tOut, bool runOut = false, std::vector<int> *bellies = NULL);
     static Stroke Comma(double x, double y, int tilt);
     /**
      * A liquescent stroke (cephalicus / epiphonus). When @p stem > 0 the note's own melodic stroke of

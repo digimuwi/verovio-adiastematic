@@ -33,6 +33,7 @@
 #include "signiflet.h"
 #include "smufl.h"
 #include "staff.h"
+#include "staffdef.h"
 #include "syllable.h"
 #include "zone.h"
 
@@ -382,6 +383,7 @@ void View::DrawNeumeAdiastematic(DeviceContext *dc, Neume *neume, Staff *staff)
         info.shortStroke = (nc->GetRellen() == ncForm_RELLEN_s);
         info.gapped = (nc->GetCon() == ncForm_CON_g);
         info.looped = (nc->GetCon() == ncForm_CON_l);
+        info.ligated = (nc->GetLigated() == BOOLEAN_true);
         const std::string intm = nc->GetIntm();
         info.intm = intm.empty() ? 0 : intm.front();
         // @place is a non-standard placement override for a detached / gapped component, so it is not in
@@ -473,19 +475,28 @@ void View::DrawNeumeAdiastematic(DeviceContext *dc, Neume *neume, Staff *staff)
     // The scribe's forward slant: convert the option's degrees to the shear's tangent.
     const CalligraphicNeume::Slant slant{ std::tan(m_options->m_neumeCalligraphicSlant.GetValue() * M_PI / 180.0),
         m_options->m_neumeCalligraphicSlantBias.GetValue() };
-    // The hand: its nib, and how it moves. Both default to the constants this renderer was written
-    // with, so an untouched command line draws exactly what it always drew.
-    const CalligraphicNeume::Pen pen{ m_options->m_neumeCalligraphicNibAngle.GetValue(),
-        m_options->m_neumeCalligraphicNibWidth.GetValue(), m_options->m_neumeCalligraphicNibThin.GetValue(),
-        m_options->m_neumeCalligraphicEpisemaNib.GetValue() };
-    const CalligraphicNeume::Gesture gesture{ m_options->m_neumeCalligraphicBreakGap.GetValue(),
-        m_options->m_neumeCalligraphicRepeatSlide.GetValue(), m_options->m_neumeCalligraphicNestleGap.GetValue(),
-        m_options->m_neumeCalligraphicAboutFaceShift.GetValue(),
-        m_options->m_neumeCalligraphicLiquescentCurl.GetValue(),
-        m_options->m_neumeCalligraphicLiquescentHook.GetValue(), m_options->m_neumeCalligraphicLoopJoin.GetValue(),
-        m_options->m_neumeCalligraphicEpisemaBow.GetValue(), m_options->m_neumeCalligraphicEpisemaBowChain.GetValue(),
-        m_options->m_neumeCalligraphicRellenRatio.GetValue() };
-    const CalligraphicNeume::NeumeGeometry geo = CalligraphicNeume::Build(ncInfos, scale, slant, pen, gesture);
+    // The hand: the script's nib, how it moves, and where it puts a pitch on its shapes (CalligraphicNeume::Hand),
+    // named by staffDef/@notationsubtype or --neume-hand. A page that names no script gets the default hand,
+    // whose nib and gesture are the constants this renderer was written with. Any nib or gesture option set
+    // on the command line wins over the hand's own value.
+    const std::string script = this->GetNeumeScript(staff);
+    const CalligraphicNeume::Hand &hand = CalligraphicNeume::HandFor(script);
+    auto pick = [](const auto &option, double own) -> double { return option.IsSet() ? option.GetValue() : own; };
+    const CalligraphicNeume::Pen pen{ pick(m_options->m_neumeCalligraphicNibAngle, hand.pen.angleDeg),
+        pick(m_options->m_neumeCalligraphicNibWidth, hand.pen.width),
+        pick(m_options->m_neumeCalligraphicNibThin, hand.pen.thin),
+        pick(m_options->m_neumeCalligraphicEpisemaNib, hand.pen.episema) };
+    const CalligraphicNeume::Gesture gesture{ pick(m_options->m_neumeCalligraphicBreakGap, hand.gesture.breakGap),
+        pick(m_options->m_neumeCalligraphicRepeatSlide, hand.gesture.repeatDx),
+        pick(m_options->m_neumeCalligraphicNestleGap, hand.gesture.nestleGap),
+        pick(m_options->m_neumeCalligraphicAboutFaceShift, hand.gesture.aboutFaceShift),
+        pick(m_options->m_neumeCalligraphicLiquescentCurl, hand.gesture.liqCurl),
+        pick(m_options->m_neumeCalligraphicLiquescentHook, hand.gesture.liqHook),
+        pick(m_options->m_neumeCalligraphicLoopJoin, hand.gesture.loopJoin),
+        pick(m_options->m_neumeCalligraphicEpisemaBow, hand.gesture.episemaBow),
+        pick(m_options->m_neumeCalligraphicEpisemaBowChain, hand.gesture.episemaBowChain),
+        pick(m_options->m_neumeCalligraphicRellenRatio, hand.gesture.rellenRatio) };
+    const CalligraphicNeume::NeumeGeometry geo = CalligraphicNeume::Build(ncInfos, scale, slant, pen, gesture, hand);
     if (geo.ncs.size() != ncObjects.size()) return;
 
     // Anchor the gesture at the first nc. The helper works in pen space (+y down); verovio logical
@@ -520,9 +531,11 @@ void View::DrawNeumeAdiastematic(DeviceContext *dc, Neume *neume, Staff *staff)
 
     for (size_t i = 0; i < ncObjects.size(); ++i) {
         const CalligraphicNeume::NcGeometry &ncGeo = geo.ncs[i];
-        if (ncGeo.ribbon.empty() && ncGeo.episemata.empty()) continue;
+        if (ncGeo.ribbon.empty() && ncGeo.pieces.empty() && ncGeo.episemata.empty()) continue;
 
         for (const CalligraphicNeume::PointF &p : ncGeo.ribbon) extendBBox(p);
+        for (const std::vector<CalligraphicNeume::PointF> &piece : ncGeo.pieces)
+            for (const CalligraphicNeume::PointF &p : piece) extendBBox(p);
         for (const std::vector<CalligraphicNeume::PointF> &epi : ncGeo.episemata)
             for (const CalligraphicNeume::PointF &p : epi) extendBBox(p);
 
@@ -534,6 +547,21 @@ void View::DrawNeumeAdiastematic(DeviceContext *dc, Neume *neume, Staff *staff)
             std::vector<Point> outline;
             outline.reserve(ncGeo.ribbon.size());
             for (const CalligraphicNeume::PointF &p : ncGeo.ribbon) outline.push_back(toDeviceContext(p));
+
+            dc->SetPen(0, PEN_SOLID);
+            dc->SetBrush(1.0);
+            dc->DrawClosedBezierPath(outline);
+            dc->ResetBrush();
+            dc->ResetPen();
+        }
+
+        // The note's further pen strokes (a point script's stem, connector or plica tail), inked like the
+        // ribbon. Empty for every stroke script.
+        for (const std::vector<CalligraphicNeume::PointF> &piece : ncGeo.pieces) {
+            if (piece.empty()) continue;
+            std::vector<Point> outline;
+            outline.reserve(piece.size());
+            for (const CalligraphicNeume::PointF &p : piece) outline.push_back(toDeviceContext(p));
 
             dc->SetPen(0, PEN_SOLID);
             dc->SetBrush(1.0);
@@ -567,6 +595,16 @@ void View::DrawNeumeAdiastematic(DeviceContext *dc, Neume *neume, Staff *staff)
         gestureY1 = gestureY2 = anchorY;
     }
     this->DrawNeumeSignifLets(dc, neume, staff, gestureX1, gestureY1, gestureX2, gestureY2);
+}
+
+std::string View::GetNeumeScript(const Staff *staff) const
+{
+    assert(staff);
+
+    const std::string forced = m_options->m_neumeHand.GetValue();
+    if (!forced.empty()) return forced;
+    if (staff->m_drawingStaffDef) return staff->m_drawingStaffDef->GetNotationsubtype();
+    return "";
 }
 
 void View::DrawNeumeSignifLets(DeviceContext *dc, Neume *neume, Staff *staff, int x1, int y1, int x2, int y2)

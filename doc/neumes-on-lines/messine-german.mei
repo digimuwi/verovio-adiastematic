@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mei xmlns="http://www.music-encoding.org/ns/mei" meiversion="5.0">
+  <!--
+    Synthetic test file for calligraphic neumes on a staff (verovio option neume-calligraphic), one of the
+    doc/neumes-on-lines set. Each syllable reproduces a measured facsimile example (id in the comment and
+    in every nc xml:id, "<example>-n<k>" with k the note number of the example's pitch points); syllables
+    whose ids contain "-x" are synthetic extras that show the hand. Pitches come from the facsimile review
+    of 2026-10-27 (examples.csv): 12th-13th century melodies, not an edition of any manuscript. Every
+    nc carries explicit shape attributes: shapes are never inferred from neume/@type.
+    Guidonian letters map to MEI as G = g3, a = a3, c = c4 (middle C), C = c3.
+
+    Hand: Messine-German (Messine-Gothic) neumes. Berlin, Staatsbibliothek, Mus. ms. 40078, f. 245r
+    (the trope Hodie cantandus est; four lines, F red, c yellow, a and D green, no clef: the c clef on
+    line 4 stands in for the coloured lines), and messine-german-01 from a later Hungarian fragment
+    (four red lines, rhombic notes).
+    Shapes: single note = rising stroke (tilt ne): head with a flag above, stem below; 7-shaped
+    clivis = knob with a short rising hairline (tilt ne, short) + falling stroke (tilt s); epiphonus =
+    small loop at the foot (looped joint, @con="l") + rising stroke with a liquescent; cephalicus = small
+    crest (tilt ne, curve c, short) + stroke falling to the lower left (tilt sw) with a liquescent;
+    S-oriscus = @s-shape="w" with <oriscus/>, pitch at its waist; rhombus = dot.
+    Not represented: messine-german-02 (Hungarian fragment F661: a b clef two lines below a red F) -
+    too faded for pitch points; MEI has no b clef.
+  -->
+  <meiHead>
+    <fileDesc>
+      <titleStmt>
+        <title>Neumes on lines: Messine-German (Berlin 40078)</title>
+      </titleStmt>
+      <pubStmt />
+    </fileDesc>
+  </meiHead>
+  <music>
+    <body>
+      <mdiv>
+        <score>
+          <scoreDef>
+            <staffGrp>
+              <staffDef n="1" lines="4" notationtype="neume" notationsubtype="messine-german" />
+            </staffGrp>
+          </scoreDef>
+          <section>
+            <staff n="1">
+              <layer n="1">
+                <clef shape="C" line="4" />
+                <!-- messine-german-01 (Seq. Veni sancte spiritus, "requies"): clivis c b as two rhombi -->
+                <syllable>
+                  <syl>re-</syl>
+                  <neume type="clivis">
+                    <nc xml:id="messine-german-01-n1" pname="c" oct="4" />
+                    <nc xml:id="messine-german-01-n2" pname="b" oct="3" con="g" />
+                  </neume>
+                </syllable>
+                <sb />
+                <!-- messine-german-11 (Berlin 40078, "cantandus"): epiphonus C D, small loop at the foot -->
+                <syllable>
+                  <syl>can-</syl>
+                  <neume type="epiphonus">
+                    <nc xml:id="messine-german-11-n1" pname="c" oct="3" tilt="sw" curve="c" rellen="s" />
+                    <nc xml:id="messine-german-11-n2" pname="d" oct="3" tilt="ne" con="l">
+                      <liquescent curve="a" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <!-- messine-german-12: cephalicus D C -->
+                <syllable>
+                  <syl>tan-</syl>
+                  <neume type="cephalicus">
+                    <nc xml:id="messine-german-12-n1" pname="d" oct="3" tilt="ne" curve="c" rellen="s" />
+                    <nc xml:id="messine-german-12-n2" pname="c" oct="3" tilt="sw">
+                      <liquescent curve="c" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <!-- messine-german-13 ("sub tempore"): liquescent falling a fifth G C, long tail -->
+                <syllable>
+                  <syl>tem-</syl>
+                  <neume type="cephalicus">
+                    <nc xml:id="messine-german-13-n1" pname="g" oct="3" tilt="ne" curve="c" rellen="s" />
+                    <nc xml:id="messine-german-13-n2" pname="c" oct="3" tilt="sw" rellen="l">
+                      <liquescent curve="c" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <sb />
+                <!-- messine-german-14 ("Quis est iste puer"): punctum G, S-shaped oriscus G (pitch at its waist) running into a rising stroke a -->
+                <syllable>
+                  <syl>-er</syl>
+                  <neume type="pes">
+                    <nc xml:id="messine-german-14-n1" pname="g" oct="3" />
+                    <nc xml:id="messine-german-14-n2" pname="g" oct="3" con="g" s-shape="w">
+                      <oriscus />
+                    </nc>
+                    <nc xml:id="messine-german-14-n3" pname="a" oct="3" tilt="ne" />
+                  </neume>
+                </syllable>
+                <!-- messine-german-15: two single notes G | F, head with a flag above and a stem below -->
+                <syllable>
+                  <syl>quem</syl>
+                  <neume type="virga">
+                    <nc xml:id="messine-german-15-n1" pname="g" oct="3" tilt="ne" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>bat</syl>
+                  <neume type="virga">
+                    <nc xml:id="messine-german-15-n2" pname="f" oct="3" tilt="ne" />
+                  </neume>
+                </syllable>
+                <!-- messine-german-16 ("gignebat"): 7-shaped clivis a G, pitch at the knob -->
+                <syllable>
+                  <syl>gne-</syl>
+                  <neume type="clivis">
+                    <nc xml:id="messine-german-16-n1" pname="a" oct="3" tilt="ne" rellen="s" />
+                    <nc xml:id="messine-german-16-n2" pname="g" oct="3" tilt="s" />
+                  </neume>
+                </syllable>
+                <sb />
+                <!-- synthetic extras in the Berlin hand (not measured) -->
+                <syllable>
+                  <syl>punctum</syl>
+                  <neume type="punctum">
+                    <nc xml:id="messine-german-x1-n1" pname="a" oct="3" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>pes</syl>
+                  <neume type="pes">
+                    <nc xml:id="messine-german-x2-n1" pname="f" oct="3" tilt="e" curve="a" rellen="s" />
+                    <nc xml:id="messine-german-x2-n2" pname="a" oct="3" tilt="ne" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>torculus</syl>
+                  <neume type="torculus">
+                    <nc xml:id="messine-german-x3-n1" pname="f" oct="3" tilt="e" curve="a" rellen="s" />
+                    <nc xml:id="messine-german-x3-n2" pname="a" oct="3" tilt="ne" />
+                    <nc xml:id="messine-german-x3-n3" pname="g" oct="3" tilt="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>climacus</syl>
+                  <neume type="climacus">
+                    <nc xml:id="messine-german-x4-n1" pname="c" oct="4" tilt="ne" />
+                    <nc xml:id="messine-german-x4-n2" pname="b" oct="3" con="g" />
+                    <nc xml:id="messine-german-x4-n3" pname="a" oct="3" con="g" />
+                  </neume>
+                </syllable>
+              </layer>
+            </staff>
+          </section>
+        </score>
+      </mdiv>
+    </body>
+  </music>
+</mei>
