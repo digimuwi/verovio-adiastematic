@@ -81,6 +81,8 @@ public:
         bool shortStroke = false; ///< @rellen == s
         char intm = 0; ///< first char of @intm (u / d / s), 0 if absent
         bool gapped = false; ///< @con == g: detached from the previous component (a fresh gesture)
+        bool ligated = false; ///< @ligated: written as one oblique with its neighbour (a point script draws two
+                              ///< consecutive ligated ncs as one broad-nib diagonal; the stroke builder ignores it)
         bool looped = false; ///< @con == l: joined to the previous component through a small cursive
                              ///< loop - the pen winds a crossing loop at the joint before this
                              ///< component's stroke (the Old Hispanic looped connection)
@@ -122,6 +124,12 @@ public:
          * of that component's calligraphic shape rather than a detached line.
          */
         std::vector<std::vector<PointF>> episemata;
+        /**
+         * Further closed outlines of this nc's note ink, each a separate pen stroke beside the @ref ribbon
+         * (same format). A point script writes a note as its mark (the ribbon) and, apart from it, the
+         * stem, connector or plica tail that belongs to the same note. Empty for the stroke builder.
+         */
+        std::vector<std::vector<PointF>> pieces;
     };
 
     /**
@@ -250,6 +258,12 @@ public:
          */
         double sReach = -1.0;
         /**
+         * Point scripts only: an opening stroke marked @rellen="s" (a Nonantolan short virga) takes this reach,
+         * unscaled, and pitch point instead of its role's, when its reach is above 0 (the default, unused). The
+         * mark then sits at the stroke's upper end.
+         */
+        Opening shortOpening = { 0.0, 1.0 };
+        /**
          * How far the curl or hairline of a liquescent drawn with its own stroke (an explicit @tilt) runs
          * on past its pitch, in steps, for an ascending and a descending one. The pitch then sits that far
          * short of the liquescence's furthest reach. Negative keeps the curl at its natural size with the
@@ -263,9 +277,29 @@ public:
          * Drawn by BuildPoint.
          */
         bool pointScript = false;
-        /** How a bare <nc> (a dot) is written. */
-        enum class Dot { Dab, Square, Lozenge, Point };
+        /**
+         * How a bare <nc> (a dot) is written: a dab of the nib (the stroke builder's punctum), a broad-nib
+         * square, a lozenge, a small round point, or a short level dash. A point script draws it at each
+         * note's pitch; an nc with a level @tilt is always a dash, whatever the hand's dot.
+         */
+        enum class Dot { Dab, Square, Lozenge, Point, Dash };
         Dot dot = Dot::Dab;
+        /**
+         * Point scripts only. The hand writes upright: its stems and connectors run plumb whatever the lean
+         * of @tilt (square notation's ruled verticals).
+         */
+        bool upright = false;
+        /**
+         * Point scripts only. Stems and connectors run along a side of the mark rather than through its
+         * centre - the right side of a virga or a pes, the left of a clivis's first note - and a note
+         * joined to a lower one is set beside it, abutting, instead of straight below (square notation).
+         */
+        bool edgeStems = false;
+        /**
+         * Point scripts only. The width in pen px of the hand's mark: a square's or a dash's (whose height is the
+         * nib's), a point's diameter, a lozenge's breadth. 0 = as wide as the nib is broad (a dash: one step).
+         */
+        double markWidth = 0.0;
         /** Staff furniture in the hand's own forms (drawn by the view, not by Build). */
         enum class ClefForm { Glyph, Letter };
         ClefForm clef = ClefForm::Glyph;
@@ -313,9 +347,11 @@ private:
      * A point script's neume on a staff (Hand::pointScript): each <nc> its own mark at its own pitch. Only
      * called by Build, for a neume whose every nc is pitched, after Build has set the pen and gesture.
      * Returns the geometry unscaled and unanchored (pen px, origin at the first nc's pitch); Build applies
-     * its usual left-edge anchoring and scale.
+     * its usual left-edge anchoring and scale. @p pen and @p gesture are the ones Build was given (the
+     * hand's own, merged with any command-line override). See src/calligraphicpoint.cpp.
      */
-    static NeumeGeometry BuildPoint(const std::vector<NcInfo> &ncs, Slant slant, const Hand &hand);
+    static NeumeGeometry BuildPoint(
+        const std::vector<NcInfo> &ncs, Slant slant, const Pen &pen, const Gesture &gesture, const Hand &hand);
     /**
      * A stroke script's neume (every hand but a point script on a staff): the pen gestures of Build's
      * steps 1-3, unscaled and unanchored.
