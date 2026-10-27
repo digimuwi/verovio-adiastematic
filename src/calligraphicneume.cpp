@@ -529,30 +529,32 @@ CalligraphicNeume::Stroke CalligraphicNeume::ObliqueShape(double x, double y, Po
 // the direction the pen first moves - which orients the S and its mirror / rotated forms: "w" the
 // standard letter S, "e" its mirror, "s" the S turned 90° anti-clockwise, "n" that mirror (see
 // SShapeSwing). Without @tilt the spine runs perpendicular to that swing: upright for w/e, level for s/n.
-CalligraphicNeume::Stroke CalligraphicNeume::Wave(double x, double y, const std::string &orient, int tilt)
+CalligraphicNeume::Stroke CalligraphicNeume::Wave(
+    double x, double y, const std::string &orient, int tilt, double size)
 {
     const bool rotated = SShapeRotated(orient);
     PointF dir = TiltVec(tilt);
     if (dir.x == 0.0 && dir.y == 0.0) dir = rotated ? TiltVec(COMPASSDIRECTION_e) : TiltVec(COMPASSDIRECTION_n);
-    const double len = rotated ? 24.0 : 22.0;
+    const double len = (rotated ? 24.0 : 22.0) * size;
     // centre the wave on (x, y) by backing the start off by half its travel
-    return WaveFrom({ x - dir.x * len / 2, y - dir.y * len / 2 }, orient, tilt);
+    return WaveFrom({ x - dir.x * len / 2, y - dir.y * len / 2 }, orient, tilt, size);
 }
 
 // An S-shaped wave starting at s, travelling along @tilt. Used for a connected oriscus / quassus
 // inside a ligature (e.g. the second component of a virga strata), where the wave must spring from
 // the previous stroke's tip rather than be centred on a cell.
-CalligraphicNeume::Stroke CalligraphicNeume::WaveFrom(PointF s, const std::string &orient, int tilt)
+CalligraphicNeume::Stroke CalligraphicNeume::WaveFrom(PointF s, const std::string &orient, int tilt, double size)
 {
     const bool rotated = SShapeRotated(orient);
     PointF dir = TiltVec(tilt);
     // No @tilt: the spine runs perpendicular to the initial swing - upright for an upright S, level
     // for one turned on its side.
     if (dir.x == 0.0 && dir.y == 0.0) dir = rotated ? TiltVec(COMPASSDIRECTION_e) : TiltVec(COMPASSDIRECTION_n);
-    const double len = rotated ? 26.0 : 24.0;
+    const double len = (rotated ? 26.0 : 24.0) * size;
     // The amplitude must clear the broad nib (NIB_W = 6 px) comfortably, otherwise the sweep absorbs
-    // the wiggle into the ribbon width and the S stops reading as an S.
-    const double amp = rotated ? 9.0 : 12.0;
+    // the wiggle into the ribbon width and the S stops reading as an S - so a smaller S narrows less
+    // than it shortens.
+    const double amp = (rotated ? 9.0 : 12.0) * std::max(size, 0.7);
     const PointF e = { s.x + dir.x * len, s.y + dir.y * len };
     // The wiggle axis is the @s-shape's initial swing, projected perpendicular to the travel so the S
     // still runs along @tilt but opens toward @s-shape. The sign carried by that swing is what
@@ -1435,12 +1437,15 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::BuildStroke(
     };
     // On a staff, the hand's rule for component k as the opening stroke of its gesture (see Hand): alone when
     // nothing connected follows; a foot when the pen goes on in the same vertical sense (a pes) or the
-    // stroke itself runs level; a lead when the next stroke turns back (a clivis lead-in, a Messine 7).
+    // stroke itself runs level; a lead when the next stroke turns back (a clivis lead-in, a Messine 7), an
+    // arch if that lead bows (a clivis arch, a cephalicus crest) and the hand places arches apart.
     auto openingOf = [&](size_t k) -> const Opening & {
         if (k + 1 >= ncs.size() || breaksBefore(k + 1)) return hand.solo;
         const double own = TiltVec(effTilt[k]).y; // pen space: +y is down
         const double next = ncs[k + 1].pitchY - ncs[k].pitchY;
         if (std::fabs(own) < 1e-6 || own * next > 0.0) return hand.foot;
+        const bool bows = (ncs[k].curve != curvatureDirection_CURVE_NONE) || ncs[k].angled;
+        if (bows && hand.arch.reach >= 0.0) return hand.arch;
         return hand.lead;
     };
 
@@ -1522,20 +1527,36 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::BuildStroke(
         // Except where the curl itself is the move: a whole-note hook joined to its predecessor whose curl,
         // drawn off the pen as it would be on a unison, already runs the way the pitch goes. That is the
         // Hildegard books' curled three-note liquescent (x x y), whose curl ends ON the new pitch, with no
-        // overshoot. The curl is scaled about the pen, keeping its form, until its end reaches the pitch;
-        // where that would take a curl less than about a third or more than three times its size, the
-        // stroke-and-curl above stands in.
+        // overshoot, its end the lowest (or highest) ink of the curl (hildegard-05, -06, -14, -15). So the
+        // open curl is drawn as the half turn the pen makes there: it leaves the pen tangent to the stroke
+        // before, swings out to the curl side and turns back under itself, ending heading back the way it
+        // came, about one curl-radius behind where it set off - the blob at the foot of the curl. Its end
+        // is then exactly one diameter across from the pen, and the radius is what makes that the pitch.
+        // Where the curl side does not run the way the pitch goes, or the radius would be under a fifth or
+        // over twice the hook's own, the stroke-and-curl above stands in; so does a closed (looped) curl,
+        // which returns to where it started and so cannot be the move.
         std::vector<PointF> fittedHook;
-        if (pitched && wholeHook && i > 0 && !breaksBefore(i) && std::fabs(nc.pitchY - pen.y) > 1e-6) {
+        if (pitched && wholeHook && !nc.liquescentLooped && i > 0 && !breaksBefore(i)
+            && std::fabs(nc.pitchY - pen.y) > 1e-6) {
             PointF enter = prevExitDir;
             if (enter.x == 0.0 && enter.y == 0.0) enter = TiltVec(tilt);
             if (enter.x == 0.0 && enter.y == 0.0) enter = TiltVec(COMPASSDIRECTION_e);
-            const Stroke sh = Loop(pen, enter, nc.liquescentCurve, nc.liquescentLooped, 0.0, LiqHookR());
-            const double natural = sh.exit.y - pen.y;
+            const PointF d = enter.Unit({ 1.0, 0.0 });
+            const double sign = (nc.liquescentCurve == curvatureDirection_CURVE_a) ? 1.0 : -1.0; // as in Curl
+            const PointF perp = { sign * d.y, -sign * d.x };
             const double wanted = nc.pitchY - pen.y;
-            const double k = (std::fabs(natural) > 1e-6) ? wanted / natural : 0.0;
-            if (k >= 0.35 && k <= 3.0) {
-                for (const PointF &p : sh.pts) fittedHook.push_back(pen + (p - pen) * k);
+            const double r = (std::fabs(perp.y) > 0.5) ? wanted / (2.0 * perp.y) : 0.0;
+            if (r >= 0.2 * LiqHookR() && r <= 2.0 * LiqHookR()) {
+                // In the frame of the entry direction d and the curl side perp: across, r(1 - cos t); along,
+                // r sin t forward less r(1 - cos t)/2 drifting back. Tangent to d at t = 0; at t = pi the
+                // pen is 2r across - the farthest it gets - heading back along -d, r behind its start.
+                const int N = 24;
+                for (int j = 0; j <= N; ++j) {
+                    const double t = M_PI * j / N;
+                    const double across = r * (1.0 - std::cos(t));
+                    const double along = r * std::sin(t) - across / 2.0;
+                    fittedHook.push_back(pen + perp * across + d * along);
+                }
             }
         }
         const bool hook
@@ -1571,6 +1592,11 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::BuildStroke(
                 len = opening->reach * s_unitPx * RellenFactor(nc.longStroke, nc.shortStroke) / dirY;
             }
         }
+
+        // An S-shaped oriscus on a staff at the hand's size (Hand::sReach), measured along its spine.
+        const double sSize = (pitched && hasSShape && hand.sReach >= 0.0)
+            ? hand.sReach * s_unitPx / (SShapeRotated(nc.sShape) ? 26.0 : 24.0)
+            : 1.0;
 
         std::vector<PointF> pts = { pen };
         bool dot = false;
@@ -1697,7 +1723,8 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::BuildStroke(
             else if (hasSShape) {
                 // Centred on the anchor when first or a level repeat; a stepped detached wave springs
                 // forward from the gap anchor so it stacks up the contour (the oriscus of a salicus).
-                Stroke sh = centred ? Wave(anchor.x, anchor.y, nc.sShape, tilt) : WaveFrom(anchor, nc.sShape, tilt);
+                Stroke sh = centred ? Wave(anchor.x, anchor.y, nc.sShape, tilt, sSize)
+                                    : WaveFrom(anchor, nc.sShape, tilt, sSize);
                 pts = sh.pts;
                 pen = sh.exit;
                 pitchAt = (int)pts.size() / 2; // an S-shaped oriscus's pitch is its waist
@@ -1828,7 +1855,7 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::BuildStroke(
                 }
             }
             else if (hasSShape) {
-                Stroke sh = WaveFrom(pen, nc.sShape, tilt); // connected oriscus / quassus (virga strata)
+                Stroke sh = WaveFrom(pen, nc.sShape, tilt, sSize); // connected oriscus / quassus (virga strata)
                 pts = sh.pts;
                 pen = sh.exit;
                 pitchAt = (int)pts.size() / 2; // an S-shaped oriscus's pitch is its waist

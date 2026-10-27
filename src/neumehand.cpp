@@ -44,18 +44,22 @@ namespace {
         // four lines. The virga's pitch is its head and the thick stroke hangs about one step below it; the
         // same passage in both books (hildegard-01, -08) puts a G virga after a punctum E with its head on
         // G, where the foot would read F. A clivis lead-in starts about a step under the arch (-01, -03).
+        // The pes foot is the blob where the pen sets down, its pitch there, the short hairline it starts
+        // with reaching only about a tenth of a step lower (hildegard-02, -11, -12, -13).
         Hand h;
         h.token = "hildegard";
         h.solo = { 1.0, 1.0 };
         h.lead = { 1.0, 1.0 };
-        h.foot = { 1.0, 1.0 };
+        h.foot = { 0.6, 0.15 };
         // A liquescent with its own stroke: the plain cephalicus has its pitch on the lower part of the
         // thick tail and its hairline runs 0.3 to 0.85 step on (hildegard-10, -16, -17); an ascending
         // liquescent pes ends its thick stroke at the pitch with the hairline about half a step beyond (our
-        // scan check of O splendidissima gemma). The curled three-note form ends on its pitch, which is the
-        // universal curl-only rule in Build, not a hand setting.
+        // scan check of O splendidissima gemma). The overshoot is the pen's path; the ink runs half a nib
+        // further, so 0.4 down puts the hairline's end about 0.6 below the pitch, the middle of the three
+        // readings. The curled three-note form ends on its pitch, which is the universal curl-only rule in
+        // Build, not a hand setting.
         h.liqOvershootUp = 0.5;
-        h.liqOvershootDown = 0.6;
+        h.liqOvershootDown = 0.4;
         // Letter clefs c and f that move between and within systems; a red f stroke marks the pitch f,
         // through a space where the ruling puts it there (hildegard-07, -11).
         h.clef = Hand::ClefForm::Letter;
@@ -77,7 +81,7 @@ namespace {
         // The epiphonus ends where its small curl turns (german-05, 0); the cephalicus ends on its pitch
         // once (german-04) and half a step past it once (german-06).
         h.liqOvershootUp = 0.0;
-        h.liqOvershootDown = 0.25;
+        h.liqOvershootDown = 0.1; // the pen's path; the ink's end runs half a nib further
         h.clef = Hand::ClefForm::Letter;
         h.pitchMarkers = { { 'f', "#b0302a" }, { 'c', "#c9a227" } };
         return h;
@@ -85,13 +89,14 @@ namespace {
 
     Hand Hufnagel()
     {
-        // Karlsruhe Aug. perg. 60 and Stams 40: the nail head carries the pitch and its tail runs about 2.3
-        // steps below (hufnagel-03); the n-shaped clivis has its first pitch at the top-left corner, the left
-        // stem's tail reaching 1 to 1.3 steps below it (hufnagel-02). A lozenge is read at its centre.
+        // Karlsruhe Aug. perg. 60 and Stams 40: the nail head carries the pitch and its tail runs 2 to 2.3
+        // steps below (hufnagel-03, -04; a long one, hufnagel-01, is 3.7 - a @rellen="l"); the n-shaped
+        // clivis has its first pitch at the top-left corner, the left stem's tail reaching 1.3 steps below
+        // the second note, 2.3 below the corner (hufnagel-02). A lozenge is read at its centre.
         Hand h;
         h.token = "hufnagel";
-        h.solo = { 2.3, 1.0 };
-        h.lead = { 1.15, 1.0 };
+        h.solo = { 2.2, 1.0 };
+        h.lead = { 2.3, 1.0 };
         h.dot = Hand::Dot::Lozenge;
         h.clef = Hand::ClefForm::Letter;
         h.pitchMarkers = { { 'f', "#b0302a" }, { 'c', "#c9a227" } };
@@ -102,11 +107,13 @@ namespace {
     {
         // Bellelay (Porrentruy Ms. 18): a single stroke is centred on its pitch and reaches about 0.6 step
         // either side (messine-03, -04). The 7-shaped clivis has its first pitch at the knob where the pen
-        // sets down; the corner, 0.4 step higher, carries none (messine-02).
+        // sets down; the corner, 0.4 step higher, carries none (messine-02). The hooked pes opens with a
+        // level bowl whose pitch is its bottom, halfway along it (messine-01, -04).
         Hand h;
         h.token = "messine";
         h.solo = { 1.2, 0.5 };
         h.lead = { 0.4, 0.0 };
+        h.foot = { 2.0, 0.5 };
         h.clef = Hand::ClefForm::Letter;
         return h;
     }
@@ -116,11 +123,17 @@ namespace {
         // Berlin Mus. ms. 40078 (one scribe): the single note's pitch is the centre of its head, the flag
         // tip 0.3 to 0.4 step above it and the stem end 0.85 to 1 below (messine-german-15) - a 1.25-step
         // stroke with its pitch 0.72 of the way up. The 7-clivis: knob, then a corner 0.4 to 0.5 step above
-        // the first pitch (messine-german-16).
+        // the first pitch (messine-german-16). A crest, though, carries its pitch where the pen turns - the
+        // top of the cephalicus head (-12, -13) - and the bow down into an epiphonus loop at its bottom
+        // (-11): an arch has its pitch at its end.
         Hand h;
         h.token = "messine-german";
         h.solo = { 1.25, 0.72 };
         h.lead = { 0.45, 0.0 };
+        h.arch = { 1.0, 1.0 };
+        // The S-shaped oriscus is small: its upper hook and its tail each about 0.4 step from the waist
+        // (messine-german-14), so a spine of about one step once the nib is added.
+        h.sReach = 0.6;
         // The epiphonus overshoots by 0.4 (messine-german-11); the cephalicus forms end on the pitch (-12,
         // -13).
         h.liqOvershootUp = 0.4;

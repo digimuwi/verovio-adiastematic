@@ -235,10 +235,20 @@ public:
          * curved stroke, by its role: alone (nothing connected follows - a virga, a single Messine
          * stroke), a lead (a connected stroke follows and turns back vertically - a clivis lead-in, the
          * bar of a Messine 7) or a foot (a connected stroke follows in the same vertical sense - a pes).
+         * A lead that bows (@curve or @angled: a clivis arch, a cephalicus crest, the swing down into an
+         * epiphonus loop) is an arch, which a hand may place apart from its straight lead - the Messine
+         * pen sets the pitch of a 7 where it starts but of a crest where it turns. A negative arch reach
+         * means the arch is placed as the lead.
          */
         Opening solo;
         Opening lead;
+        Opening arch = { -1.0, -1.0 };
         Opening foot;
+        /**
+         * The length of an S-shaped oriscus along its spine on a staff, in steps; its pitch is its
+         * waist, so it reaches half this either side. Negative keeps the natural S (about 1.8 steps).
+         */
+        double sReach = -1.0;
         /**
          * How far the curl or hairline of a liquescent drawn with its own stroke (an explicit @tilt) runs
          * on past its pitch, in steps, for an ascending and a descending one. The pitch then sits that far
@@ -369,10 +379,11 @@ private:
     static std::vector<PointF> RotateAround(const std::vector<PointF> &pts, double cx, double cy, double ang);
 
     static Stroke ObliqueShape(double x, double y, PointF dir, double len);
-    static Stroke Wave(double x, double y, const std::string &orient, int tilt);
+    static Stroke Wave(double x, double y, const std::string &orient, int tilt, double size = 1.0);
     /** An S-shaped wave that begins at @p s (for a connected oriscus / quassus within a ligature,
-     * e.g. the second component of a virga strata) rather than being centred on a point. */
-    static Stroke WaveFrom(PointF s, const std::string &orient, int tilt);
+     * e.g. the second component of a virga strata) rather than being centred on a point. @p size
+     * scales it (a hand's smaller S on a staff, Hand::sReach); 1 is the natural size. */
+    static Stroke WaveFrom(PointF s, const std::string &orient, int tilt, double size = 1.0);
     /**
      * Ride a wavy wiggle on an arbitrary spine: @p spine is the axis the wave follows (a straight
      * chord, a bow, an angled chevron), resampled by arc length and displaced perpendicular to its
