@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 
 //----------------------------------------------------------------------------
 
@@ -182,6 +183,26 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::BuildPoint(
     // How far the nib's footprint reaches either side of its centre horizontally, so a stroke can be set flush
     // with a mark's side.
     const double nibHalfX = (std::fabs(nib.x) * pen.width + std::fabs(across.x) * pen.thin) / 2.0;
+    // A stem, connector or tail whose ink runs exactly from a to b: the nib's footprint reaches past the ends of
+    // the path it is swept along (by half the nib's breadth where the stroke runs along the nib - the square
+    // hand's hairlines), so the path is drawn in by that much at each end. Nothing when the stroke is shorter
+    // than the footprint itself.
+    auto stroke = [&](PointF a, PointF b) -> std::vector<PointF> {
+        const double len = (b - a).Len();
+        const PointF u = (b - a).Unit();
+        const double reach = (std::fabs(nib.Dot(u)) * pen.width + std::fabs(across.Dot(u)) * pen.thin) / 2.0;
+        if (len <= 2.0 * reach + EPS) return {};
+        return sweep(a + u * reach, b - u * reach);
+    };
+    // How far along the unit direction @p u from the centre of a mark of extent @p e the ray leaves it.
+    auto exitDist = [&](const PointF &u, double left, double right, double top, double bottom) -> double {
+        double t = std::numeric_limits<double>::max();
+        if (u.x > EPS) t = std::min(t, right / u.x);
+        if (u.x < -EPS) t = std::min(t, left / u.x);
+        if (u.y > EPS) t = std::min(t, bottom / u.y);
+        if (u.y < -EPS) t = std::min(t, top / u.y);
+        return (t == std::numeric_limits<double>::max()) ? 0.0 : std::max(0.0, t);
+    };
 
     auto record = [&](size_t i, std::vector<PointF> pts, bool episema = false) {
         geo.strokes.push_back({ (int)i, episema, std::move(pts) });
@@ -354,9 +375,15 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::BuildPoint(
                 op = &hand.foot;
             }
         }
+        // A short stroke (@rellen="s") has its own reach and pitch point where the hand gives one.
+        double scale = rellen(nc);
+        if (nc.shortStroke && hand.shortOpening.reach > 0.0) {
+            op = &hand.shortOpening;
+            scale = 1.0;
+        }
         PointF d = (nc.tilt != COMPASSDIRECTION_NONE) ? TiltVec(nc.tilt) : PointF{ 0.0, -1.0 };
         if (hand.upright) d = { 0.0, (d.y > 0.0) ? 1.0 : -1.0 };
-        const double len = op->reach * STEP * rellen(nc) / std::max(std::fabs(d.y), 0.2);
+        const double len = op->reach * STEP * scale / std::max(std::fabs(d.y), 0.2);
         // The mark is the stroke's head whichever way the pen ran - rising to it (Nonantolan, @tilt="n") or
         // setting it down and pulling the stem away (a square virga, @tilt="s") - so Opening::at is measured up
         // the stroke, from its lower end to its upper end: a falling stroke counts it from its far end.
@@ -397,7 +424,7 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::BuildPoint(
             }
             for (size_t k = 0; k < tails.size(); ++k) {
                 // The first tail, the one that carries the pitch, is the note's ink; a second is a piece of it.
-                std::vector<PointF> ink = sweep(tails[k][0], tails[k][1]);
+                std::vector<PointF> ink = stroke(tails[k][0], tails[k][1]);
                 if (k == 0)
                     out.ribbon = std::move(ink);
                 else
@@ -415,6 +442,7 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::BuildPoint(
         Mark m = markFor(nc);
         const double cx = placeX(i, y, m.ext, oblique);
         const PointF c = { cx, y };
+        PointF head = c; // where the mark goes: its pitch, or the head of a stroke centred on the pitch
 
         // The stroke arriving at this pitch: from the previous mark when joined to it, else an opening stroke. A
         // square hand hangs every joined note on its hairline, stroke attribute or not: that is how its notes
@@ -425,17 +453,28 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::BuildPoint(
             if (joins) {
                 const double dy = y - prev.cy;
                 if (edge) {
-                    // The square connector: a hairline along the shared side, sized by the interval.
+                    // The square connector: a hairline along the shared side, sized by the interval, running in
+                    // the gap between the two squares (none where they touch, as on a second).
                     const double x = prev.right - nibHalfX;
-                    path = { { x, prev.cy }, { x, y } };
+                    const double y0 = (dy < 0.0) ? prev.top : prev.bottom;
+                    const double y1 = (dy < 0.0) ? y + m.ext.bottom : y + m.ext.top;
+                    if ((dy < -EPS && y1 < y0) || (dy > EPS && y1 > y0)) path = { { x, y0 }, { x, y1 } };
                 }
                 else {
-                    path = { { prev.cx, prev.cy }, c };
+                    // From mark to mark, its ink between them.
+                    const PointF a = { prev.cx, prev.cy };
+                    const PointF u = (c - a).Unit();
+                    const double t0 = exitDist(
+                        u, prev.left - prev.cx, prev.right - prev.cx, prev.top - prev.cy, prev.bottom - prev.cy);
+                    const double t1 = exitDist(u * -1.0, m.ext.left, m.ext.right, m.ext.top, m.ext.bottom);
+                    if ((c - a).Len() > t0 + t1 + EPS) path = { a + u * t0, c - u * t1 };
                 }
-                if (std::fabs(dy) < EPS && edge) path.clear(); // abutting squares need no connector
             }
             else {
                 path = opening(i, c, m.ext);
+                // The mark is the stroke's head: at the pitch unless the hand centres the stroke on it (a
+                // Nonantolan short virga), then at the stroke's upper end.
+                if (!edge && path.size() == 2) head = (path[0].y < path[1].y) ? path[0] : path[1];
                 // A stem running through the space below (or above) the mark keeps later marks of the neume off
                 // it: a lower note joined to a Nonantolan or Aquitanian virga steps beside the stem, not onto it.
                 if (!edge && path.size() == 2) {
@@ -445,7 +484,8 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::BuildPoint(
                 }
             }
             if (path.size() == 2) {
-                out.pieces.push_back(sweep(path[0], path[1]));
+                std::vector<PointF> ink = stroke(path[0], path[1]);
+                if (!ink.empty()) out.pieces.push_back(std::move(ink));
                 record(i, path);
             }
         }
@@ -474,8 +514,8 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::BuildPoint(
             continue;
         }
 
-        Translate(m.outline, c);
-        Translate(m.ductus, c);
+        Translate(m.outline, head);
+        Translate(m.ductus, head);
         out.ribbon = std::move(m.outline);
         record(i, m.ductus);
         setPrev(cx, y, m.ext);
@@ -489,7 +529,8 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::BuildPoint(
             PointF a = c;
             if (edge) a.x = prev.right - nibHalfX;
             const std::vector<PointF> path = { a, a + d * ((STEP + over) / std::fabs(d.y)) };
-            out.pieces.push_back(sweep(path[0], path[1]));
+            std::vector<PointF> ink = stroke(path[0], path[1]);
+            if (!ink.empty()) out.pieces.push_back(std::move(ink));
             record(i, path);
         }
 

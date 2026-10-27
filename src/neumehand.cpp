@@ -206,6 +206,9 @@ namespace {
         h.token = "nonantolan";
         h.pointScript = true;
         h.solo = { 3.0, 1.0 };
+        // The short virgae are centred on their pitch, their thick top about 0.3 step above it (nonantolan-02,
+        // -03): half a step long with the pitch at the middle.
+        h.shortOpening = { 0.6, 0.5 };
         h.gesture.breakGap = 6.0;
         h.clef = Hand::ClefForm::Letter;
         return h;

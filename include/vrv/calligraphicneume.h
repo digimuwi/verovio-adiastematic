@@ -248,6 +248,12 @@ public:
         Opening lead;
         Opening foot;
         /**
+         * Point scripts only: an opening stroke marked @rellen="s" (a Nonantolan short virga) takes this reach,
+         * unscaled, and pitch point instead of its role's, when its reach is above 0 (the default, unused). The
+         * mark then sits at the stroke's upper end.
+         */
+        Opening shortOpening = { 0.0, 1.0 };
+        /**
          * How far the curl or hairline of a liquescent drawn with its own stroke (an explicit @tilt) runs
          * on past its pitch, in steps, for an ascending and a descending one. The pitch then sits that far
          * short of the liquescence's furthest reach. Negative keeps the curl at its natural size with the
