@@ -1,0 +1,1530 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mei xmlns="http://www.music-encoding.org/ns/mei" meiversion="5.0">
+  <!--
+    Neumes on lines: the St. Gall catalogue (hartker_neumes.mei) on a 4-line staff.
+    Every calligraphic attribute is kept; @intm became @pname/@oct (u = +1 step,
+    d = -1, s/su/n = 0), each neume centred on the staff. Liquescent ncs that stood
+    for two pitches are split, one nc per pitch. The "Pitched:", "Conflict:" and
+    "Staff:" syllables at the end are hand-written: leaps, unisons, a pes with a
+    repeated first note (three ncs), tilt/pitch conflicts and a mid-line clef.
+    Encoding contract and anchor rules: eChant docs/plans/2026-10-10-neumes-on-lines.md.
+  -->
+  <meiHead>
+    <fileDesc>
+      <titleStmt>
+        <title />
+      </titleStmt>
+      <pubStmt />
+    </fileDesc>
+  </meiHead>
+  <music>
+    <body>
+      <mdiv>
+        <score>
+          <scoreDef>
+            <staffGrp>
+              <staffDef n="1" lines="4" notationtype="neume" notationsubtype="stgall" />
+            </staffGrp>
+          </scoreDef>
+          <section>
+            <staff n="1">
+              <layer n="1">
+                <clef shape="C" line="4" />
+                <syllable>
+                  <syl>Tractulus episema</syl>
+                  <neume>
+                    <nc pname="g" oct="3" tilt="e" rellen="s">
+                      <episema />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Punctum</syl>
+                  <neume>
+                    <nc pname="g" oct="3" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Virga episema</syl>
+                  <neume>
+                    <nc pname="g" oct="3" tilt="ne">
+                      <episema place="left" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Oriscus curved</syl>
+                  <neume>
+                    <nc pname="g" oct="3" s-shape="e">
+                      <oriscus />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Oriscus flat</syl>
+                  <neume>
+                    <nc pname="g" oct="3" s-shape="n">
+                      <oriscus />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Oriscus wave</syl>
+                  <neume>
+                    <nc pname="g" oct="3" tilt="e" curve="c">
+                  </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Stropha</syl>
+                  <neume>
+                    <nc pname="g" oct="3">
+                      <strophicus />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Stropha episema</syl>
+                  <neume>
+                    <nc pname="g" oct="3">
+                      <strophicus />
+                      <episema form="h" place="right" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pes rotundus</syl>
+                  <neume>
+                    <nc pname="f" oct="3" curve="a" tilt="s" />
+                    <nc pname="g" oct="3" tilt="ne" rellen="l" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pes rotundus episema</syl>
+                  <neume>
+                    <nc pname="f" oct="3" curve="a" tilt="s" />
+                    <nc pname="g" oct="3" rellen="l" tilt="ne">
+                      <episema place="above" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pes quadratus</syl>
+                  <neume>
+                    <nc pname="f" oct="3" tilt="se" />
+                    <nc pname="g" oct="3" tilt="ne" rellen="l" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pes quadratus episema</syl>
+                  <neume>
+                    <nc pname="f" oct="3" tilt="se" />
+                    <nc pname="g" oct="3" rellen="l" tilt="ne">
+                      <episema place="above" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pes quassus</syl>
+                  <neume>
+                    <nc pname="f" oct="3" s-shape="w" tilt="se" />
+                    <nc pname="g" oct="3" tilt="ne" rellen="l" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pes quassus [oriscus?]</syl>
+                  <neume>
+                    <nc pname="f" oct="3" tilt="s" s-shape="w">
+                      <oriscus />
+                    </nc>
+                    <nc pname="g" oct="3" tilt="ne" rellen="l" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pes quassus episema</syl>
+                  <neume>
+                    <nc pname="f" oct="3" s-shape="w" tilt="se" />
+                    <nc pname="g" oct="3" tilt="ne">
+                      <episema />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pes quassus flexus</syl>
+                  <neume>
+                    <nc pname="f" oct="3" s-shape="s" tilt="se" />
+                    <nc pname="g" oct="3" tilt="ne" curve="c" />
+                    <nc pname="f" oct="3" tilt="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pes quassus flexus episema</syl>
+                  <neume>
+                    <nc pname="f" oct="3" s-shape="s" tilt="se" />
+                    <nc pname="g" oct="3" rellen="l" tilt="ne" curve="c">
+                      <episema place="above" />
+                    </nc>
+                    <nc pname="f" oct="3" tilt="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Clivis</syl>
+                  <neume>
+                    <nc pname="g" oct="3" tilt="ne" curve="c" />
+                    <nc pname="f" oct="3" tilt="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Clivis episema (top)</syl>
+                  <neume>
+                    <nc pname="g" oct="3" tilt="ne" curve="c">
+                      <episema place="above" />
+                    </nc>
+                    <nc pname="f" oct="3" tilt="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Clivis one episema (right)</syl>
+                  <neume>
+                    <nc pname="g" oct="3" tilt="ne" curve="c" />
+                    <nc pname="f" oct="3" tilt="s">
+                      <episema place="right" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Clivis two episema (right)</syl>
+                  <neume>
+                    <nc pname="g" oct="3" tilt="ne" curve="c" />
+                    <nc pname="f" oct="3" tilt="s">
+                      <episema />
+                      <episema place="below" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Clivis two episema (top + right)</syl>
+                  <neume>
+                    <nc pname="g" oct="3" tilt="ne" curve="c">
+                      <episema place="above" />
+                    </nc>
+                    <nc pname="f" oct="3" tilt="s">
+                      <episema place="right" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Clivis melodic</syl>
+                  <neume>
+                    <nc pname="g" oct="3" tilt="ne" curve="c" />
+                    <nc pname="f" oct="3" tilt="s" rellen="l" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Clivis episema melodic (on top)</syl>
+                  <neume>
+                    <nc pname="g" oct="3" tilt="ne" curve="c">
+                      <episema place="above" />
+                    </nc>
+                    <nc pname="f" oct="3" tilt="s" rellen="l" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pressus maior</syl>
+                  <neume>
+                    <nc pname="g" oct="3" tilt="ne" />
+                    <nc pname="g" oct="3" s-shape="n" rellen="s" />
+                    <nc pname="f" oct="3" con="g" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pressus maior episema</syl>
+                  <neume>
+                    <nc pname="g" oct="3" tilt="ne">
+                      <episema place="left" />
+                    </nc>
+                    <nc pname="g" oct="3" s-shape="n" />
+                    <nc pname="f" oct="3" con="g" tilt="e" rellen="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Scandicus</syl>
+                  <neume>
+                    <nc pname="f" oct="3" />
+                    <nc pname="g" oct="3" con="g" />
+                    <nc pname="a" oct="3" con="g" tilt="ne" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Scandicus episema</syl>
+                  <neume>
+                    <nc pname="f" oct="3" />
+                    <nc pname="g" oct="3" con="g" />
+                    <nc pname="a" oct="3" con="g" tilt="ne">
+                      <episema place="above" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Scandicus</syl>
+                  <neume>
+                    <nc pname="f" oct="3" rellen="s" tilt="e" />
+                    <nc pname="g" oct="3" con="g" rellen="s" tilt="e" />
+                    <nc pname="a" oct="3" con="g" tilt="ne" rellen="l" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Quilismascandicus</syl>
+                  <neume>
+                    <nc pname="f" oct="3" tilt="e" rellen="s" />
+                    <nc pname="g" oct="3" con="g">
+                      <quilisma waves="3" />
+                    </nc>
+                    <nc pname="g" oct="3" tilt="ne" rellen="l" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Quilismascandicus</syl>
+                  <neume>
+                    <nc pname="f" oct="3" tilt="e" rellen="s" />
+                    <nc pname="g" oct="3" con="g">
+                      <quilisma waves="2" />
+                    </nc>
+                    <nc pname="g" oct="3" tilt="ne" rellen="l" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Scandicus</syl>
+                  <neume>
+                    <nc pname="e" oct="3" />
+                    <nc pname="f" oct="3" con="g" />
+                    <nc pname="g" oct="3" con="g" />
+                    <nc pname="a" oct="3" con="g" tilt="ne" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Scandicus episema</syl>
+                  <neume>
+                    <nc pname="e" oct="3" />
+                    <nc pname="f" oct="3" con="g" />
+                    <nc pname="g" oct="3" con="g" />
+                    <nc pname="a" oct="3" con="g" tilt="ne">
+                      <episema place="above" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Quilismascandicus 2</syl>
+                  <neume>
+                    <nc pname="f" oct="3" tilt="e" />
+                    <nc pname="g" oct="3" tilt="e" con="g" />
+                    <nc pname="a" oct="3" con="g">
+                      <quilisma waves="3" />
+                    </nc>
+                    <nc pname="a" oct="3" tilt="ne" rellen="l" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Quilismascandicus 3</syl>
+                  <neume>
+                    <nc pname="f" oct="3" tilt="e" />
+                    <nc pname="g" oct="3" tilt="e" con="g" />
+                    <nc pname="a" oct="3" con="g">
+                      <quilisma waves="2" />
+                    </nc>
+                    <nc pname="a" oct="3" tilt="ne" rellen="l" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Scandicus flexus</syl>
+                  <neume>
+                    <nc pname="f" oct="3" />
+                    <nc pname="g" oct="3" con="g" />
+                    <nc pname="a" oct="3" con="g" tilt="ne" curve="c" />
+                    <nc pname="g" oct="3" tilt="s" />
+                    <signifLet place="above-right">c</signifLet>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Scandicus flexus episema</syl>
+                  <neume>
+                    <nc pname="f" oct="3" tilt="e" />
+                    <nc pname="g" oct="3" con="g" tilt="e" />
+                    <nc pname="a" oct="3" con="g" tilt="ne" curve="c">
+                      <episema place="above" />
+                    </nc>
+                    <nc pname="g" oct="3" tilt="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Scandicus flexus melodic</syl>
+                  <neume>
+                    <nc pname="f" oct="3" />
+                    <nc pname="g" oct="3" con="g" />
+                    <nc pname="a" oct="3" con="g" tilt="ne" curve="c" />
+                    <nc pname="g" oct="3" tilt="s" rellen="l" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Scandicus flexus melodic, episema</syl>
+                  <neume>
+                    <nc pname="f" oct="3" />
+                    <nc pname="g" oct="3" con="g" />
+                    <nc pname="a" oct="3" con="g" tilt="ne" curve="c">
+                      <episema place="above" />
+                    </nc>
+                    <nc pname="g" oct="3" tilt="s" rellen="l" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Scandicus flexus episema</syl>
+                  <neume>
+                    <nc pname="f" oct="3" />
+                    <nc pname="g" oct="3" con="g" />
+                    <nc pname="a" oct="3" con="g" tilt="ne">
+                      <episema place="above" />
+                    </nc>
+                    <nc pname="g" oct="3" tilt="s" curve="c" rellen="s">
+                </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Quilismascandicus flexus</syl>
+                  <neume>
+                    <nc pname="e" oct="3" tilt="e" />
+                    <nc pname="f" oct="3" tilt="e" con="g" />
+                    <nc pname="g" oct="3" con="g">
+                      <quilisma waves="3" />
+                    </nc>
+                    <nc pname="a" oct="3" tilt="ne" curve="c" rellen="l" />
+                    <nc pname="g" oct="3" tilt="s" rellen="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Salicus</syl>
+                  <neume>
+                    <nc pname="f" oct="3" />
+                    <nc pname="g" oct="3" curve="c" con="g" tilt="e">
+                      <oriscus />
+                    </nc>
+                    <nc pname="a" oct="3" con="g" tilt="ne" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Salicus</syl>
+                  <neume>
+                    <nc pname="f" oct="3" />
+                    <nc pname="g" oct="3" s-shape="n" con="g" tilt="e">
+                      <oriscus />
+                    </nc>
+                    <nc pname="a" oct="3" con="g" tilt="ne" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Salicus episema</syl>
+                  <neume>
+                    <nc pname="f" oct="3" />
+                    <nc pname="g" oct="3" con="g" curve="c" tilt="e">
+                      <oriscus />
+                    </nc>
+                    <nc pname="a" oct="3" con="g" tilt="ne">
+                      <episema place="above" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Salicus episema</syl>
+                  <neume>
+                    <nc pname="f" oct="3" />
+                    <nc pname="g" oct="3" con="g" tilt="e" s-shape="n">
+                      <oriscus />
+                    </nc>
+                    <nc pname="a" oct="3" con="g" tilt="ne">
+                      <episema place="above" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Salicus flexus</syl>
+                  <neume>
+                    <nc pname="f" oct="3" />
+                    <nc pname="g" oct="3" con="g" tilt="e" curve="c">
+                      <oriscus />
+                    </nc>
+                    <nc pname="a" oct="3" con="g" tilt="ne" curve="c" />
+                    <nc pname="g" oct="3" tilt="s" rellen="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Salicus flexus episema</syl>
+                  <neume>
+                    <nc pname="f" oct="3" />
+                    <nc pname="g" oct="3" con="g" tilt="e" curve="c">
+                      <oriscus />
+                    </nc>
+                    <nc pname="a" oct="3" con="g" curve="c" tilt="ne">
+                      <episema place="above" />
+                    </nc>
+                    <nc pname="g" oct="3" tilt="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Virga strata praepunctis</syl>
+                  <neume>
+                    <nc pname="f" oct="3" />
+                    <nc pname="g" oct="3" con="g" />
+                    <nc pname="a" oct="3" con="g" tilt="ne" />
+                    <nc pname="a" oct="3" s-shape="n" />
+                    <signifLet place="above-left">c</signifLet>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Virga strata prepunctis</syl>
+                  <neume>
+                    <nc pname="f" oct="3" />
+                    <nc pname="g" oct="3" con="g" />
+                    <nc pname="a" oct="3" con="g" tilt="ne">
+                      <episema place="left" />
+                    </nc>
+                    <nc pname="a" oct="3" s-shape="n" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Climacus</syl>
+                  <neume>
+                    <nc pname="a" oct="3" tilt="ne" />
+                    <nc pname="g" oct="3" con="g" />
+                    <nc pname="f" oct="3" con="g" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Climacus episema</syl>
+                  <neume>
+                    <nc pname="a" oct="3" tilt="ne">
+                      <episema place="above" />
+                    </nc>
+                    <nc pname="g" oct="3" con="g" />
+                    <nc pname="f" oct="3" con="g" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Climacus</syl>
+                  <neume>
+                    <nc pname="a" oct="3" tilt="ne" curve="c" />
+                    <nc pname="g" oct="3" tilt="s" rellen="s">
+                      <episema place="right" />
+                    </nc>
+                    <nc pname="f" oct="3" con="g" tilt="e" rellen="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Climacus</syl>
+                  <neume>
+                    <nc pname="a" oct="3" tilt="ne" />
+                    <nc pname="g" oct="3" con="g" />
+                    <nc pname="f" oct="3" con="g" />
+                    <nc pname="e" oct="3" con="g" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Climacus episema</syl>
+                  <neume>
+                    <nc pname="a" oct="3" tilt="ne">
+                      <episema place="above" />
+                    </nc>
+                    <nc pname="g" oct="3" con="g" />
+                    <nc pname="f" oct="3" con="g" />
+                    <nc pname="e" oct="3" con="g" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Torculus</syl>
+                  <neume>
+                    <nc pname="f" oct="3" curve="a" tilt="s" />
+                    <nc pname="g" oct="3" curve="c" tilt="ne" />
+                    <nc pname="f" oct="3" tilt="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Torculus episema</syl>
+                  <neume>
+                    <nc pname="f" oct="3" curve="a" tilt="se" rellen="s" />
+                    <nc pname="g" oct="3" tilt="ne" curve="c" />
+                    <nc pname="f" oct="3" tilt="s">
+                      <episema place="right" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Torculus episema</syl>
+                  <neume>
+                    <nc pname="f" oct="3" curve="a" tilt="se" rellen="s" />
+                    <nc pname="g" oct="3" tilt="ne" curve="c" />
+                    <nc pname="f" oct="3" tilt="s">
+                      <episema />
+                      <episema place="below" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Torculus episema</syl>
+                  <neume>
+                    <nc pname="f" oct="3" curve="a" tilt="se" rellen="s" />
+                    <nc pname="g" oct="3" curve="c" tilt="ne">
+                      <episema place="above" />
+                    </nc>
+                    <nc pname="f" oct="3" tilt="s" rellen="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Torculus melodic</syl>
+                  <neume>
+                    <nc pname="f" oct="3" curve="a" tilt="s" />
+                    <nc pname="g" oct="3" curve="c" tilt="ne" />
+                    <nc pname="f" oct="3" curve="c" tilt="s" rellen="l" />
+                    <signifLet place="above-right">l</signifLet>
+                    <signifLet place="below-right">i</signifLet>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Torculus melodic episema</syl>
+                  <neume>
+                    <nc pname="f" oct="3" curve="a" tilt="s" />
+                    <nc pname="g" oct="3" curve="c" tilt="ne" />
+                    <nc pname="f" oct="3" tilt="s" rellen="l">
+                      <episema place="right" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Torculus</syl>
+                  <neume>
+                    <nc pname="f" oct="3" curve="c" tilt="e" />
+                    <nc pname="g" oct="3" tilt="n" />
+                    <nc pname="f" oct="3" s-shape="n" tilt="e" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Torculus</syl>
+                  <neume>
+                    <nc pname="f" oct="3" curve="a" tilt="s" />
+                    <nc pname="g" oct="3" tilt="ne" />
+                    <nc pname="f" oct="3" curve="c" tilt="s" rellen="l" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Torculus resupinus 4</syl>
+                  <neume>
+                    <nc pname="f" oct="3" curve="a" tilt="se" rellen="s" />
+                    <nc pname="g" oct="3" tilt="n" />
+                    <nc pname="f" oct="3" tilt="s" />
+                    <nc pname="g" oct="3" tilt="ne" rellen="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Torculus resupinus 4 episema</syl>
+                  <neume>
+                    <nc pname="f" oct="3" curve="a" tilt="se" rellen="s" />
+                    <nc pname="g" oct="3" curve="c" tilt="ne" />
+                    <nc pname="f" oct="3" rellen="s" tilt="s" />
+                    <nc pname="g" oct="3" rellen="l" tilt="ne">
+                      <episema place="above" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Torculus resupinus 4 episema</syl>
+                  <neume>
+                    <nc pname="f" oct="3" curve="a" tilt="se" rellen="s" />
+                    <nc pname="g" oct="3" tilt="n">
+                      <episema place="above" />
+                    </nc>
+                    <nc pname="f" oct="3" tilt="s" />
+                    <nc pname="g" oct="3" tilt="ne" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Porrectus</syl>
+                  <neume>
+                    <nc pname="g" oct="3" tilt="ne" curve="c" />
+                    <nc pname="f" oct="3" tilt="s" />
+                    <nc pname="g" oct="3" tilt="ne" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Porrectus episema</syl>
+                  <neume>
+                    <nc pname="g" oct="3" curve="c" tilt="ne" />
+                    <nc pname="f" oct="3" tilt="s" />
+                    <nc pname="g" oct="3" tilt="ne">
+                      <episema />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Porrectus episema (on top of clivis)</syl>
+                  <neume>
+                    <nc pname="g" oct="3" curve="c" tilt="ne">
+                      <episema place="above" />
+                    </nc>
+                    <nc pname="f" oct="3" tilt="s" />
+                    <nc pname="g" oct="3" tilt="ne" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Porrectus flexus</syl>
+                  <neume>
+                    <nc pname="g" oct="3" curve="c" tilt="ne" />
+                    <nc pname="f" oct="3" curve="a" tilt="se" />
+                    <nc pname="g" oct="3" tilt="ne" curve="c" />
+                    <nc pname="f" oct="3" tilt="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Porrectus flexus episema</syl>
+                  <neume>
+                    <nc pname="g" oct="3" curve="c" tilt="ne" />
+                    <nc pname="f" oct="3" curve="a" tilt="se" />
+                    <nc pname="g" oct="3" curve="c" tilt="ne" />
+                    <nc pname="f" oct="3" tilt="s">
+                      <episema place="right" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Porrectus flexus episema</syl>
+                  <neume>
+                    <nc pname="g" oct="3" tilt="ne" curve="c" />
+                    <nc pname="f" oct="3" tilt="se" curve="a" />
+                    <nc pname="g" oct="3" tilt="ne" curve="c">
+                      <episema place="above" />
+                    </nc>
+                    <nc pname="f" oct="3" tilt="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Porrectus flexus</syl>
+                  <neume>
+                    <nc pname="g" oct="3" tilt="ne" curve="c" />
+                    <nc pname="f" oct="3" tilt="se" curve="a" />
+                    <nc pname="g" oct="3" tilt="ne" curve="c" rellen="l">
+                      <episema place="above" />
+                    </nc>
+                    <nc pname="f" oct="3" tilt="s" rellen="l">
+                  </nc>
+                    <signifLet place="below-right">i</signifLet>
+                    <signifLet place="below-right">e</signifLet>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pes subbipunctis 1</syl>
+                  <neume>
+                    <nc pname="g" oct="3" curve="a" />
+                    <nc pname="a" oct="3" tilt="ne" rellen="l" />
+                    <nc pname="g" oct="3" con="g" />
+                    <nc pname="f" oct="3" con="g" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pes subbipunctis 2</syl>
+                  <neume>
+                    <nc pname="g" oct="3" curve="a" />
+                    <nc pname="a" oct="3" tilt="ne" rellen="l" />
+                    <nc pname="g" oct="3" con="g" tilt="e" rellen="s" />
+                    <nc pname="f" oct="3" con="g" tilt="e" rellen="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pes subbipunctis 3</syl>
+                  <neume>
+                    <nc pname="g" oct="3" curve="a" rellen="s" />
+                    <nc pname="a" oct="3" tilt="ne" curve="c" />
+                    <nc pname="g" oct="3" tilt="s" rellen="s">
+                      <episema place="right" />
+                    </nc>
+                    <nc pname="f" oct="3" con="g" rellen="s" tilt="e" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pes subbipunctis 4</syl>
+                  <neume>
+                    <nc pname="g" oct="3" curve="a" tilt="s" />
+                    <nc pname="a" oct="3" tilt="ne" rellen="l">
+                      <episema />
+                    </nc>
+                    <nc pname="g" oct="3" con="g" />
+                    <nc pname="f" oct="3" con="g" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pes subbipunctis episema</syl>
+                  <neume>
+                    <nc pname="g" oct="3" tilt="se" />
+                    <nc pname="a" oct="3" tilt="ne" rellen="l">
+                      <episema />
+                    </nc>
+                    <nc pname="g" oct="3" con="g" />
+                    <nc pname="f" oct="3" con="g" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pes subbipunctis episema</syl>
+                  <neume>
+                    <nc pname="g" oct="3" tilt="se" />
+                    <nc pname="a" oct="3" tilt="ne" rellen="l">
+                      <episema />
+                    </nc>
+                    <nc pname="g" oct="3" con="g" />
+                    <nc pname="f" oct="3" con="g" tilt="e">
+                      <episema />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pes quadratus subbipunctis</syl>
+                  <neume>
+                    <nc pname="g" oct="3" tilt="se" />
+                    <nc pname="a" oct="3" tilt="ne" rellen="l" />
+                    <nc pname="g" oct="3" con="g" tilt="e" rellen="s" />
+                    <nc pname="f" oct="3" con="g" tilt="e" rellen="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pes quadratus subbipunctis episema</syl>
+                  <neume>
+                    <nc pname="g" oct="3" tilt="se" />
+                    <nc pname="a" oct="3" tilt="ne" rellen="l">
+                      <episema place="left" />
+                    </nc>
+                    <nc pname="g" oct="3" con="g" tilt="e" />
+                    <nc pname="f" oct="3" con="g" tilt="e" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pes subbipunctis episema (on the top of the pes rotundus)</syl>
+                  <neume>
+                    <nc pname="g" oct="3" curve="a" />
+                    <nc pname="a" oct="3" tilt="ne" rellen="l" curve="c">
+                      <episema place="above" />
+                    </nc>
+                    <nc pname="g" oct="3" tilt="s" rellen="s">
+                      <episema place="right" />
+                    </nc>
+                    <nc pname="f" oct="3" con="g" tilt="e" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pes rotundus subpunctis 5</syl>
+                  <neume>
+                    <nc pname="g" oct="3" curve="a" tilt="s" rellen="s" />
+                    <nc pname="a" oct="3" tilt="ne" rellen="l" />
+                    <nc pname="g" oct="3" con="g" />
+                    <nc pname="f" oct="3" con="g" />
+                    <nc pname="e" oct="3" con="g" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pes subpunctis 5 (with pes rotundus)</syl>
+                  <neume>
+                    <nc pname="g" oct="3" curve="a" />
+                    <nc pname="a" oct="3" tilt="ne" rellen="l" curve="c" />
+                    <nc pname="g" oct="3" tilt="s" rellen="s">
+                      <episema place="right" />
+                    </nc>
+                    <nc pname="f" oct="3" con="g" />
+                    <nc pname="e" oct="3" con="g" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pes subpunctis 5 (with pes rotundus)</syl>
+                  <neume>
+                    <nc pname="g" oct="3" curve="a" />
+                    <nc pname="a" oct="3" tilt="ne" curve="c" rellen="l" />
+                    <nc pname="g" oct="3" tilt="s" rellen="s">
+                      <episema place="right" />
+                    </nc>
+                    <nc pname="f" oct="3" con="g" tilt="e" />
+                    <nc pname="e" oct="3" con="g" tilt="e" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pes subpunctis 5 (with pes rotundus)</syl>
+                  <neume>
+                    <nc pname="g" oct="3" curve="a" />
+                    <nc pname="a" oct="3" tilt="ne" rellen="l" />
+                    <nc pname="g" oct="3" con="g" />
+                    <nc pname="f" oct="3" con="g" rellen="s" tilt="e" />
+                    <nc pname="e" oct="3" con="g" rellen="s" tilt="e" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pes subpunctis 6 (with pes rotundus)</syl>
+                  <neume>
+                    <nc pname="a" oct="3" curve="a" tilt="se" />
+                    <nc pname="b" oct="3" curve="c" tilt="ne" rellen="l" />
+                    <nc pname="a" oct="3" tilt="s" rellen="s">
+                      <episema place="right" />
+                    </nc>
+                    <nc pname="g" oct="3" con="g" />
+                    <nc pname="f" oct="3" con="g" tilt="e" rellen="s" />
+                    <nc pname="e" oct="3" con="g" tilt="e" rellen="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Clivis Virga strata 3</syl>
+                  <neume>
+                    <nc pname="g" oct="3" tilt="ne" curve="c" />
+                    <nc pname="f" oct="3" tilt="s" />
+                    <nc pname="g" oct="3" curve="a" tilt="ne" />
+                    <nc pname="g" oct="3" s-shape="n" />
+                    <nc pname="f" oct="3" con="g" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Torculus Virga strata 4</syl>
+                  <neume>
+                    <nc pname="f" oct="3" curve="a" tilt="s" rellen="s" />
+                    <nc pname="g" oct="3" tilt="ne" curve="c" />
+                    <nc pname="f" oct="3" tilt="s" curve="c" />
+                    <nc pname="g" oct="3" tilt="ne" curve="a" />
+                    <nc pname="g" oct="3" s-shape="n" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Porrectus flexus resupinus 5</syl>
+                  <neume>
+                    <nc pname="g" oct="3" tilt="ne" curve="c" />
+                    <nc pname="f" oct="3" tilt="s" />
+                    <nc pname="g" oct="3" tilt="ne" curve="a" />
+                    <nc pname="f" oct="3" tilt="s" curve="c" />
+                    <nc pname="g" oct="3" tilt="ne" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Porrectus flexus resupinus 5</syl>
+                  <neume>
+                    <nc pname="g" oct="3" curve="c" tilt="ne" />
+                    <nc pname="f" oct="3" tilt="s" />
+                    <nc pname="g" oct="3" tilt="ne" />
+                    <nc pname="f" oct="3" tilt="s" />
+                    <nc pname="g" oct="3" tilt="ne">
+                      <episema place="left" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Torculus resupinus flexus</syl>
+                  <neume>
+                    <nc pname="f" oct="3" tilt="s" rellen="s" />
+                    <nc pname="g" oct="3" tilt="n" />
+                    <nc pname="f" oct="3" tilt="s" />
+                    <nc pname="g" oct="3" tilt="n" />
+                    <nc pname="f" oct="3" tilt="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Torculus resupinus flexus 5</syl>
+                  <neume>
+                    <nc pname="f" oct="3" curve="a" rellen="s" />
+                    <nc pname="g" oct="3" tilt="ne" curve="c" />
+                    <nc pname="f" oct="3" tilt="se" curve="a" />
+                    <nc pname="g" oct="3" tilt="ne" curve="c">
+                      <episema place="above" />
+                    </nc>
+                    <nc pname="f" oct="3" tilt="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Porrectus flexus Virga strata 6</syl>
+                  <neume>
+                    <nc pname="g" oct="3" tilt="ne" curve="c" />
+                    <nc pname="f" oct="3" tilt="s" curve="a" />
+                    <nc pname="g" oct="3" tilt="ne" curve="c" />
+                    <nc pname="f" oct="3" tilt="s" curve="a" />
+                    <nc pname="g" oct="3" tilt="ne" />
+                    <nc pname="g" oct="3" s-shape="n" />
+                    <nc pname="f" oct="3" con="g" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Virga strata</syl>
+                  <neume>
+                    <nc pname="g" oct="3" tilt="ne" />
+                    <nc pname="g" oct="3" s-shape="n" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Virga strata episema</syl>
+                  <neume>
+                    <nc pname="g" oct="3" tilt="ne">
+                      <episema place="left" />
+                    </nc>
+                    <nc pname="g" oct="3" s-shape="n" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Bivirga</syl>
+                  <neume>
+                    <nc pname="g" oct="3" tilt="ne" />
+                    <nc pname="g" oct="3" con="g" tilt="ne" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Bivirga</syl>
+                  <neume>
+                    <nc pname="g" oct="3" tilt="ne">
+                      <episema place="above" />
+                    </nc>
+                    <nc pname="g" oct="3" con="g" tilt="ne">
+                      <episema place="above" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Bistropha</syl>
+                  <neume>
+                    <nc pname="g" oct="3" curve="c">
+                      <strophicus />
+                    </nc>
+                    <nc pname="g" oct="3" con="g" curve="c">
+                      <strophicus />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Bistropha episema</syl>
+                  <neume>
+                    <nc pname="g" oct="3">
+                      <strophicus />
+                    </nc>
+                    <nc pname="g" oct="3" con="g">
+                      <strophicus />
+                      <episema form="h" place="right" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Tristropha</syl>
+                  <neume>
+                    <nc pname="g" oct="3">
+                      <strophicus />
+                    </nc>
+                    <nc pname="g" oct="3" con="g">
+                      <strophicus />
+                    </nc>
+                    <nc pname="g" oct="3" con="g">
+                      <strophicus />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Tristropha episema</syl>
+                  <neume>
+                    <nc pname="g" oct="3">
+                      <strophicus />
+                    </nc>
+                    <nc pname="g" oct="3" con="g">
+                      <strophicus />
+                    </nc>
+                    <nc pname="g" oct="3" con="g">
+                      <strophicus />
+                      <episema form="h" place="right" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pes stratus</syl>
+                  <neume>
+                    <nc pname="f" oct="3" curve="a" />
+                    <nc pname="g" oct="3" tilt="n" />
+                    <nc pname="g" oct="3" tilt="e" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Clivis liquescent 2 (Cephalicus)</syl>
+                  <neume>
+                    <nc pname="g" oct="3" tilt="ne" rellen="l" />
+                    <nc pname="f" oct="3">
+                      <liquescent curve="c" looped="true" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Clivis liquescent 2 episema</syl>
+                  <neume>
+                    <nc pname="g" oct="3" tilt="ne">
+                      <episema place="above" />
+                    </nc>
+                    <nc pname="f" oct="3">
+                      <liquescent curve="c" looped="true" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pes liquescent 2 (Epiphonus)</syl>
+                  <neume>
+                    <nc pname="f" oct="3" tilt="s" curve="a" />
+                    <nc pname="g" oct="3" tilt="ne">
+                      <liquescent curve="a" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Climacus liquescent 3 (Ancus)</syl>
+                  <neume>
+                    <nc pname="a" oct="3" tilt="ne" />
+                    <nc pname="g" oct="3" tilt="s" />
+                    <nc pname="f" oct="3" tilt="se">
+                      <liquescent curve="c" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Climacus liquescent 3 (Ancus)</syl>
+                  <neume>
+                    <nc pname="a" oct="3" tilt="ne" curve="c" rellen="l" />
+                    <nc pname="g" oct="3" curved="c" tilt="s" rellen="s" />
+                    <nc pname="f" oct="3" tilt="se" rellen="s">
+                      <liquescent curve="c" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Climacus liquescent episema 3 (Ancus)</syl>
+                  <neume>
+                    <nc pname="a" oct="3" tilt="ne" rellen="s">
+                      <episema place="above" />
+                    </nc>
+                    <nc pname="g" oct="3" tilt="s" />
+                    <nc pname="f" oct="3" tilt="se">
+                      <liquescent curve="c" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Climacus liquescent episema 3 (Ancus)</syl>
+                  <neume>
+                    <nc pname="a" oct="3" tilt="ne" rellen="l" curve="c">
+                      <episema place="above" />
+                    </nc>
+                    <nc pname="g" oct="3" tilt="s" rellen="s" />
+                    <nc pname="f" oct="3" curve="c" tilt="se" rellen="s">
+                      <liquescent curve="c" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Climacus liquescent episema 3 (Ancus)</syl>
+                  <neume>
+                    <nc pname="a" oct="3" tilt="ne" curve="c" />
+                    <nc pname="g" oct="3" tilt="s" rellen="s" />
+                    <nc pname="f" oct="3" tilt="se" rellen="s">
+                      <liquescent curve="c" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Porrectus liquescent 3</syl>
+                  <neume>
+                    <nc pname="g" oct="3" tilt="ne" curve="c" />
+                    <nc pname="f" oct="3" tilt="s" />
+                    <nc pname="g" oct="3">
+                      <liquescent curve="a" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Porrectus liquescent episema 3</syl>
+                  <neume>
+                    <nc pname="g" oct="3" tilt="ne" curve="c">
+                      <episema place="left" />
+                    </nc>
+                    <nc pname="f" oct="3" tilt="s" />
+                    <nc pname="f" oct="3" rellen="s">
+                      <liquescent curve="a" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Porrectus flexus liquescent 4</syl>
+                  <neume>
+                    <nc pname="g" oct="3" tilt="ne" curve="c" />
+                    <nc pname="f" oct="3" curve="a" tilt="se" />
+                    <nc pname="g" oct="3" curve="c" tilt="ne" />
+                    <nc pname="f" oct="3" tilt="se">
+                      <liquescent curve="a" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Porrectus flexus liquescent 4</syl>
+                  <neume>
+                    <nc pname="g" oct="3" curve="c" tilt="ne" rellen="s" />
+                    <nc pname="f" oct="3" tilt="se" curve="a" rellen="s" />
+                    <nc pname="g" oct="3" tilt="n" />
+                    <nc pname="f" oct="3" curve="c">
+                      <liquescent looped="true" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Porrectus flexus liquescent 4</syl>
+                  <neume>
+                    <nc pname="g" oct="3" curve="c" tilt="ne" rellen="s" />
+                    <nc pname="f" oct="3" tilt="se" curve="a" rellen="s" />
+                    <nc pname="g" oct="3" tilt="n" />
+                    <nc pname="f" oct="3" curve="c">
+                      <liquescent looped="true" />
+                      <episema place="above" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Porrectus flexus flexus liquescent 5</syl>
+                  <neume>
+                    <nc pname="a" oct="3" curve="c" tilt="ne" />
+                    <nc pname="g" oct="3" tilt="s" curve="a" />
+                    <nc pname="a" oct="3" tilt="ne" curve="c" />
+                    <nc pname="g" oct="3" tilt="s" />
+                    <nc pname="f" oct="3" tilt="se">
+                      <liquescent />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Porrectus flexus flexus liquescent 5</syl>
+                  <neume>
+                    <nc pname="a" oct="3" curve="c" tilt="ne" />
+                    <nc pname="g" oct="3" curve="a" tilt="s" />
+                    <nc pname="a" oct="3" curve="c" tilt="ne">
+                      <episema place="above" />
+                    </nc>
+                    <nc pname="g" oct="3" tilt="s" />
+                    <nc pname="f" oct="3" tilt="se">
+                      <liquescent />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Torculus resupinus flexus flexus episema</syl>
+                  <neume>
+                    <nc pname="f" oct="3" curve="a" rellen="s" tilt="se" />
+                    <nc pname="g" oct="3" tilt="ne" curve="c" />
+                    <nc pname="f" oct="3" tilt="s" curve="a" />
+                    <nc pname="g" oct="3" tilt="ne" curve="a">
+                      <episema place="above" />
+                    </nc>
+                    <nc pname="f" oct="3">
+                      <liquescent />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Porrectus flexus resupinus liquescent</syl>
+                  <neume>
+                    <nc pname="g" oct="3" tilt="ne" curve="c" />
+                    <nc pname="f" oct="3" tilt="s" />
+                    <nc pname="g" oct="3" curve="a" tilt="ne" />
+                    <nc pname="f" oct="3" curve="c" tilt="s" />
+                    <nc pname="g" oct="3" tilt="ne">
+                      <liquescent curve="a" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pes rotundus liquescent</syl>
+                  <neume>
+                    <nc pname="f" oct="3" curved="a" tilt="se" rellen="s" />
+                    <nc pname="g" oct="3" tilt="ne" curve="c">
+                      <liquescent curve="c" looped="true" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pes rotundus liquescent episema</syl>
+                  <neume>
+                    <nc pname="f" oct="3" curve="a" tilt="se" rellen="s" />
+                    <nc pname="g" oct="3" tilt="n">
+                      <liquescent curve="c" looped="true" />
+                      <episema place="above" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pes quadratus liquescent</syl>
+                  <neume>
+                    <nc pname="f" oct="3" tilt="se" rellen="s" />
+                    <nc pname="g" oct="3" tilt="n">
+                      <liquescent curve="c" looped="true" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pes quadratus liquescent episema</syl>
+                  <neume>
+                    <nc pname="f" oct="3" tilt="se" />
+                    <nc pname="g" oct="3" rellen="l" tilt="n" curve="c">
+                      <liquescent curve="c" looped="true" />
+                      <episema place="above" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pes quassus liquescent</syl>
+                  <neume>
+                    <nc pname="f" oct="3" s-shape="s" tilt="se" rellen="s" />
+                    <nc pname="g" oct="3" tilt="ne">
+                      <liquescent curve="c" looped="true" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Virga strata liquescent</syl>
+                  <neume>
+                    <nc pname="f" oct="3" tilt="ne" s-shape="s" />
+                    <nc pname="g" oct="3" tilt="ne" rellen="s">
+                      <oriscus />
+                      <liquescent looped="true" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Torculus liquescent 4</syl>
+                  <neume>
+                    <nc pname="g" oct="3" curve="a" tilt="se" rellen="s" />
+                    <nc pname="a" oct="3" tilt="ne" curve="c" rellen="l" />
+                    <nc pname="g" oct="3" tilt="s" />
+                    <nc pname="f" oct="3" tilt="se">
+                      <liquescent curve="c" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Torculus liquescent episema 4</syl>
+                  <neume>
+                    <nc pname="g" oct="3" curve="a" tilt="se" rellen="s" />
+                    <nc pname="a" oct="3" tilt="ne" rellen="l" curve="c">
+                      <episema place="above" />
+                    </nc>
+                    <nc pname="g" oct="3" tilt="s" />
+                    <nc pname="f" oct="3" tilt="se">
+                      <liquescent curve="c" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Torculus liquescent 4</syl>
+                  <neume>
+                    <nc pname="g" oct="3" tilt="se" rellen="s" />
+                    <nc pname="a" oct="3" tilt="ne" curve="c" />
+                    <nc pname="g" oct="3" tilt="s" />
+                    <nc pname="f" oct="3" tilt="se">
+                      <liquescent curve="c" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Torculus liquescent episema 4</syl>
+                  <neume>
+                    <nc pname="g" oct="3" tilt="se" />
+                    <nc pname="a" oct="3" curve="c" rellen="l" tilt="ne">
+                      <episema place="above" />
+                    </nc>
+                    <nc pname="g" oct="3" tilt="s" />
+                    <nc pname="f" oct="3" tilt="s">
+                      <liquescent curve="c" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Torculus resupinus flexus liquescent</syl>
+                  <neume>
+                    <nc pname="f" oct="3" curve="a" tilt="se" rellen="s" />
+                    <nc pname="g" oct="3" tilt="ne" curve="c" />
+                    <nc pname="f" oct="3" tilt="s" />
+                    <nc pname="g" oct="3" tilt="ne" rellen="l">
+                      <liquescent curve="c" looped="true" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Torculus resupinus liquescent</syl>
+                  <neume>
+                    <nc pname="f" oct="3" curve="a" tilt="se" />
+                    <nc pname="g" oct="3" tilt="ne" curve="c" rellen="l" />
+                    <nc pname="f" oct="3" tilt="s" rellen="s">
+                      <liquescent curve="a" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Torculus resupinus liquescent</syl>
+                  <neume>
+                    <nc pname="f" oct="3" tilt="se" />
+                    <nc pname="g" oct="3" rellen="l" tilt="ne" />
+                    <nc pname="f" oct="3" tilt="s" rellen="s" curve="c">
+                      <liquescent curve="a" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Torculus resupinus liquescent episema</syl>
+                  <neume>
+                    <nc pname="f" oct="3" tilt="e" />
+                    <nc pname="g" oct="3" rellen="l" tilt="n" curve="c">
+                      <episema form="h" place="left" />
+                    </nc>
+                    <nc pname="f" oct="3" tilt="e" curve="a">
+                      <liquescent curve="a" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Scandicus liquescent</syl>
+                  <neume>
+                    <nc pname="f" oct="3" tilt="e" />
+                    <nc pname="g" oct="3" con="g" tilt="e" />
+                    <nc pname="a" oct="3" con="g" tilt="ne" rellen="l">
+                      <liquescent curve="c" looped="true" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Salicus liquescent</syl>
+                  <neume>
+                    <nc pname="f" oct="3" />
+                    <nc pname="g" oct="3" con="g" curve="c" tilt="e">
+                      <oriscus />
+                    </nc>
+                    <nc pname="a" oct="3" con="g" tilt="ne">
+                      <liquescent curve="c" looped="true" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Looped connection</syl>
+                  <neume>
+                    <nc pname="f" oct="3" tilt="se" />
+                    <nc pname="g" oct="3" con="l" tilt="n" rellen="l" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pitched: pes, a fifth</syl>
+                  <neume>
+                    <nc pname="d" oct="3" curve="a" tilt="s" />
+                    <nc pname="a" oct="3" tilt="ne" rellen="l" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pitched: clivis, a fourth</syl>
+                  <neume>
+                    <nc pname="c" oct="4" tilt="ne" curve="c" />
+                    <nc pname="g" oct="3" tilt="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pitched: porrectus, uneven intervals</syl>
+                  <neume>
+                    <nc pname="c" oct="4" tilt="ne" />
+                    <nc pname="f" oct="3" tilt="s" />
+                    <nc pname="a" oct="3" tilt="ne" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pitched: torculus, wide</syl>
+                  <neume>
+                    <nc pname="e" oct="3" tilt="se" />
+                    <nc pname="b" oct="3" tilt="ne" />
+                    <nc pname="f" oct="3" tilt="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pitched: climacus, a third then a step</syl>
+                  <neume>
+                    <nc pname="c" oct="4" tilt="ne" />
+                    <nc pname="a" oct="3" con="g" />
+                    <nc pname="g" oct="3" con="g" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pitched: scandicus, a step then a fourth</syl>
+                  <neume>
+                    <nc pname="d" oct="3" />
+                    <nc pname="e" oct="3" con="g" />
+                    <nc pname="a" oct="3" con="g" tilt="ne" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pitched: quilisma scandicus, thirds</syl>
+                  <neume>
+                    <nc pname="d" oct="3" tilt="e" rellen="s" />
+                    <nc pname="f" oct="3" con="g">
+                      <quilisma waves="3" />
+                    </nc>
+                    <nc pname="a" oct="3" tilt="ne" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pitched: cephalicus, a fourth</syl>
+                  <neume>
+                    <nc pname="c" oct="4" tilt="ne" rellen="l" />
+                    <nc pname="g" oct="3">
+                      <liquescent curve="c" looped="true" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pitched: epiphonus, a fifth</syl>
+                  <neume>
+                    <nc pname="d" oct="3" tilt="s" curve="a" />
+                    <nc pname="a" oct="3" tilt="ne">
+                      <liquescent curve="a" />
+                    </nc>
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pitched: pressus on one pitch</syl>
+                  <neume>
+                    <nc pname="a" oct="3" tilt="ne" />
+                    <nc pname="a" oct="3" s-shape="n" rellen="s" />
+                    <nc pname="g" oct="3" con="g" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Pitched: pes with a repeated first note</syl>
+                  <neume>
+                    <nc pname="f" oct="3" />
+                    <nc pname="f" oct="3" />
+                    <nc pname="g" oct="3" tilt="ne" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Conflict: rising tilt on a falling note</syl>
+                  <neume>
+                    <nc pname="c" oct="4" tilt="ne" curve="c" />
+                    <nc pname="a" oct="3" tilt="ne" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Conflict: level stroke over a fifth</syl>
+                  <neume>
+                    <nc pname="e" oct="3" tilt="e" />
+                    <nc pname="b" oct="3" tilt="e" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>Staff: F clef on line 3</syl>
+                  <clef shape="F" line="3" />
+                  <neume>
+                    <nc pname="f" oct="3" curve="a" tilt="s" />
+                    <nc pname="a" oct="3" tilt="ne" rellen="l" />
+                  </neume>
+                </syllable>
+              </layer>
+            </staff>
+          </section>
+        </score>
+      </mdiv>
+    </body>
+  </music>
+</mei>
