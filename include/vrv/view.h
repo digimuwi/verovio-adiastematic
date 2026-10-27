@@ -29,6 +29,7 @@ class Breath;
 class Caesura;
 class Chord;
 class ControlElement;
+class Custos;
 class DeviceContext;
 class Dir;
 class Div;
@@ -428,6 +429,22 @@ protected:
      * its staffDef/@notationsubtype (empty when it names none).
      */
     std::string GetNeumeScript(const Staff *staff) const;
+    ///@}
+
+    /**
+     * @name Staff furniture of a calligraphic neume staff, in the hand of its script.
+     * Each applies only under --neume-calligraphic on a neume staff; otherwise it does nothing and returns
+     * false, and the stock drawing goes on. Defined in view_neumefurniture.cpp
+     */
+    ///@{
+    /** Draw @p clef as its letter (c, F) at line height @p y when the staff's hand writes letter clefs. */
+    bool DrawNeumeClefLetter(DeviceContext *dc, Clef *clef, Staff *staff, int x, int y);
+    /** Draw @p custos in the hand's own form (square, head and tail, slant, check). */
+    bool DrawNeumeCustos(DeviceContext *dc, Custos *custos, Layer *layer, Staff *staff, Measure *measure);
+    /** Draw the staff lines in the colours of staffDef/@lines.color. */
+    bool DrawNeumeStaffLinesColored(DeviceContext *dc, Staff *staff, StaffDef *staffDef, Measure *measure);
+    /** Draw the hand's coloured pitch markers (--neume-pitch-markers), following the clefs of the staff. */
+    void DrawNeumePitchMarkers(DeviceContext *dc, Staff *staff, StaffDef *staffDef, Measure *measure);
     ///@}
 
     /**

@@ -321,6 +321,30 @@ public:
     static std::vector<std::string> HandTokens();
 
     /**
+     * @name Staff furniture in a hand's own forms (src/calligraphicfurniture.cpp), drawn by the view beside
+     * the neumes: the custos and the letter clefs (Hand::custos, Hand::clef). Outlines are in pen space (+y
+     * down, prototype px, unscaled), each a flat closed cubic Bézier list like NcGeometry::ribbon.
+     */
+    ///@{
+    /**
+     * Sweep @p pen's nib along the centreline @p centre and return one closed, fillable outline: the same
+     * broad-nib width law as a neume's ribbon, for a mark that is not a neume.
+     */
+    static std::vector<PointF> NibOutline(const std::vector<PointF> &centre, const Pen &pen);
+    /**
+     * The custos in @p form (any but Glyph), written with @p pen: its pitch at the origin, its ink running
+     * right from about x = 0. Empty for Glyph. The shapes and their evidence are in the .cpp.
+     */
+    static std::vector<std::vector<PointF>> CustosOutlines(Hand::CustosForm form, const Pen &pen);
+    /**
+     * The letter a letter-clef hand (Hand::clef == Letter) writes for a clef of @p clefShape
+     * (data_CLEFSHAPE): c for a C clef, F (f in the Hildegard books) for an F clef, g for a G clef. 0 for a
+     * shape no letter stands for, which keeps the glyph.
+     */
+    static char32_t ClefLetter(const Hand &hand, int clefShape);
+    ///@}
+
+    /**
      * Build the geometry of one neume from its ordered <nc> components. The returned
      * NeumeGeometry::ncs is parallel to @p ncs (same size and order), so each entry can be inked
      * inside its own <nc> graphic.
