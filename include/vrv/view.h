@@ -431,6 +431,16 @@ protected:
     ///@}
 
     /**
+     * @name Staff furniture of a calligraphic neume staff, in the hand of its script.
+     * Each applies only under --neume-calligraphic on a neume staff; otherwise it does nothing and returns
+     * false, and the stock drawing goes on. Defined in view_neumefurniture.cpp
+     */
+    ///@{
+    /** Draw the staff lines in the colours of staffDef/@lines.color. */
+    bool DrawNeumeStaffLinesColored(DeviceContext *dc, Staff *staff, StaffDef *staffDef, Measure *measure);
+    ///@}
+
+    /**
      * @name Methods for drawing Floating child classes.
      * They are base drawing methods that are called directly from DrawFloatingElement.
      * Call appropriate method of child classes (Slur, Tempo, Tie, etc).

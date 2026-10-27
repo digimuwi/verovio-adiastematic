@@ -1331,6 +1331,9 @@ void View::DrawStaffLines(DeviceContext *dc, Staff *staff, StaffDef *staffDef, M
     // Nothing to do if both are false
     if (!gltLines && !visibleLines) return;
 
+    // A calligraphic neume staff with staffDef/@lines.color (view_neumefurniture.cpp)
+    if (!gltLines && this->DrawNeumeStaffLinesColored(dc, staff, staffDef, measure)) return;
+
     int j, x1, x2, y1, y2;
 
     x1 = measure->GetDrawingX();
