@@ -267,12 +267,7 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::BuildPoint(
                     // A small round point, a touch longer along the nib than across it, Hand::markWidth across (the
                     // nib's breadth by default).
                     const double r = ((hand.markWidth > 0.0) ? hand.markWidth : pen.width) / 2.0;
-                    std::vector<PointF> ring;
-                    for (int k = 0; k < 8; ++k) {
-                        const double a = k * M_PI / 4.0;
-                        ring.push_back(nib * (1.08 * r * std::cos(a)) + across * (0.92 * r * std::sin(a)));
-                    }
-                    m.outline = SmoothClosed(ring);
+                    m.outline = RoundPoint(o, r, pen);
                     m.ductus = { o };
                     m.ext = ExtentAround(m.outline, o);
                     return m;

@@ -166,6 +166,11 @@ cistercian-01-n2,cistercian,cistercian-01,c4,hairline end above c,extent_above,0
 cistercian-02-n1,cistercian,cistercian-02,b3,top of the S above b,extent_above,0.7,0.3,-0.03,pitch point 1 is the right-hand turn in the b space; the top rises 0.7 above b
 cistercian-02-n2,cistercian,cistercian-02,a3,end of the hairline tail on a,extent_below,0,0.3,-0.04,pitch point 2; overshoot 0
 cistercian-03-n1,cistercian,cistercian-03,c4,head of gau- on the c line,head,0,0.3,,"from the notes (head at 55,72); the custos itself is not an nc"
+cistercian-01-n1,french,cistercian-01,a3,centre of the small loop,foot,0,0.3,-0.03,"pitch point 1; the loop is the @con=l joint, inked with n2, so n1's own ink is checked ending at the loop centre; the Rein example in the French hand"
+cistercian-01-n2,french,cistercian-01,c4,hairline end above c,extent_above,0.4,0.3,0.05,"pitch point 2; thick stroke ends 0.5 below c, hairline 0.4 above (overshoot 0.4 up); the Rein example in the French hand"
+cistercian-02-n1,french,cistercian-02,b3,top of the S above b,extent_above,0.7,0.3,-0.03,pitch point 1 is the right-hand turn in the b space; the top rises 0.7 above b; the Rein example in the French hand
+cistercian-02-n2,french,cistercian-02,a3,end of the hairline tail on a,extent_below,0,0.3,-0.04,pitch point 2; overshoot 0; the Rein example in the French hand
+cistercian-03-n1,french,cistercian-03,c4,head of gau- on the c line,head,0,0.3,,"from the notes (head at 55,72); the custos itself is not an nc; the Rein example in the French hand"
 aquitanian-01-n1,aquitanian,aquitanian-01,d3,bottom end of the rising liquescent stroke,centre,0,0.35,,pitch point 1; its tail reaches ~0.2 below D
 aquitanian-01-n2,aquitanian,aquitanian-01,f3,top end of the same stroke,extent_above,0,0.3,,pitch point 2; overshoot 0
 aquitanian-01-n3,aquitanian,aquitanian-01,f3,punctum,centre,0,0.3,,pitch point 3

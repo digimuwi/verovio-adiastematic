@@ -158,6 +158,39 @@ namespace {
         return h;
     }
 
+    Hand French()
+    {
+        // Montpellier H.159 (the Dijon tonary, s. XI): French neumes over its letters a-p, with no staff. The book
+        // gives the shapes and the pen, measured on the plates of ff. 98r-98v at about 16 px a step (a virga,
+        // 23-40 px long, taken as one line distance); it cannot show where a pitch sits on a stroke. That comes
+        // from the French neumes the Cistercians of Rein set on lines, as in Cistercian(): the epiphonus's pitch
+        // 0.4 step out on its hairline (cistercian-01), the S-shaped cephalicus ending on its pitch (-02).
+        Hand h;
+        h.token = "french";
+        // A fine pen held steeper than the St. Gall one: the upright strokes (virga, the clivis's rising leg) are
+        // its thinnest after the hairline flourishes, under 0.25 step, and level strokes and descents to the
+        // right (tractulus, pes foot, the falls of clivis and porrectus) its broadest, about 0.4 step.
+        h.pen.angleDeg = 115.0;
+        h.pen.width = 5.2;
+        h.pen.thin = 1.4;
+        // A repeated stroke stands 0.55-0.85 step from the one before (bivirga, tristropha), and a detached mark is
+        // set down about half a step clear of the last (the dot between pes and clivis, 98v us, in).
+        h.gesture.repeatDx = 9.0;
+        h.gesture.breakGap = 10.0;
+        // A curved opening that turns back - the bottom hook of the S-shaped torculus - hangs about a step above
+        // its pitch, where the straight lead of the clivis rises a full line distance to its apex.
+        h.arch = { 1.0, 1.0 };
+        h.liqOvershootUp = 0.4;
+        h.liqOvershootDown = 0.0;
+        // Dots are small round points, about a nib across (98v us, in).
+        h.dot = Hand::Dot::Point;
+        // Staff furniture as at Rein: letter clefs, the head-and-tail custos, red F and yellow c.
+        h.clef = Hand::ClefForm::Letter;
+        h.custos = Hand::CustosForm::HeadTail;
+        h.pitchMarkers = { { 'f', "#b0302a" }, { 'c', "#c9a227" } };
+        return h;
+    }
+
     Hand Beneventan()
     {
         // Benevento 34, Barb. lat. 603: "the end of the tail indicates the pitch of the second note" (Hiley
@@ -257,8 +290,9 @@ namespace {
 
     const std::vector<Hand> &Hands()
     {
-        static const std::vector<Hand> hands = { StGall(), Hildegard(), German(), Hufnagel(), Messine(),
-            MessineGerman(), Cistercian(), Beneventan(), Aquitanian(), CentralItalian(), Nonantolan(), Square() };
+        static const std::vector<Hand> hands
+            = { StGall(), Hildegard(), German(), Hufnagel(), Messine(), MessineGerman(), Cistercian(), French(),
+                  Beneventan(), Aquitanian(), CentralItalian(), Nonantolan(), Square() };
         return hands;
     }
 
