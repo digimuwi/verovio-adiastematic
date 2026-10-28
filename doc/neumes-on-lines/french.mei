@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mei xmlns="http://www.music-encoding.org/ns/mei" meiversion="5.0">
+  <!--
+    Synthetic test file for calligraphic neumes on a staff (verovio option neume-calligraphic), one of the
+    doc/neumes-on-lines set. Every nc carries explicit shape attributes: shapes are never inferred from
+    neume/@type. Guidonian letters map to MEI as G = g3, a = a3, c = c4 (middle C).
+
+    Hand: French neumes, from Montpellier, BIU Medecine H.159 (the Dijon tonary, s. XI), which writes them
+    over its letters a-p with no staff. Its shapes, pen and spacing were measured on the plates of
+    ff. 98r-98v (R. Diffusa est), at about 16 px a step (a virga taken as one line distance).
+    french-01 to -15 reproduce signs of that page: the shapes as written, the pitches those of the
+    tonary's letters (h = a, i = b, k = c, l = d, m = e, n = f, o = g; a hook sign repeats the letter
+    before it). H.159 cannot show where a pitch sits on a stroke, so these carry no pitch points.
+    The placement is the French neumes on lines of the Cistercians of Rein (Wien, OeNB Cod. 1799**),
+    whose measured examples cistercian-01 to -03 are reproduced here in the French hand and calibrated.
+    Ids: "<example>-n<k>" with k the note number; "-x" ids are synthetic extras that show the hand.
+    Shapes: virga = upright stroke (tilt n); punctum = round point (bare nc); tractulus = level dash
+    (tilt e); pes = short level foot (tilt e, rellen s) + upright stem (tilt n); clivis = thin rising lead
+    (tilt n) + broad fall to the right (tilt se); torculus = S: hook (tilt se, curve a) + spine turning
+    over (tilt ne, curve c) + short fall (tilt s); porrectus = N: short lead (tilt n, rellen s) + fall
+    (tilt se) + thin rise (tilt ne); oriscus = S-shaped wave (s-shape w) running into its tail.
+    On a staff the S of the torculus spans its intervals, so over a second it lies on its side where
+    H.159, writing it to a fixed size, stands it upright.
+  -->
+  <meiHead>
+    <fileDesc>
+      <titleStmt>
+        <title>Neumes on lines: French (Montpellier H.159; placement from Rein, OeNB Cod. 1799**)</title>
+      </titleStmt>
+      <pubStmt />
+    </fileDesc>
+  </meiHead>
+  <music>
+    <body>
+      <mdiv>
+        <score>
+          <scoreDef>
+            <staffGrp>
+              <staffDef n="1" lines="4" notationtype="neume" notationsubtype="french" />
+            </staffGrp>
+          </scoreDef>
+          <section>
+            <staff n="1">
+              <layer n="1">
+                <!-- cistercian-01 (Rein, R. Ecce virgo concipiet, "virgo"): epiphonus a c, loop + thick up-stroke + hairline; the pitch rule the French hand takes from Rein (c clef on line 3 keeps a and c on lines, as at Rein) -->
+                <clef shape="C" line="3" />
+                <syllable>
+                  <syl>vir-</syl>
+                  <neume type="epiphonus">
+                    <nc xml:id="cistercian-01-n1" pname="a" oct="3" tilt="sw" curve="c" rellen="s" />
+                    <nc xml:id="cistercian-01-n2" pname="c" oct="4" tilt="ne" con="l"><liquescent curve="a" /></nc>
+                  </neume>
+                </syllable>
+                <sb />
+                <!-- cistercian-02 (Rein, R. Ecce veniet dominus, "sanctus"): S-shaped cephalicus b a -->
+                <syllable>
+                  <syl>san-</syl>
+                  <neume type="cephalicus">
+                    <nc xml:id="cistercian-02-n1" pname="b" oct="3" tilt="ne" curve="c" />
+                    <nc xml:id="cistercian-02-n2" pname="a" oct="3" tilt="sw" curve="a"><liquescent curve="c" /></nc>
+                  </neume>
+                </syllable>
+                <sb />
+                <!-- cistercian-03 (Rein, R. Sicut mater consolatur, "gaudebit"): virga c, head on the c line; F clef on line 2 -->
+                <clef shape="F" line="2" />
+                <syllable>
+                  <syl>gau-</syl>
+                  <neume type="virga">
+                    <nc xml:id="cistercian-03-n1" pname="c" oct="4" tilt="n" />
+                  </neume>
+                </syllable>
+                <sb />
+                <!-- french-01 (Montpellier H.159 f. 98r, R. Diffusa est, "Diffusa", letters h): punctum a, a round point -->
+                <clef shape="C" line="2" />
+                <syllable>
+                  <syl>Dif-</syl>
+                  <neume type="punctum">
+                    <nc xml:id="french-01-n1" pname="a" oct="3" />
+                  </neume>
+                </syllable>
+                <!-- french-02 (Montpellier H.159 f. 98r, R. Diffusa est, "Diffusa", letters k k): bivirga c c, two upright strokes about 0.6 step apart -->
+                <syllable>
+                  <syl>fu-</syl>
+                  <neume type="bivirga">
+                    <nc xml:id="french-02-n1" pname="c" oct="4" tilt="n" />
+                    <nc xml:id="french-02-n2" pname="c" oct="4" tilt="n" con="g" />
+                  </neume>
+                </syllable>
+                <!-- french-03 (Montpellier H.159 f. 98r, R. Diffusa est, "Diffusa", letters k l): pes c d, a short level foot and an upright stem from its right end -->
+                <syllable>
+                  <syl>sa</syl>
+                  <neume type="pes">
+                    <nc xml:id="french-03-n1" pname="c" oct="4" tilt="e" rellen="s" />
+                    <nc xml:id="french-03-n2" pname="d" oct="4" tilt="n" />
+                  </neume>
+                </syllable>
+                <!-- french-04 (Montpellier H.159 f. 98r, R. Diffusa est, "est", letters k l k l, then i i i): torculus resupinus c d c d, an S whose last stroke runs on as a long hairline to the upper right; tristropha b b b, three short upright strokes -->
+                <syllable>
+                  <syl>est</syl>
+                  <neume type="torculus resupinus">
+                    <nc xml:id="french-04-n1" pname="c" oct="4" tilt="se" curve="a" />
+                    <nc xml:id="french-04-n2" pname="d" oct="4" tilt="ne" curve="c" />
+                    <nc xml:id="french-04-n3" pname="c" oct="4" tilt="s" />
+                    <nc xml:id="french-04-n4" pname="d" oct="4" tilt="ne" />
+                  </neume>
+                  <neume type="tristropha">
+                    <nc xml:id="french-04-n5" pname="b" oct="3" tilt="n" rellen="s" />
+                    <nc xml:id="french-04-n6" pname="b" oct="3" tilt="n" rellen="s" con="g" />
+                    <nc xml:id="french-04-n7" pname="b" oct="3" tilt="n" rellen="s" con="g" />
+                  </neume>
+                </syllable>
+                <sb />
+                <!-- french-05 (Montpellier H.159 f. 98r, R. Diffusa est, "gratia", letters k i l k): two clivis c b and d c, the rising leg thin, the fall broad, with a sharp apex -->
+                <syllable>
+                  <syl>gra-</syl>
+                  <neume type="clivis">
+                    <nc xml:id="french-05-n1" pname="c" oct="4" tilt="n" />
+                    <nc xml:id="french-05-n2" pname="b" oct="3" tilt="se" />
+                  </neume>
+                  <neume type="clivis">
+                    <nc xml:id="french-05-n3" pname="d" oct="4" tilt="n" />
+                    <nc xml:id="french-05-n4" pname="c" oct="4" tilt="se" />
+                  </neume>
+                </syllable>
+                <!-- french-06 (Montpellier H.159 f. 98r, R. Diffusa est, "gratia", letters k l k): torculus c d c, the S: a hook at the foot, a spine turning over at the top, a short fall -->
+                <syllable>
+                  <syl>ti-</syl>
+                  <neume type="torculus">
+                    <nc xml:id="french-06-n1" pname="c" oct="4" tilt="se" curve="a" />
+                    <nc xml:id="french-06-n2" pname="d" oct="4" tilt="ne" curve="c" />
+                    <nc xml:id="french-06-n3" pname="c" oct="4" tilt="s" />
+                  </neume>
+                </syllable>
+                <sb />
+                <!-- french-07 (Montpellier H.159 f. 98r, R. Diffusa est, "labiis", letters k l n l): pes c d, clivis f d -->
+                <syllable>
+                  <syl>la-</syl>
+                  <neume type="pes">
+                    <nc xml:id="french-07-n1" pname="c" oct="4" tilt="e" rellen="s" />
+                    <nc xml:id="french-07-n2" pname="d" oct="4" tilt="n" />
+                  </neume>
+                  <neume type="clivis">
+                    <nc xml:id="french-07-n3" pname="f" oct="4" tilt="n" />
+                    <nc xml:id="french-07-n4" pname="d" oct="4" tilt="se" />
+                  </neume>
+                </syllable>
+                <!-- french-08 (Montpellier H.159 f. 98r, R. Diffusa est, "propterea", letters o m o): porrectus g e g, an N: a short thin lead, a broad fall, a thin rise -->
+                <syllable>
+                  <syl>ter-</syl>
+                  <neume type="porrectus">
+                    <nc xml:id="french-08-n1" pname="g" oct="4" tilt="n" rellen="s" />
+                    <nc xml:id="french-08-n2" pname="e" oct="4" tilt="se" />
+                    <nc xml:id="french-08-n3" pname="g" oct="4" tilt="ne" />
+                  </neume>
+                </syllable>
+                <!-- french-09 (Montpellier H.159 f. 98r, R. Diffusa est, "benedixit", letters k): tractulus c, a short broad dash -->
+                <syllable>
+                  <syl>be-</syl>
+                  <neume type="tractulus">
+                    <nc xml:id="french-09-n1" pname="c" oct="4" tilt="e" />
+                  </neume>
+                </syllable>
+                <sb />
+                <!-- french-10 (Montpellier H.159 f. 98r, R. Diffusa est, "tuis", letters n n, hook, l): bivirga f f, then the oriscus on f (the hook sign repeats f) running down into a long tail to d -->
+                <syllable>
+                  <syl>tu-</syl>
+                  <neume type="bivirga">
+                    <nc xml:id="french-10-n1" pname="f" oct="4" tilt="n" />
+                    <nc xml:id="french-10-n2" pname="f" oct="4" tilt="n" con="g" />
+                  </neume>
+                  <neume type="pressus">
+                    <nc xml:id="french-10-n3" pname="f" oct="4" s-shape="w"><oriscus /></nc>
+                    <nc xml:id="french-10-n4" pname="d" oct="4" tilt="s" />
+                  </neume>
+                </syllable>
+                <!-- french-11 (Montpellier H.159 f. 98r, R. Diffusa est, "propterea", letters m l k): climacus e d c, a virga and two dots -->
+                <syllable>
+                  <syl>a</syl>
+                  <neume type="climacus">
+                    <nc xml:id="french-11-n1" pname="e" oct="4" tilt="n" />
+                    <nc xml:id="french-11-n2" pname="d" oct="4" con="g" />
+                    <nc xml:id="french-11-n3" pname="c" oct="4" con="g" />
+                  </neume>
+                </syllable>
+                <sb />
+                <!-- french-12 (Montpellier H.159 f. 98v, R. Diffusa est, "te", letters k h l): porrectus c a d -->
+                <syllable>
+                  <syl>te</syl>
+                  <neume type="porrectus">
+                    <nc xml:id="french-12-n1" pname="c" oct="4" tilt="n" rellen="s" />
+                    <nc xml:id="french-12-n2" pname="a" oct="3" tilt="se" />
+                    <nc xml:id="french-12-n3" pname="d" oct="4" tilt="ne" />
+                  </neume>
+                </syllable>
+                <!-- french-13 (Montpellier H.159 f. 98v, R. Diffusa est, "deus", letters h k h, hook, g): pes a c, a dot a, clivis a g -->
+                <syllable>
+                  <syl>us</syl>
+                  <neume type="pes">
+                    <nc xml:id="french-13-n1" pname="a" oct="3" tilt="e" rellen="s" />
+                    <nc xml:id="french-13-n2" pname="c" oct="4" tilt="n" />
+                  </neume>
+                  <neume type="punctum">
+                    <nc xml:id="french-13-n3" pname="a" oct="3" />
+                  </neume>
+                  <neume type="clivis">
+                    <nc xml:id="french-13-n4" pname="a" oct="3" tilt="n" />
+                    <nc xml:id="french-13-n5" pname="g" oct="3" tilt="se" />
+                  </neume>
+                </syllable>
+                <!-- french-14 (Montpellier H.159 f. 98v, R. Diffusa est, "aeternum", letters m n m): torculus e f e -->
+                <syllable>
+                  <syl>ae-</syl>
+                  <neume type="torculus">
+                    <nc xml:id="french-14-n1" pname="e" oct="4" tilt="se" curve="a" />
+                    <nc xml:id="french-14-n2" pname="f" oct="4" tilt="ne" curve="c" />
+                    <nc xml:id="french-14-n3" pname="e" oct="4" tilt="s" />
+                  </neume>
+                </syllable>
+                <!-- french-15 (Montpellier H.159 f. 98v, R. Diffusa est, "aeternum", letters m n l): torculus e f d -->
+                <syllable>
+                  <syl>num</syl>
+                  <neume type="torculus">
+                    <nc xml:id="french-15-n1" pname="e" oct="4" tilt="se" curve="a" />
+                    <nc xml:id="french-15-n2" pname="f" oct="4" tilt="ne" curve="c" />
+                    <nc xml:id="french-15-n3" pname="d" oct="4" tilt="s" />
+                  </neume>
+                </syllable>
+                <sb />
+                <!-- synthetic extras in the French hand (not measured) -->
+                <syllable>
+                  <syl>scandicus</syl>
+                  <neume type="scandicus">
+                    <nc xml:id="french-x1-n1" pname="g" oct="3" />
+                    <nc xml:id="french-x1-n2" pname="a" oct="3" tilt="e" rellen="s" con="g" />
+                    <nc xml:id="french-x1-n3" pname="c" oct="4" tilt="n" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>pes subbipunctis</syl>
+                  <neume type="pes subbipunctis">
+                    <nc xml:id="french-x2-n1" pname="c" oct="4" tilt="e" rellen="s" />
+                    <nc xml:id="french-x2-n2" pname="e" oct="4" tilt="n" />
+                    <nc xml:id="french-x2-n3" pname="d" oct="4" con="g" />
+                    <nc xml:id="french-x2-n4" pname="c" oct="4" con="g" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>porrectus flexus</syl>
+                  <neume type="porrectus flexus">
+                    <nc xml:id="french-x3-n1" pname="d" oct="4" tilt="n" rellen="s" />
+                    <nc xml:id="french-x3-n2" pname="b" oct="3" tilt="se" />
+                    <nc xml:id="french-x3-n3" pname="d" oct="4" tilt="ne" curve="c" />
+                    <nc xml:id="french-x3-n4" pname="c" oct="4" tilt="s" />
+                  </neume>
+                </syllable>
+                <syllable>
+                  <syl>clivis a fifth</syl>
+                  <neume type="clivis">
+                    <nc xml:id="french-x4-n1" pname="g" oct="4" tilt="n" />
+                    <nc xml:id="french-x4-n2" pname="c" oct="4" tilt="se" />
+                  </neume>
+                </syllable>
+              </layer>
+            </staff>
+          </section>
+        </score>
+      </mdiv>
+    </body>
+  </music>
+</mei>

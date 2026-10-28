@@ -280,7 +280,8 @@ public:
         /**
          * How a bare <nc> (a dot) is written: a dab of the nib (the stroke builder's punctum), a broad-nib
          * square, a lozenge, a small round point, or a short level dash. A point script draws it at each
-         * note's pitch; an nc with a level @tilt is always a dash, whatever the hand's dot.
+         * note's pitch; an nc with a level @tilt is always a dash, whatever the hand's dot. A stroke script
+         * draws a dab, or the round point when it names Point.
          */
         enum class Dot { Dab, Square, Lozenge, Point, Dash };
         Dot dot = Dot::Dab;
@@ -296,8 +297,9 @@ public:
          */
         bool edgeStems = false;
         /**
-         * Point scripts only. The width in pen px of the hand's mark: a square's or a dash's (whose height is the
-         * nib's), a point's diameter, a lozenge's breadth. 0 = as wide as the nib is broad (a dash: one step).
+         * The width in pen px of the hand's mark: a square's or a dash's (whose height is the nib's), a point's
+         * diameter, a lozenge's breadth. 0 = as wide as the nib is broad (a dash: one step). Point scripts, and
+         * the round point of a stroke script.
          */
         double markWidth = 0.0;
         /** Staff furniture in the hand's own forms (drawn by the view, not by Build). */
@@ -563,6 +565,11 @@ private:
     static std::vector<PointF> NibRibbon(const std::vector<PointF> &pts, double scale = 1.0);
     /** A punctum: the rounded footprint of a single broad-nib dab centred at @p c (pen space). */
     static std::vector<PointF> Punctum(PointF c);
+    /**
+     * A small round point of radius @p r centred at @p c (pen space), a touch longer along @p pen's nib than
+     * across it: the dot of a hand whose Hand::dot is Point, in either builder.
+     */
+    static std::vector<PointF> RoundPoint(PointF c, double r, const Pen &pen);
     /** Endpoint-preserving binomial low-pass of a polyline (removes finite-difference edge noise). */
     static void SmoothPolyline(std::vector<PointF> &p, int passes);
     /** Control points for the segment p1->p2 of a centripetal Catmull-Rom spline through p0..p3. */
@@ -574,9 +581,10 @@ private:
     /**
      * Ink one run (a maximal sequence of connected components - a single continuous pen gesture)
      * into @p geo, cutting the ribbon into per-nc slices. Runs are separated by @con="g" breaks, so
-     * a neume with no breaks is a single run and a pes subbipunctis is several.
+     * a neume with no breaks is a single run and a pes subbipunctis is several. A punctum is a dab of the
+     * nib, or the round point of a @p hand that writes its dots so (Hand::dot).
      */
-    static void InkRun(const std::vector<Seg> &run, NeumeGeometry &geo, Slant slant);
+    static void InkRun(const std::vector<Seg> &run, NeumeGeometry &geo, Slant slant, const Hand &hand);
 
     /**
      * Ink the episema accents of every marked nc across @p runs into @p geo (phase 3 of Build,

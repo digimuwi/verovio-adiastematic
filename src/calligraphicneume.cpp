@@ -392,6 +392,20 @@ std::vector<CalligraphicNeume::PointF> CalligraphicNeume::Punctum(PointF c)
     return SmoothClosed(diamond);
 }
 
+// A small round point: eight points on an ellipse a touch longer along the nib than across it, rounded into
+// one smooth outline (Aquitanian dots, the French hand's).
+std::vector<CalligraphicNeume::PointF> CalligraphicNeume::RoundPoint(PointF c, double r, const Pen &pen)
+{
+    const PointF nib = { std::cos(pen.angleDeg * M_PI / 180.0), std::sin(pen.angleDeg * M_PI / 180.0) };
+    const PointF across = nib.Perp();
+    std::vector<PointF> ring;
+    for (int k = 0; k < 8; ++k) {
+        const double a = k * M_PI / 4.0;
+        ring.push_back(c + nib * (1.08 * r * std::cos(a)) + across * (0.92 * r * std::sin(a)));
+    }
+    return SmoothClosed(ring);
+}
+
 // A smooth filled outline for the fixed nib swept along a whole centreline.
 std::vector<CalligraphicNeume::PointF> CalligraphicNeume::NibRibbon(const std::vector<PointF> &pts, double scale)
 {
@@ -943,13 +957,19 @@ std::vector<CalligraphicNeume::PointF> CalligraphicNeume::EpisemaFoot(PointF cor
 // ribbon edges are computed and smoothed over the whole run, then attributed to the component each
 // cross-section came from; adjacent slices overlap by a few cross-sections so their straight butts
 // are buried under the neighbouring ink and the union traces only the smooth edges.
-void CalligraphicNeume::InkRun(const std::vector<Seg> &run, NeumeGeometry &geo, Slant slant)
+void CalligraphicNeume::InkRun(const std::vector<Seg> &run, NeumeGeometry &geo, Slant slant, const Hand &hand)
 {
     if (run.empty()) return;
     if (run[0].isDot) { // a punctum is isolated into its own run
         PointF c = run[0].pts[0]; // a dab has no travel direction: it is only carried by the slant
         if (!slant.IsNone()) c = SlantShear(c, { 0.0, 0.0 }, slant);
-        geo.ncs[run[0].ncIndex].ribbon = Punctum(c);
+        if (hand.dot == Hand::Dot::Point) {
+            geo.ncs[run[0].ncIndex].ribbon
+                = RoundPoint(c, ((hand.markWidth > 0.0) ? hand.markWidth : g_pen.width) / 2.0, g_pen);
+        }
+        else {
+            geo.ncs[run[0].ncIndex].ribbon = Punctum(c);
+        }
         geo.strokes.push_back({ run[0].ncIndex, false, { c } });
         return;
     }
@@ -2056,7 +2076,7 @@ CalligraphicNeume::NeumeGeometry CalligraphicNeume::BuildStroke(
     // 2) Ink each run as one continuous gesture, cut into per-nc slices.
     geo.ncs.resize(ncs.size());
     for (std::vector<Seg> &run : runs) {
-        InkRun(run, geo, slant);
+        InkRun(run, geo, slant, hand);
     }
 
     // 3) Episemata: short accent strokes set just clear of the ink they mark (see BuildEpisemata).

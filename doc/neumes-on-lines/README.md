@@ -31,6 +31,7 @@ transcription or private MEI is included.
 | `messine.mei` | messine | messine-01 to -04, extras | Bellelay |
 | `messine-german.mei` | messine-german | messine-german-01, -11 to -16, extras | Berlin 40078; -01 is a later Hungarian fragment |
 | `cistercian.mei` | cistercian | cistercian-01 to -03, extras | Rein, 5 lines. -03 is a custos (`<custos>`) after gau- |
+| `french.mei` | french | cistercian-01 to -03, french-01 to -15, extras | Montpellier H.159 shapes; see "The French hand" below |
 | `aquitanian.mei` | aquitanian | aquitanian-01 to -03, extras | One line (`lines="1"`), which is G: an invisible G clef with `dis="8"` below |
 | `beneventan.mei` | beneventan | beneventan-01, -03, extras | F clef. The pitches of -01 are relative |
 | `central-italian.mei` | central-italian | central-italian-01, -02, extras | Bodmer 74 |
@@ -44,6 +45,20 @@ one clef per staff), messine-german-02 (a b clef; MEI has none, and the page is 
 beneventan-02 (a red line above the text with no established pitch) are omitted. The custodes of
 aquitanian-02, beneventan-01, cistercian-03 and square-03 are encoded as `<custos>`. They are not
 `nc`s, so they are not calibrated.
+
+## The French hand
+
+Montpellier, BIU Médecine H.159 (the Dijon tonary, 11th century) writes French neumes over its letters a-p,
+with no staff. The `french` hand takes its shapes, pen and spacing from that book, measured on the plates of
+ff. 98r-98v (R. *Diffusa est*) at about 16 px a step, a virga being taken as one line distance. french-01
+to -15 reproduce signs of that page, with the pitches of the tonary's letters (h i k l m n o = a b c d e f g;
+a hook sign repeats the letter before it). These examples are not in `examples.csv` and have no pitch
+points, because H.159 cannot show where a pitch sits on a stroke.
+
+That placement comes from the French neumes that the Cistercians of Rein wrote on lines. Their measured
+examples cistercian-01 to -03 are reproduced in `french.mei` in the French hand (4 lines, with the clef
+moved so that the notes keep their line or space), and they are what the `french` rows of
+`calibration.csv` check. They pass and fail as in `cistercian.mei`.
 
 ## MEI Guidelines Listing 283
 
@@ -108,3 +123,7 @@ Results on 2026-10-27, 238 rows:
 |---|---|---|
 | PR #1 head (`vrv-base`, 85fa4c4) | 172 | 66 |
 | this branch, build of 09:48 (85fa4c4-dirty, hands and landing rules) | 189 | 49 |
+
+With the French hand (2026-10-28, 243 rows): 231 pass and 12 fail. The 5 new `french` rows give 4 passes
+and 1 failure, the same as their `cistercian` counterparts (cistercian-02-n1, the top of the S). The other
+families are unchanged.

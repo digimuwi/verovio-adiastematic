@@ -1935,8 +1935,8 @@ Options::Options()
     m_neumeHand.SetInfo("Calligraphic neume hand",
         "The script whose hand draws calligraphic neumes on a staff, overriding staffDef/@notationsubtype: where "
         "it puts a pitch on each shape and how far its strokes reach around it (stgall, hildegard, german, "
-        "hufnagel, messine, messine-german, cistercian, beneventan, aquitanian, central-italian, nonantolan, "
-        "square). Unknown names fall back to stgall.");
+        "hufnagel, messine, messine-german, cistercian, french, beneventan, aquitanian, central-italian, "
+        "nonantolan, square). Unknown names fall back to stgall.");
     m_neumeHand.Init("");
     this->Register(&m_neumeHand, "neumeHand", &m_neume);
 
